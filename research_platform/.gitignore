@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+*.sqlite3
+
+.DS_Store
+
+venv/
+media/papers/pdfs/*
+
+*.log
+
+bart_finetune/
+langchain_chatbot/
+legal/
+
+research_platform/ieee_paper.tex
