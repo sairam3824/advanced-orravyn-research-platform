@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+{% block title %}Reading Lists - Research Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .page-header h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .create-btn {
+        padding: 0.6rem 1.2rem;
+        background: var(--accent-color);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+
+    .create-btn:hover {
+        background: #1d4ed8;
+    }
+
+    .list-card {
+        background: transparent;
+        border: none;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        padding: 1.5rem 0;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .list-card::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 3px;
+        height: 100%;
+        background: var(--primary-gradient);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .list-card:hover {
+        transform: translateX(8px);
+    }
+
+    .list-card:hover::before {
+        opacity: 1;
+    }
+
+    .list-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.3rem;
+    }
+
+    .list-title a {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .list-title a:hover {
+        color: var(--accent-color);
+    }
+
+    .list-meta {
+        display: flex;
+        gap: 1.5rem;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+
+    .list-meta span {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .list-description {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        line-height: 1.5;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1.5rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state i {
+        font-size: 2.5rem;
+        opacity: 0.2;
+        margin-bottom: 1rem;
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Reading Lists</h1>
+    <button onclick="showCreateModal()" class="create-btn">
+        <i class="fas fa-plus"></i> Create List
+    </button>
+</div>
+
+<!-- View Tabs -->
+<div style="display: flex; gap: 0.5rem; margin-bottom: 2rem; border-bottom: 2px solid rgba(0,0,0,0.06);">
+    <a href="?view=my" style="padding: 0.75rem 1.5rem; text-decoration: none; font-weight: 600; font-size: 0.95rem; border-bottom: 2px solid {% if view_type == 'my' %}var(--accent-color){% else %}transparent{% endif %}; color: {% if view_type == 'my' %}var(--accent-color){% else %}var(--text-secondary){% endif %}; margin-bottom: -2px; transition: all 0.25s ease;">
+        <i class="fas fa-user"></i> My Lists
+    </a>
+    <a href="?view=public" style="padding: 0.75rem 1.5rem; text-decoration: none; font-weight: 600; font-size: 0.95rem; border-bottom: 2px solid {% if view_type == 'public' %}var(--accent-color){% else %}transparent{% endif %}; color: {% if view_type == 'public' %}var(--accent-color){% else %}var(--text-secondary){% endif %}; margin-bottom: -2px; transition: all 0.25s ease;">
+        <i class="fas fa-globe"></i> Public Lists
+    </a>
+</div>
+
+<div class="reading-lists">
+    {% for list in reading_lists %}
+    <div class="list-card">
+        <div class="list-title">
+            <a href="{% url 'papers:reading_list_detail' list.pk %}">{{ list.name }}</a>
+        </div>
+        <div class="list-meta">
+            <span><i class="fas fa-user"></i> {{ list.owner.username }}</span>
+            <span><i class="fas fa-file-alt"></i> {{ list.papers.count }} papers</span>
+            <span><i class="fas fa-calendar"></i> {{ list.updated_at|date:"M d, Y" }}</span>
+            {% if list.is_public %}
+            <span><i class="fas fa-globe"></i> Public</span>
+            {% else %}
+            <span><i class="fas fa-lock"></i> Private</span>
+            {% endif %}
+        </div>
+        {% if list.description %}
+        <p class="list-description">{{ list.description }}</p>
+        {% endif %}
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <i class="fas fa-list"></i>
+        {% if view_type == 'public' %}
+        <p>No public reading lists available yet.</p>
+        {% else %}
+        <p>No reading lists yet. Create your first one!</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Create Modal -->
+<div id="createModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: #fff; padding: 2rem; border-radius: 12px; max-width: 500px; width: 90%;">
+        <h3 style="margin-bottom: 1.5rem;">Create Reading List</h3>
+        <form id="createForm">
+            {% csrf_token %}
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Name</label>
+                <input type="text" name="name" required style="width: 100%; padding: 0.6rem; border: 1px solid #ddd; border-radius: 8px;">
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Description</label>
+                <textarea name="description" rows="3" style="width: 100%; padding: 0.6rem; border: 1px solid #ddd; border-radius: 8px;"></textarea>
+            </div>
+            <div style="margin-bottom: 1.5rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="checkbox" name="is_public">
+                    <span>Make this list public</span>
+                </label>
+            </div>
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <button type="button" onclick="hideCreateModal()" style="padding: 0.6rem 1.2rem; border: 1px solid #ddd; background: #fff; border-radius: 8px; cursor: pointer;">Cancel</button>
+                <button type="submit" style="padding: 0.6rem 1.2rem; background: var(--accent-color); color: #fff; border: none; border-radius: 8px; cursor: pointer;">Create</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showCreateModal() {
+    document.getElementById('createModal').style.display = 'flex';
+}
+
+function hideCreateModal() {
+    document.getElementById('createModal').style.display = 'none';
+}
+
+document.getElementById('createForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch('{% url "papers:create_reading_list" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(err => console.error('Error:', err));
+});
+</script>
+{% endblock %}

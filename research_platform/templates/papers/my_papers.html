@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+{% block title %}My Papers - Orravyn Research Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+    }
+
+    .page-header h1 {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .paper-item {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 14px;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 0.75rem;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .paper-item::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 3px;
+        height: 100%;
+        background: var(--primary-gradient);
+        border-radius: 3px 0 0 3px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .paper-item:hover {
+        border-color: rgba(37, 99, 235, 0.15);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+    }
+
+    .paper-item:hover::before {
+        opacity: 1;
+    }
+
+    .paper-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .paper-item-title {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 0.3rem;
+    }
+
+    .paper-item-title a {
+        color: var(--accent-color);
+        text-decoration: none;
+    }
+
+    .paper-item-title a:hover {
+        color: #1d4ed8;
+    }
+
+    .paper-item-abstract {
+        font-size: 0.88rem;
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin: 0.4rem 0 0.5rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .paper-item-meta {
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .paper-item-meta span {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        padding: 0.15rem 0.55rem;
+        border-radius: 50px;
+        font-size: 0.72rem;
+        font-weight: 600;
+    }
+
+    .status-badge.approved {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .status-badge.pending {
+        background: rgba(245, 158, 11, 0.1);
+        color: #d97706;
+    }
+
+    .paper-actions {
+        display: flex;
+        gap: 0.4rem;
+        flex-shrink: 0;
+    }
+
+    .paper-act-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.35rem 0.7rem;
+        border-radius: 8px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        background: #fff;
+        color: var(--text-secondary);
+    }
+
+    .paper-act-btn:hover {
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+    }
+
+    .paper-act-btn.danger {
+        border-color: rgba(220, 38, 38, 0.15);
+        color: #dc2626;
+    }
+
+    .paper-act-btn.danger:hover {
+        background: rgba(220, 38, 38, 0.04);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1.5rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state i {
+        font-size: 2.5rem;
+        opacity: 0.2;
+        margin-bottom: 1rem;
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>My Papers</h1>
+    <a href="{% url 'papers:upload' %}" class="feature-btn"><i class="fas fa-cloud-upload-alt"></i> Upload Paper</a>
+</div>
+
+{% for paper in papers %}
+<div class="paper-item">
+    <div class="paper-item-header">
+        <div style="flex: 1;">
+            <div class="paper-item-title"><a href="{% url 'papers:detail' paper.pk %}">{{ paper.title }}</a></div>
+            {% if paper.abstract %}<p class="paper-item-abstract">{{ paper.abstract|truncatechars:160 }}</p>{% endif %}
+        </div>
+        <div class="paper-actions">
+            <a href="{% url 'papers:detail' paper.pk %}" class="paper-act-btn"><i class="fas fa-eye"></i> View</a>
+            <a href="{% url 'papers:edit' paper.pk %}" class="paper-act-btn"><i class="fas fa-edit"></i> Edit</a>
+            <a href="{% url 'papers:delete' paper.pk %}" class="paper-act-btn danger"><i class="fas fa-trash"></i>
+                Delete</a>
+        </div>
+    </div>
+    <div class="paper-item-meta">
+        <span>
+            {% if paper.is_approved %}
+            <span class="status-badge approved"><i class="fas fa-check-circle"></i> Approved</span>
+            {% else %}
+            <span class="status-badge pending"><i class="fas fa-clock"></i> Pending</span>
+            {% endif %}
+        </span>
+        <span><i class="fas fa-eye"></i> {{ paper.view_count }} views</span>
+        <span><i class="fas fa-download"></i> {{ paper.download_count }} downloads</span>
+    </div>
+</div>
+{% empty %}
+<div class="empty-state">
+    <i class="fas fa-file-alt"></i>
+    <p>You haven't uploaded any papers yet.</p>
+    <a href="{% url 'papers:upload' %}" class="feature-btn">Upload Your First Paper</a>
+</div>
+{% endfor %}
+
+{% if is_paginated %}
+<nav aria-label="Page navigation" style="margin-top: 1.5rem;">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}<li class="page-item"><a class="page-link"
+                href="?page={{ page_obj.previous_page_number }}">Previous</a></li>{% endif %}
+        {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}<li class="page-item active"><span class="page-link">{{ num }}</span></li>{% else
+        %}<li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>{% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}<li class="page-item"><a class="page-link"
+                href="?page={{ page_obj.next_page_number }}">Next</a></li>{% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

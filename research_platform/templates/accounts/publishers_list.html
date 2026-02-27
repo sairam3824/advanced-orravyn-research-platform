@@ -1,0 +1,424 @@
+{% extends 'base.html' %}
+{% block title %}Publishers - Research Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        margin-bottom: 2rem;
+    }
+
+    .page-header h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .page-header p {
+        font-size: 0.95rem;
+        color: var(--text-secondary);
+    }
+
+    .search-box {
+        margin-bottom: 2rem;
+    }
+
+    .search-input {
+        width: 100%;
+        max-width: 500px;
+        padding: 0.7rem 1rem;
+        border: 1.5px solid rgba(0, 0, 0, 0.08);
+        border-radius: 12px;
+        font-size: 0.95rem;
+        transition: all 0.25s ease;
+    }
+
+    .search-input:focus {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+        outline: none;
+    }
+
+    .publisher-card {
+        background: transparent;
+        border: none;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        padding: 1.5rem 0;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .publisher-card::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 3px;
+        height: 100%;
+        background: var(--primary-gradient);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .publisher-card:hover {
+        transform: translateX(8px);
+    }
+
+    .publisher-card:hover::before {
+        opacity: 1;
+    }
+
+    .publisher-header {
+        display: flex;
+        gap: 1.5rem;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .publisher-avatar {
+        flex-shrink: 0;
+    }
+
+    .avatar-circle {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 2px solid rgba(37, 99, 235, 0.15);
+    }
+
+    .avatar-circle img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .avatar-placeholder {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background: rgba(37, 99, 235, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        color: var(--accent-color);
+    }
+
+    .publisher-info h3 {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .publisher-info h3 a {
+        color: var(--text-primary);
+        text-decoration: none;
+        transition: color 0.25s ease;
+    }
+
+    .publisher-info h3 a:hover {
+        color: var(--accent-color);
+    }
+
+    .publisher-meta {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+
+    .publisher-stats {
+        display: flex;
+        gap: 1.5rem;
+        font-size: 0.82rem;
+        color: var(--text-secondary);
+        margin-top: 0.5rem;
+    }
+
+    .publisher-stats span {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .verified-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        padding: 0.15rem 0.5rem;
+        border-radius: 50px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+        margin-left: 0.5rem;
+    }
+
+    .follow-btn {
+        padding: 0.4rem 1rem;
+        border: 1.5px solid var(--accent-color);
+        background: transparent;
+        color: var(--accent-color);
+        border-radius: 8px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+
+    .follow-btn:hover {
+        background: var(--accent-color);
+        color: #fff;
+    }
+
+    .follow-btn.following {
+        background: var(--accent-color);
+        color: #fff;
+    }
+
+    .follow-btn.following:hover {
+        background: #dc2626;
+        border-color: #dc2626;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1.5rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state i {
+        font-size: 2.5rem;
+        opacity: 0.2;
+        margin-bottom: 1rem;
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Publishers</h1>
+    <p>Discover researchers and publishers sharing their work on the platform</p>
+</div>
+
+<div class="search-box">
+    <form method="get" id="publisherSearchForm">
+        <input type="text" name="search" id="publisherSearchInput" class="search-input" placeholder="Search publishers by name, institution, or research interests..." value="{{ search_query }}" autocomplete="off">
+    </form>
+</div>
+
+<div class="publishers-list" id="publishersList">
+    {% for publisher in publishers %}
+    <div class="publisher-card">
+        <div class="publisher-header">
+            <div class="publisher-avatar">
+                {% if publisher.profile.avatar %}
+                <div class="avatar-circle"><img src="{{ publisher.profile.avatar.url }}" alt="Avatar"></div>
+                {% else %}
+                <div class="avatar-placeholder"><i class="fas fa-user"></i></div>
+                {% endif %}
+            </div>
+            <div class="publisher-info flex-grow-1">
+                <h3>
+                    <a href="{% url 'accounts:publisher_detail' publisher.pk %}">
+                        {{ publisher.profile.full_name }}
+                    </a>
+                    {% if publisher.profile.is_credentials_verified %}
+                    <span class="verified-badge"><i class="fas fa-check-circle"></i> Verified</span>
+                    {% endif %}
+                </h3>
+                <div class="publisher-meta">
+                    {% if publisher.profile.institution %}
+                    <i class="fas fa-university"></i> {{ publisher.profile.institution }}
+                    {% endif %}
+                    {% if publisher.profile.orcid %}
+                    <span style="margin-left: 1rem;"><i class="fas fa-id-card"></i> ORCID: {{ publisher.profile.orcid }}</span>
+                    {% endif %}
+                </div>
+                {% if publisher.profile.research_interests %}
+                <p style="font-size: 0.88rem; color: var(--text-secondary); margin: 0.5rem 0;">
+                    {{ publisher.profile.research_interests|truncatewords:20 }}
+                </p>
+                {% endif %}
+                <div class="publisher-stats">
+                    <span><i class="fas fa-file-alt"></i> {{ publisher.papers_count }} papers</span>
+                    <span><i class="fas fa-users"></i> {{ publisher.followers_count }} followers</span>
+                    {% if publisher.profile.h_index > 0 %}
+                    <span><i class="fas fa-chart-line"></i> H-index: {{ publisher.profile.h_index }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% if user.is_authenticated and user != publisher %}
+            <div>
+                <button class="follow-btn {% if publisher.id in following_ids %}following{% endif %}" 
+                        data-user-id="{{ publisher.id }}"
+                        onclick="toggleFollow(this)">
+                    <i class="fas fa-user-{% if publisher.id in following_ids %}check{% else %}plus{% endif %}"></i>
+                    <span>{% if publisher.id in following_ids %}Following{% else %}Follow{% endif %}</span>
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <i class="fas fa-users"></i>
+        <p>No publishers found matching your search.</p>
+    </div>
+    {% endfor %}
+</div>
+
+{% if is_paginated %}
+<nav aria-label="Publishers pagination" style="margin-top: 2rem;">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?search={{ search_query }}&page={{ page_obj.previous_page_number }}">Previous</a>
+        </li>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+        {% else %}
+        <li class="page-item"><a class="page-link" href="?search={{ search_query }}&page={{ num }}">{{ num }}</a></li>
+        {% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?search={{ search_query }}&page={{ page_obj.next_page_number }}">Next</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let searchTimeout;
+const searchInput = document.getElementById('publisherSearchInput');
+const publishersList = document.getElementById('publishersList');
+
+// Live search - only trigger on input
+searchInput.addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    const query = this.value.trim();
+    
+    searchTimeout = setTimeout(() => {
+        loadPublishers(query);
+    }, 300);
+});
+
+function loadPublishers(query) {
+    const url = `/accounts/publishers/search/?search=${encodeURIComponent(query)}`;
+    
+    fetch(url)
+        .then(r => r.json())
+        .then(data => {
+            if (data.publishers && data.publishers.length > 0) {
+                publishersList.innerHTML = data.publishers.map(pub => createPublisherCard(pub)).join('');
+            } else {
+                publishersList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-users"></i>
+                        <p>No publishers found matching your search.</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            publishersList.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <p>Error loading publishers. Please try again.</p>
+                </div>
+            `;
+        });
+}
+
+function createPublisherCard(pub) {
+    const followingIds = {{ following_ids|safe }};
+    const isFollowing = followingIds.includes(pub.id);
+    const currentUserId = {{ user.id|default:0 }};
+    
+    const followBtn = (pub.id !== currentUserId && {{ user.is_authenticated|yesno:"true,false" }}) ? `
+        <button class="follow-btn ${isFollowing ? 'following' : ''}" 
+                data-user-id="${pub.id}"
+                onclick="toggleFollow(this)">
+            <i class="fas fa-user-${isFollowing ? 'check' : 'plus'}"></i>
+            <span>${isFollowing ? 'Following' : 'Follow'}</span>
+        </button>
+    ` : '';
+    
+    return `
+        <div class="publisher-card">
+            <div class="publisher-header">
+                <div class="publisher-avatar">
+                    ${pub.avatar ? 
+                        `<div class="avatar-circle"><img src="${pub.avatar}" alt="Avatar"></div>` :
+                        `<div class="avatar-placeholder"><i class="fas fa-user"></i></div>`
+                    }
+                </div>
+                <div class="publisher-info flex-grow-1">
+                    <h3>
+                        <a href="/accounts/publishers/${pub.id}/">
+                            ${escapeHtml(pub.full_name)}
+                        </a>
+                        ${pub.is_verified ? '<span class="verified-badge"><i class="fas fa-check-circle"></i> Verified</span>' : ''}
+                    </h3>
+                    <div class="publisher-meta">
+                        ${pub.institution ? `<i class="fas fa-university"></i> ${escapeHtml(pub.institution)}` : ''}
+                        ${pub.orcid ? `<span style="margin-left: 1rem;"><i class="fas fa-id-card"></i> ORCID: ${escapeHtml(pub.orcid)}</span>` : ''}
+                    </div>
+                    ${pub.research_interests ? `<p style="font-size: 0.88rem; color: var(--text-secondary); margin: 0.5rem 0;">${escapeHtml(pub.research_interests)}</p>` : ''}
+                    <div class="publisher-stats">
+                        <span><i class="fas fa-file-alt"></i> ${pub.papers_count} papers</span>
+                        <span><i class="fas fa-users"></i> ${pub.followers_count} followers</span>
+                        ${pub.h_index > 0 ? `<span><i class="fas fa-chart-line"></i> H-index: ${pub.h_index}</span>` : ''}
+                    </div>
+                </div>
+                ${followBtn ? `<div>${followBtn}</div>` : ''}
+            </div>
+        </div>
+    `;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function toggleFollow(btn) {
+    const userId = btn.dataset.userId;
+    const icon = btn.querySelector('i');
+    const text = btn.querySelector('span');
+    
+    fetch(`/accounts/follow/${userId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            if (data.action === 'followed') {
+                btn.classList.add('following');
+                icon.className = 'fas fa-user-check';
+                text.textContent = 'Following';
+            } else {
+                btn.classList.remove('following');
+                icon.className = 'fas fa-user-plus';
+                text.textContent = 'Follow';
+            }
+        }
+    })
+    .catch(err => console.error('Error:', err));
+}
+</script>
+{% endblock %}

@@ -1,0 +1,454 @@
+{% extends 'base.html' %}
+{% block title %}{{ group.name }} - Orravyn Research Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .group-header {
+        margin-bottom: 1.75rem;
+    }
+
+    .group-title {
+        font-size: 1.6rem;
+        font-weight: 700;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
+    }
+
+    .group-desc {
+        font-size: 0.95rem;
+        color: var(--text-secondary);
+        line-height: 1.7;
+        margin-bottom: 1rem;
+    }
+
+    .group-meta-bar {
+        display: flex;
+        gap: 1.25rem;
+        flex-wrap: wrap;
+        font-size: 0.82rem;
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+    }
+
+    .group-meta-bar span {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .group-type-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        padding: 0.15rem 0.6rem;
+        border-radius: 50px;
+        font-size: 0.72rem;
+        font-weight: 600;
+    }
+
+    .group-type-badge.public {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .group-type-badge.private {
+        background: rgba(245, 158, 11, 0.1);
+        color: #d97706;
+    }
+
+    .group-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+    }
+
+    .g-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.25s ease;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        background: #fff;
+        color: var(--text-secondary);
+    }
+
+    .g-action:hover {
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+        transform: translateY(-1px);
+    }
+
+    .g-action.primary {
+        background: var(--accent-color);
+        color: #fff;
+        border-color: var(--accent-color);
+    }
+
+    .g-action.primary:hover {
+        background: #1d4ed8;
+        color: #fff;
+        box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+    }
+
+    .g-action.danger {
+        border-color: rgba(220, 38, 38, 0.2);
+        color: #dc2626;
+    }
+
+    .g-action.danger:hover {
+        background: rgba(220, 38, 38, 0.04);
+    }
+
+    .section-label {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .section-label-text {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .section-label-text i {
+        color: var(--accent-color);
+        font-size: 0.9rem;
+    }
+
+    .paper-item {
+        padding: 0.75rem 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+    }
+
+    .paper-item:last-child {
+        border-bottom: none;
+    }
+
+    .paper-item h6 {
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin-bottom: 0.2rem;
+    }
+
+    .paper-item h6 a {
+        color: var(--accent-color);
+        text-decoration: none;
+    }
+
+    .paper-item h6 a:hover {
+        color: #1d4ed8;
+    }
+
+    .paper-item p {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin: 0 0 0.3rem;
+        line-height: 1.5;
+    }
+
+    .paper-item small {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+
+    .paper-discuss-link {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        margin-top: 0.3rem;
+    }
+
+    .paper-discuss-link:hover {
+        color: #1d4ed8;
+    }
+
+    .sidebar-title {
+        font-size: 0.82rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-primary);
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--glass-border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .member-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+    }
+
+    .member-item:last-child {
+        border-bottom: none;
+    }
+
+    .member-name {
+        font-size: 0.88rem;
+        font-weight: 500;
+        color: var(--text-primary);
+    }
+
+    .member-role {
+        display: inline-flex;
+        padding: 0.1rem 0.5rem;
+        border-radius: 50px;
+        font-size: 0.68rem;
+        font-weight: 600;
+        background: rgba(37, 99, 235, 0.08);
+        color: var(--accent-color);
+        margin-left: 0.4rem;
+    }
+
+    .view-all-link {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        text-decoration: none;
+        display: block;
+        text-align: center;
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--glass-border);
+    }
+
+    .view-all-link:hover {
+        color: #1d4ed8;
+    }
+
+    .empty-text {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="group-header">
+            <h1 class="group-title">{{ group.name }}</h1>
+            <p class="group-desc">{{ group.description }}</p>
+            <div class="group-meta-bar">
+                <span><i class="fas fa-user"></i> {{ group.created_by.username }}</span>
+                <span><i class="fas fa-calendar-alt"></i> {{ group.created_at|date:"M d, Y" }}</span>
+                <span><i class="fas fa-users"></i> {{ members.count }} members</span>
+                <span>
+                    {% if group.is_private %}
+                    <span class="group-type-badge private"><i class="fas fa-lock"></i> Private</span>
+                    {% else %}
+                    <span class="group-type-badge public"><i class="fas fa-globe"></i> Public</span>
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+
+        <div class="group-actions">
+            <a href="{% url 'chat:group_chat' group.pk %}" class="g-action primary"><i class="fas fa-comments"></i>
+                Group Chat</a>
+            {% if user.is_authenticated %}
+            {% if is_member %}
+            <a href="{% url 'groups:leave' group.pk %}" class="g-action danger"><i class="fas fa-sign-out-alt"></i>
+                Leave</a>
+            {% else %}
+            {% if not group.is_private %}
+            <a href="{% url 'groups:join' group.pk %}" class="g-action primary"><i class="fas fa-user-plus"></i> Join
+                Group</a>
+            {% endif %}
+            {% endif %}
+            {% endif %}
+        </div>
+
+        <div class="section-label">
+            <span class="section-label-text"><i class="fas fa-file-alt"></i> Group Papers</span>
+            {% if is_member %}
+            <button class="g-action" data-bs-toggle="modal" data-bs-target="#addPaperModal"
+                style="padding: 0.35rem 0.7rem; font-size: 0.78rem;"><i class="fas fa-plus"></i> Add Paper</button>
+            {% endif %}
+        </div>
+        {% for group_paper in papers %}
+        <div class="paper-item">
+            <h6><a href="{% url 'papers:detail' group_paper.paper.pk %}">{{ group_paper.paper.title }}</a></h6>
+            <p>{{ group_paper.paper.abstract|truncatechars:150 }}</p>
+            <small>Added by {{ group_paper.added_by.username }} on {{ group_paper.added_at|date:"M d, Y" }}</small>
+            <div><a href="{% url 'chat:paper_chat' group_paper.paper.pk %}" class="paper-discuss-link"><i
+                        class="fas fa-comments"></i> Discuss</a></div>
+        </div>
+        {% empty %}
+        <p class="empty-text">No papers in this group yet.</p>
+        {% endfor %}
+    </div>
+
+    <div class="col-lg-4">
+        <div class="sidebar-title">
+            Members ({{ members.count }})
+            {% if is_member and user_membership.role in 'admin,moderator' %}
+            <button class="g-action" data-bs-toggle="modal" data-bs-target="#inviteMemberModal"
+                style="padding: 0.25rem 0.6rem; font-size: 0.72rem;"><i class="fas fa-user-plus"></i> Invite</button>
+            {% endif %}
+        </div>
+        {% for member in members %}
+        <div class="member-item">
+            <div>
+                <span class="member-name">{{ member.user.username }}</span>
+                <span class="member-role">{{ member.role|title }}</span>
+            </div>
+            {% if is_member and user_membership.role == 'admin' and member.user != user %}
+            <div class="dropdown">
+                <button class="g-action dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"
+                    style="padding: 0.2rem 0.5rem; font-size: 0.72rem;"><i class="fas fa-cog"></i></button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="#" onclick="updateRole({{ member.user.id }}, 'member')">Make
+                            Member</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="updateRole({{ member.user.id }}, 'moderator')">Make
+                            Moderator</a></li>
+                    <li><a class="dropdown-item" href="#" onclick="updateRole({{ member.user.id }}, 'admin')">Make
+                            Admin</a></li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li><a class="dropdown-item text-danger"
+                            href="{% url 'groups:remove_member' group.pk member.user.id %}"
+                            onclick="return confirmAction(event, 'Remove this member?')">Remove</a></li>
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+        <a href="{% url 'groups:members' group.pk %}" class="view-all-link">View All Members →</a>
+    </div>
+</div>
+
+{% if is_member and user_membership.role in 'admin,moderator' %}
+<div class="modal fade" id="inviteMemberModal" tabindex="-1" aria-labelledby="inviteMemberModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="inviteMemberModalLabel">Invite Member</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'groups:invite_member' group.pk %}">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="username_or_email" class="form-label"
+                            style="font-weight: 600; font-size: 0.88rem;">Username or Email</label>
+                        <input type="text" name="username_or_email" id="username_or_email" class="form-control"
+                            style="border-radius: 12px;" placeholder="Enter username or email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="roleSelect" class="form-label"
+                            style="font-weight: 600; font-size: 0.88rem;">Role</label>
+                        <select name="role" id="roleSelect" class="form-control" style="border-radius: 12px;">
+                            <option value="member">Member</option>
+                            <option value="moderator">Moderator</option>
+                            {% if user_membership.role == 'admin' %}<option value="admin">Admin</option>{% endif %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="form-cancel" data-bs-dismiss="modal"
+                        style="padding: 0.5rem 1rem; font-size: 0.85rem; cursor: pointer; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 10px; background: #fff; color: var(--text-secondary);">Cancel</button>
+                    <button type="submit" class="form-submit"
+                        style="padding: 0.5rem 1rem; font-size: 0.85rem; background: var(--accent-color); color: #fff; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">Invite</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if is_member %}
+<div class="modal fade" id="addPaperModal" tabindex="-1" aria-labelledby="addPaperModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addPaperModalLabel">Add Paper to Group</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" action="{% url 'groups:add_paper' group.pk %}">
+                <div class="modal-body">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="paperSelect" class="form-label" style="font-weight: 600; font-size: 0.88rem;">Select
+                            Paper</label>
+                        <select name="paper_id" id="paperSelect" class="form-control" style="border-radius: 12px;"
+                            required>
+                            <option value="">Choose a paper...</option>
+                            {% for paper in user_papers %}
+                            <option value="{{ paper.id }}">{{ paper.title }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="form-cancel" data-bs-dismiss="modal"
+                        style="padding: 0.5rem 1rem; font-size: 0.85rem; cursor: pointer; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 10px; background: #fff; color: var(--text-secondary);">Cancel</button>
+                    <button type="submit" class="form-submit"
+                        style="padding: 0.5rem 1rem; font-size: 0.85rem; background: var(--accent-color); color: #fff; border: none; border-radius: 10px; font-weight: 600; cursor: pointer;">Add
+                        Paper</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function updateRole(userId, role) {
+        Swal.fire({
+            title: 'Are you sure?',
+            text: 'Update user role to ' + role + '?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#2563eb',
+            cancelButtonColor: '#e11d48',
+            confirmButtonText: 'Yes, update it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{% url "groups:update_role" group.pk 0 %}'.replace('0', userId);
+                const csrfToken = document.createElement('input');
+                csrfToken.type = 'hidden';
+                csrfToken.name = 'csrfmiddlewaretoken';
+                csrfToken.value = '{{ csrf_token }}';
+                const roleInput = document.createElement('input');
+                roleInput.type = 'hidden';
+                roleInput.name = 'role';
+                roleInput.value = role;
+                form.appendChild(csrfToken);
+                form.appendChild(roleInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+    }
+</script>
+{% endblock %}

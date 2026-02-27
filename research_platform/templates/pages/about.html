@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}About - Orravyn Research Platform{% endblock %}
+{% block meta_description %}Learn about the Orravyn Research Platform — our mission, architecture, and commitment to
+open academic collaboration.{% endblock %}
+{% block extra_css %}{% include 'pages/_legal_css.html' %}{% endblock %}
+
+{% block content %}
+<div class="legal-page">
+    <a href="{% url 'home' %}" class="legal-back"><i class="fas fa-arrow-left"></i> Back to Home</a>
+    <div class="legal-hero">
+        <div class="legal-hero-icon"><i class="fas fa-info-circle"></i></div>
+        <h1>About the Platform</h1>
+        <div class="legal-meta">
+            <span><i class="fas fa-globe"></i> <a href="https://orravyn.cloud" target="_blank"
+                    style="color: var(--accent-color); text-decoration: none;">orravyn.cloud</a></span>
+            <span><i class="fab fa-github"></i> <a href="https://github.com/sairam3824" target="_blank"
+                    style="color: var(--accent-color); text-decoration: none;">Open Source</a></span>
+        </div>
+    </div>
+    <div class="legal-body">
+        <h2>Project Overview</h2>
+        <p>The Orravyn Research Portal is a student-developed, open-source academic platform designed to facilitate
+            research sharing and collaboration among students, researchers, and educators. The mission is to enhance
+            academic collaboration while safeguarding user data and respecting research integrity. The platform is
+            provided "as is" and intended strictly for educational and non-commercial use.</p>
+
+        <h2>What We Offer</h2>
+        <div class="about-grid">
+            <div class="about-card">
+                <div class="card-icon"><i class="fas fa-search"></i></div>
+                <h3>AI-Powered Discovery</h3>
+                <p>Advanced search and recommendation systems powered by NLP and transformer models to surface the most
+                    relevant research for your interests.</p>
+            </div>
+            <div class="about-card">
+                <div class="card-icon"><i class="fas fa-users"></i></div>
+                <h3>Research Groups</h3>
+                <p>Create and join research groups, collaborate in real-time, and share papers with your peers across
+                    the globe.</p>
+            </div>
+            <div class="about-card">
+                <div class="card-icon"><i class="fas fa-robot"></i></div>
+                <h3>Yggdrasil AI Assistant</h3>
+                <p>An intelligent chatbot designed to help you navigate research papers, answer academic questions, and
+                    summarize content.</p>
+            </div>
+            <div class="about-card">
+                <div class="card-icon"><i class="fas fa-lock"></i></div>
+                <h3>Privacy by Design</h3>
+                <p>No third-party trackers, no advertising. All data handling is transparent and compliant with GDPR and
+                    Indian data protection law.</p>
+            </div>
+        </div>
+
+        <h2>Governing Law &amp; Licensing</h2>
+        <div class="about-grid">
+            <div class="about-card">
+                <h3>Governing Law</h3>
+                <p>This platform and any disputes arising from it shall be governed by the laws of India.</p>
+            </div>
+            <div class="about-card">
+                <h3>Jurisdiction</h3>
+                <p>Any disputes will be subject to the exclusive jurisdiction of the courts located in India.</p>
+            </div>
+            <div class="about-card">
+                <h3>Platform Licensing</h3>
+                <p>The platform's source code is released and maintained under the <a
+                        href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank">Apache License 2.0</a>.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

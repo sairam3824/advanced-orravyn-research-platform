@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% block title %}Messages - Research Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 2rem;
+    }
+
+    .conversation-item {
+        background: transparent;
+        border: none;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        padding: 1.25rem 0;
+        transition: all 0.3s ease;
+        position: relative;
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .conversation-item::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 3px;
+        height: 100%;
+        background: var(--primary-gradient);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .conversation-item:hover {
+        transform: translateX(8px);
+    }
+
+    .conversation-item:hover::before {
+        opacity: 1;
+    }
+
+    .conversation-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: rgba(37, 99, 235, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: var(--accent-color);
+        flex-shrink: 0;
+    }
+
+    .conversation-info {
+        flex-grow: 1;
+    }
+
+    .conversation-info h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.2rem;
+    }
+
+    .conversation-info h3 a {
+        color: var(--text-primary);
+        text-decoration: none;
+    }
+
+    .conversation-info h3 a:hover {
+        color: var(--accent-color);
+    }
+
+    .conversation-preview {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .conversation-time {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1.5rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state i {
+        font-size: 2.5rem;
+        opacity: 0.2;
+        margin-bottom: 1rem;
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Messages</h1>
+</div>
+
+<div class="conversations-list">
+    {% for conversation in conversations %}
+    <div class="conversation-item">
+        <div class="conversation-avatar">
+            <i class="fas fa-user"></i>
+        </div>
+        <div class="conversation-info">
+            <h3>
+                <a href="{% url 'messaging:conversation_detail' conversation.pk %}">
+                    {% for participant in conversation.participants.all %}
+                        {% if participant != user %}{{ participant.username }}{% endif %}
+                    {% endfor %}
+                </a>
+            </h3>
+            {% if conversation.messages.last %}
+            <div class="conversation-preview">
+                {{ conversation.messages.last.content|truncatewords:10 }}
+            </div>
+            {% endif %}
+        </div>
+        <div class="conversation-time">
+            {% if conversation.last_message_time %}
+            {{ conversation.last_message_time|timesince }} ago
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <i class="fas fa-comments"></i>
+        <p>No conversations yet. Start messaging other researchers!</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

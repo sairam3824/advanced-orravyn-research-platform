@@ -1,0 +1,519 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard - Orravyn Research Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dash-header {
+        margin-bottom: 2.5rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .dash-header h1 {
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+        letter-spacing: -0.5px;
+    }
+
+    .dash-header p {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+        margin: 0;
+    }
+
+    .dash-role {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.3rem 0.85rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background: rgba(37, 99, 235, 0.1);
+        color: var(--accent-color);
+        border: 1px solid rgba(37, 99, 235, 0.15);
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+        gap: clamp(1rem, 2vw, 1.25rem);
+        margin-bottom: clamp(2rem, 5vw, 3rem);
+    }
+
+    .stat-card {
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        padding: 1.5rem 0;
+        text-align: center;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .stat-card::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 2px;
+        background: var(--primary-gradient);
+        transition: width 0.3s ease;
+    }
+
+    .stat-card:hover::after {
+        width: 60%;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-3px);
+    }
+
+    .stat-card-number {
+        font-size: 2.5rem;
+        font-weight: 900;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-card-label {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        font-weight: 600;
+        margin: 0 0 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .stat-card-link {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        transition: gap 0.25s ease;
+    }
+
+    .stat-card-link:hover {
+        gap: 0.5rem;
+        color: #1d4ed8;
+    }
+
+    /* Content Grid - No Boxes */
+    .content-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr));
+        gap: clamp(1.5rem, 4vw, 3rem);
+        margin-bottom: 2rem;
+    }
+
+    .dashboard-section {
+        position: relative;
+    }
+
+    .section-label {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0 0 0.75rem 0;
+        border: none;
+        border-bottom: 2px solid rgba(37, 99, 235, 0.1);
+        background: transparent;
+        border-radius: 0;
+        text-transform: none;
+        letter-spacing: normal;
+    }
+
+    .section-label i {
+        color: var(--accent-color);
+        font-size: 1rem;
+        background: none;
+        border: none;
+        border-radius: 0;
+        padding: 0;
+        width: auto;
+        height: auto;
+    }
+
+    .subsection-label {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--text-secondary);
+        margin: 1.5rem 0 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+
+    .subsection-label i {
+        font-size: 0.75rem;
+        color: var(--accent-color);
+        background: none;
+        border: none;
+        border-radius: 0;
+        padding: 0;
+        width: auto;
+        height: auto;
+    }
+
+    /* Activity Timeline Style */
+    .activity-list {
+        position: relative;
+        padding-left: 1.5rem;
+    }
+
+    .activity-list::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: linear-gradient(to bottom, rgba(37, 99, 235, 0.2), transparent);
+    }
+
+    .activity-item {
+        padding: 0.75rem 0;
+        position: relative;
+        transition: all 0.25s ease;
+    }
+
+    .activity-item::before {
+        content: '';
+        position: absolute;
+        left: -1.5rem;
+        top: 1rem;
+        width: 8px;
+        height: 8px;
+        background: var(--accent-color);
+        border-radius: 50%;
+        border: 2px solid #fff;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+    }
+
+    .activity-item:hover {
+        padding-left: 0.5rem;
+    }
+
+    .activity-item a {
+        font-size: 0.92rem;
+        color: var(--text-primary);
+        text-decoration: none;
+        font-weight: 600;
+        display: block;
+        line-height: 1.5;
+        transition: color 0.25s ease;
+    }
+
+    .activity-item a:hover {
+        color: var(--accent-color);
+    }
+
+    .activity-item small {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        margin-top: 0.25rem;
+    }
+
+    .activity-empty {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        padding: 2rem 1rem;
+        text-align: center;
+        background: rgba(37, 99, 235, 0.02);
+        border-radius: 8px;
+        border: 1px dashed rgba(37, 99, 235, 0.15);
+    }
+
+    .activity-empty i {
+        display: block;
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        opacity: 0.3;
+    }
+
+    /* Recommendation Cards */
+    .rec-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .rec-item {
+        padding: 1.25rem;
+        background: rgba(37, 99, 235, 0.02);
+        border-left: 3px solid var(--accent-color);
+        border-radius: 0 8px 8px 0;
+        transition: all 0.3s ease;
+    }
+
+    .rec-item:hover {
+        background: rgba(37, 99, 235, 0.05);
+        border-left-width: 4px;
+        transform: translateX(3px);
+    }
+
+    .rec-item h6 {
+        font-size: 0.95rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        line-height: 1.4;
+    }
+
+    .rec-item h6 a {
+        color: var(--text-primary);
+        text-decoration: none;
+        transition: color 0.25s ease;
+    }
+
+    .rec-item h6 a:hover {
+        color: var(--accent-color);
+    }
+
+    .rec-item p {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin: 0 0 0.75rem;
+        line-height: 1.6;
+    }
+
+    .rec-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .rec-score {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 0.25rem 0.65rem;
+        border-radius: 50px;
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .rec-reason {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        font-style: italic;
+    }
+
+    /* Quick Actions */
+    .quick-actions-section {
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .quick-actions-section .section-label i {
+        background: none;
+        border: none;
+        border-radius: 0;
+        padding: 0;
+        width: auto;
+        height: auto;
+    }
+
+    .quick-actions {
+        display: flex;
+        gap: 0.85rem;
+        flex-wrap: wrap;
+        margin-top: 1rem;
+    }
+
+    .quick-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.7rem 1.4rem;
+        border-radius: 10px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        background: transparent;
+        color: var(--text-secondary);
+    }
+
+    .quick-action i {
+        background: none;
+        border: none;
+        border-radius: 0;
+        padding: 0;
+        width: auto;
+        height: auto;
+    }
+
+    .quick-action:hover {
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .quick-action.primary {
+        background: var(--primary-gradient);
+        color: #fff;
+        border-color: transparent;
+    }
+
+    .quick-action.primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
+        color: #fff;
+    }
+
+    /* Responsive styling handled by fluid grids */
+    @media (max-width: 575.98px) {
+        .dash-header h1 {
+            font-size: 1.5rem;
+        }
+
+        .stat-card-number {
+            font-size: 2rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dash-header">
+    <h1>Welcome back, {{ user.first_name|default:user.username }}!</h1>
+    <p><span class="dash-role"><i class="fas fa-id-badge"></i> {{ user.user_type|title }}</span></p>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-card-number">{{ recent_papers|length }}</div>
+        <div class="stat-card-label">My Papers</div>
+        <a href="{% url 'papers:my_papers' %}" class="stat-card-link">View All <i class="fas fa-arrow-right"></i></a>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-number">{{ recent_bookmarks|length }}</div>
+        <div class="stat-card-label">Bookmarks</div>
+        <a href="{% url 'papers:bookmarks' %}" class="stat-card-link">View All <i class="fas fa-arrow-right"></i></a>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-number">{{ recent_ratings|length }}</div>
+        <div class="stat-card-label">Ratings</div>
+        <a href="{% url 'papers:list' %}" class="stat-card-link">Browse <i class="fas fa-arrow-right"></i></a>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card-number">{{ recommendations|length }}</div>
+        <div class="stat-card-label">For You</div>
+        <a href="#recommendations" class="stat-card-link">View <i class="fas fa-arrow-right"></i></a>
+    </div>
+</div>
+
+<div class="content-grid">
+    <div class="dashboard-section">
+        <div class="section-label"><i class="fas fa-clock"></i> Recent Activity</div>
+
+        <div class="subsection-label"><i class="fas fa-file-alt"></i> Papers</div>
+        <div class="activity-list">
+            {% for paper in recent_papers %}
+            <div class="activity-item">
+                <a href="{% url 'papers:detail' paper.pk %}">{{ paper.title|truncatechars:60 }}</a>
+                <small><i class="fas fa-calendar-alt"></i> {{ paper.created_at|date:"M d, Y" }}</small>
+            </div>
+            {% empty %}
+            <div class="activity-empty">
+                <i class="fas fa-file-alt"></i>
+                No papers uploaded yet.
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="subsection-label"><i class="fas fa-bookmark"></i> Bookmarks</div>
+        <div class="activity-list">
+            {% for bookmark in recent_bookmarks %}
+            <div class="activity-item">
+                <a href="{% url 'papers:detail' bookmark.paper.pk %}">{{ bookmark.paper.title|truncatechars:60 }}</a>
+                <small><i class="fas fa-calendar-alt"></i> {{ bookmark.created_at|date:"M d, Y" }}</small>
+            </div>
+            {% empty %}
+            <div class="activity-empty">
+                <i class="fas fa-bookmark"></i>
+                No bookmarks yet.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="dashboard-section">
+        <div class="section-label" id="recommendations"><i class="fas fa-magic"></i> Recommendations</div>
+        <div class="rec-list">
+            {% for rec in recommendations %}
+            <div class="rec-item">
+                <h6><a href="{% url 'papers:detail' rec.paper.pk %}">{{ rec.paper.title|truncatechars:70 }}</a></h6>
+                <p>{{ rec.paper.abstract|truncatechars:120 }}</p>
+                <div class="rec-meta">
+                    <span class="rec-score"><i class="fas fa-chart-line"></i> {{ rec.score|floatformat:2 }}</span>
+                    <span class="rec-reason">{{ rec.reason }}</span>
+                </div>
+            </div>
+            {% empty %}
+            <div class="activity-empty">
+                <i class="fas fa-magic"></i>
+                Start bookmarking and rating papers to get personalized recommendations!
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% if user.user_type == 'publisher' or user.user_type == 'moderator' or user.user_type == 'admin' %}
+<div class="quick-actions-section">
+    <div class="section-label"><i class="fas fa-bolt"></i> Quick Actions</div>
+    <div class="quick-actions">
+        <a href="{% url 'papers:upload' %}" class="quick-action"><i class="fas fa-cloud-upload-alt"></i> Upload Paper</a>
+        <a href="{% url 'chat:my_chats' %}" class="quick-action"><i class="fas fa-comments"></i> Chats</a>
+        <a href="{% url 'groups:my_groups' %}" class="quick-action"><i class="fas fa-users"></i> My Groups</a>
+        <a href="{% url 'chat:yggdrasil_chatbot' %}" class="quick-action"><i class="fas fa-robot"></i> Yggdrasil AI</a>
+        <a href="{% url 'papers:categories' %}" class="quick-action"><i class="fas fa-tags"></i> Categories</a>
+        {% if user.user_type == 'moderator' or user.user_type == 'admin' %}
+        <a href="{% url 'papers:pending_approval' %}" class="quick-action"><i class="fas fa-clipboard-check"></i> Review Pending</a>
+        {% endif %}
+        {% if user.user_type == 'admin' %}
+        <a href="{% url 'accounts:admin_dashboard' %}" class="quick-action"><i class="fas fa-tachometer-alt"></i> Admin Dashboard</a>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+<div class="quick-actions-section">
+    <div class="section-label"><i class="fas fa-bolt"></i> Quick Actions</div>
+    <div class="quick-actions">
+        <a href="{% url 'papers:upload' %}" class="quick-action"><i class="fas fa-cloud-upload-alt"></i> Upload Paper</a>
+        <a href="{% url 'chat:my_chats' %}" class="quick-action"><i class="fas fa-comments"></i> Chats</a>
+        <a href="{% url 'groups:my_groups' %}" class="quick-action"><i class="fas fa-users"></i> My Groups</a>
+        <a href="{% url 'chat:yggdrasil_chatbot' %}" class="quick-action"><i class="fas fa-robot"></i> Yggdrasil AI</a>
+        <a href="{% url 'papers:categories' %}" class="quick-action"><i class="fas fa-tags"></i> Categories</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

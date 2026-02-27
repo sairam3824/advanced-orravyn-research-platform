@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+{% block title %}Edit Paper - Orravyn Research Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-page {
+        max-width: 720px;
+        margin: 0 auto;
+    }
+
+    .form-header {
+        margin-bottom: 1.75rem;
+    }
+
+    .form-header h1 {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .form-section-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--accent-color);
+        margin-bottom: 0.75rem;
+        margin-top: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .form-section-label:first-child {
+        margin-top: 0;
+    }
+
+    .form-section-label::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--glass-border);
+    }
+
+    .form-control,
+    .form-select {
+        border: 1.5px solid rgba(0, 0, 0, 0.08);
+        border-radius: 12px;
+        padding: 0.6rem 0.85rem;
+        font-size: 0.9rem;
+        transition: all 0.25s ease;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+    }
+
+    .form-label {
+        font-weight: 600;
+        font-size: 0.88rem;
+        color: var(--text-primary);
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 1.75rem;
+    }
+
+    .form-submit {
+        padding: 0.65rem 1.5rem;
+        background: var(--accent-color);
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.92rem;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .form-submit:hover {
+        background: #1d4ed8;
+        box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+        transform: translateY(-1px);
+    }
+
+    .form-cancel {
+        padding: 0.65rem 1.5rem;
+        border: 1.5px solid rgba(0, 0, 0, 0.08);
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.92rem;
+        color: var(--text-secondary);
+        text-decoration: none;
+        transition: all 0.25s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: #fff;
+    }
+
+    .form-cancel:hover {
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-page">
+    <div class="form-header">
+        <h1>Edit Paper</h1>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-section-label"><i class="fas fa-file-alt"></i> Paper Details</div>
+        <div class="mb-3">
+            <label for="{{ form.title.id_for_label }}" class="form-label">Title</label>
+            {{ form.title }}
+        </div>
+        <div class="mb-3">
+            <label for="{{ form.abstract.id_for_label }}" class="form-label">Abstract</label>
+            {{ form.abstract }}
+        </div>
+        <div class="mb-3">
+            <label for="{{ form.authors.id_for_label }}" class="form-label">Authors</label>
+            {{ form.authors }}
+        </div>
+
+        <div class="form-section-label"><i class="fas fa-info-circle"></i> Publication Info</div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="{{ form.publication_date.id_for_label }}" class="form-label">Publication Date</label>
+                    {{ form.publication_date }}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="{{ form.doi.id_for_label }}" class="form-label">DOI</label>
+                    {{ form.doi }}
+                </div>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Categories</label>
+            {{ form.categories }}
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="form-submit"><i class="fas fa-save"></i> Update Paper</button>
+            <a href="{% url 'papers:detail' object.pk %}" class="form-cancel">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

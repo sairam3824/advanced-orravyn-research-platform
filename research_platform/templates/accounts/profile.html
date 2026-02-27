@@ -1,0 +1,280 @@
+{% extends 'base.html' %}
+{% block title %}Profile - Orravyn Research Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-header {
+        display: flex;
+        gap: 2rem;
+        margin-bottom: 2rem;
+        align-items: flex-start;
+    }
+
+    .profile-avatar {
+        flex-shrink: 0;
+        text-align: center;
+    }
+
+    .avatar-circle {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        overflow: hidden;
+        margin-bottom: 0.75rem;
+        border: 3px solid rgba(37, 99, 235, 0.15);
+    }
+
+    .avatar-circle img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .avatar-placeholder {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: rgba(37, 99, 235, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        color: var(--accent-color);
+        margin-bottom: 0.75rem;
+    }
+
+    .profile-info h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .profile-info .email {
+        font-size: 0.88rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+
+    .profile-role {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        padding: 0.2rem 0.7rem;
+        border-radius: 50px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        background: rgba(37, 99, 235, 0.08);
+        color: var(--accent-color);
+        margin-bottom: 0.75rem;
+    }
+
+    .edit-link {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        transition: gap 0.25s ease;
+    }
+
+    .edit-link:hover {
+        gap: 0.5rem;
+        color: #1d4ed8;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+        gap: 0.75rem;
+        margin-bottom: 2rem;
+    }
+
+    .info-item {
+        padding: 0.75rem 0;
+    }
+
+    .info-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--accent-color);
+        margin-bottom: 0.2rem;
+    }
+
+    .info-value {
+        font-size: 0.92rem;
+        color: var(--text-primary);
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+        gap: clamp(1rem, 3vw, 1.5rem);
+        margin-top: 2rem;
+    }
+
+    .stat-card {
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        padding: 1.5rem 0;
+        text-align: center;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .stat-card::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 2px;
+        background: var(--primary-gradient);
+        transition: width 0.3s ease;
+    }
+
+    .stat-card:hover::after {
+        width: 60%;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-3px);
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 900;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+
+    @media (max-width: 768px) {
+        .profile-header {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-header">
+    <div class="profile-avatar">
+        {% if profile.avatar %}
+        <div class="avatar-circle"><img src="{{ profile.avatar.url }}" alt="Avatar"></div>
+        {% else %}
+        <div class="avatar-placeholder"><i class="fas fa-user"></i></div>
+        {% endif %}
+    </div>
+    <div class="profile-info">
+        <h1>{{ profile.first_name }} {{ profile.last_name }}</h1>
+        <p class="email">{{ user.email }}</p>
+        <span class="profile-role"><i class="fas fa-id-badge"></i> {{ user.user_type|title }}</span>
+        <div><a href="{% url 'accounts:profile_edit' %}" class="edit-link"><i class="fas fa-edit"></i> Edit Profile</a>
+        </div>
+    </div>
+</div>
+
+<div class="info-grid">
+    <div class="info-item">
+        <div class="info-label">Institution</div>
+        <div class="info-value">{{ profile.institution|default:"Not specified" }}</div>
+    </div>
+    <div class="info-item">
+        <div class="info-label">Research Interests</div>
+        <div class="info-value">{{ profile.research_interests|default:"Not specified" }}</div>
+    </div>
+    <div class="info-item">
+        <div class="info-label">Bio</div>
+        <div class="info-value">{{ profile.bio|default:"No bio provided" }}</div>
+    </div>
+    <div class="info-item">
+        <div class="info-label">Member Since</div>
+        <div class="info-value">{{ user.created_at|date:"F d, Y" }}</div>
+    </div>
+    {% if profile.orcid %}
+    <div class="info-item">
+        <div class="info-label">ORCID iD</div>
+        <div class="info-value">
+            <a href="https://orcid.org/{{ profile.orcid }}" target="_blank" style="color: var(--accent-color); text-decoration: none;">
+                <i class="fas fa-external-link-alt"></i> {{ profile.orcid }}
+            </a>
+        </div>
+    </div>
+    {% endif %}
+    {% if profile.h_index > 0 %}
+    <div class="info-item">
+        <div class="info-label">H-Index</div>
+        <div class="info-value">{{ profile.h_index }}</div>
+    </div>
+    {% endif %}
+    {% if profile.website %}
+    <div class="info-item">
+        <div class="info-label">Website</div>
+        <div class="info-value">
+            <a href="{{ profile.website }}" target="_blank" style="color: var(--accent-color); text-decoration: none;">
+                <i class="fas fa-globe"></i> Visit Website
+            </a>
+        </div>
+    </div>
+    {% endif %}
+    {% if profile.google_scholar %}
+    <div class="info-item">
+        <div class="info-label">Google Scholar</div>
+        <div class="info-value">
+            <a href="{{ profile.google_scholar }}" target="_blank" style="color: var(--accent-color); text-decoration: none;">
+                <i class="fas fa-graduation-cap"></i> View Profile
+            </a>
+        </div>
+    </div>
+    {% endif %}
+    {% if profile.research_gate %}
+    <div class="info-item">
+        <div class="info-label">ResearchGate</div>
+        <div class="info-value">
+            <a href="{{ profile.research_gate }}" target="_blank" style="color: var(--accent-color); text-decoration: none;">
+                <i class="fas fa-flask"></i> View Profile
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-number">{{ uploaded_papers }}</div>
+        <div class="stat-label">Papers</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ bookmarks_count }}</div>
+        <div class="stat-label">Bookmarks</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ ratings_count }}</div>
+        <div class="stat-label">Ratings</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ groups_count }}</div>
+        <div class="stat-label">Groups</div>
+    </div>
+</div>
+{% endblock %}

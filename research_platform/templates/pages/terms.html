@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}Terms & Conditions - Orravyn Research Platform{% endblock %}
+{% block meta_description %}Terms and Conditions governing the use of the Orravyn Research Platform.{% endblock %}
+
+{% block extra_css %}
+{% include 'pages/_legal_css.html' %}
+{% endblock %}
+
+{% block content %}
+<div class="legal-page">
+    <a href="{% url 'home' %}" class="legal-back"><i class="fas fa-arrow-left"></i> Back to Home</a>
+
+    <div class="legal-hero">
+        <div class="legal-hero-icon"><i class="fas fa-file-contract"></i></div>
+        <h1>Terms &amp; Conditions</h1>
+        <div class="legal-meta">
+            <span><i class="fas fa-calendar-alt"></i> Effective: August 4, 2025</span>
+            <span><i class="fas fa-tag"></i> Version 1.0</span>
+        </div>
+    </div>
+
+    <div class="legal-body">
+        <h2>1. Acceptance of Terms</h2>
+        <p>By accessing or using the Research Portal, you agree to comply with and be legally bound by these Terms and
+            Conditions. If you do not agree to any of these terms, you must not use the platform. Continued use of the
+            platform constitutes acceptance of the most recent version of these terms.</p>
+
+        <h2>2. Purpose of the Platform</h2>
+        <p>The Research Portal is a student-developed, open-source academic platform provided for non-commercial,
+            educational, and research collaboration purposes only. It is intended for students, researchers, educators,
+            and academic contributors to share and explore open-access research content.</p>
+
+        <h2>3. User Eligibility and Accounts</h2>
+        <p>Users must be at least 16 years old or have institutional permission to access and use the platform. By
+            creating an account, you confirm that the information you provide is accurate and that you are legally
+            permitted to use the platform under applicable laws. Users are responsible for maintaining the
+            confidentiality of their login credentials and for all activities under their account.</p>
+
+        <h2>4. Non-Commercial Use</h2>
+        <p>The platform and all its services are offered exclusively for non-commercial academic use. No content,
+            service, or feature of the Research Portal may be used for profit, resale, or advertising. Any attempt to
+            commercialize platform content or features is strictly prohibited.</p>
+
+        <h2>5. User Responsibilities</h2>
+        <p>You are responsible for all content you upload or share via the platform. This includes ensuring that you
+            have the legal right to upload such content and that it does not violate copyright, intellectual property
+            rights, academic ethics, or applicable law. Content must not include any offensive, harmful, plagiarized, or
+            misleading material.</p>
+
+        <h2>6. Content Licensing and Ownership</h2>
+        <p>All content hosted by the Research Portal is either (a) uploaded by users with appropriate rights or (b)
+            collected from open-access sources under licenses that permit redistribution. Users retain ownership of
+            their original uploads but grant the platform a non-exclusive, royalty-free license to store, display, and
+            distribute that content for academic purposes. The platform itself is released and maintained under the
+            Apache License 2.0.</p>
+
+        <h2>7. AI-Powered Features</h2>
+        <p>The platform includes optional AI-based features such as search optimization, document recommendations, and
+            usage analytics. By using the platform, users automatically provide consent for the collection and use of
+            anonymized usage data, as outlined in the Privacy Policy.</p>
+
+        <h2>8. Platform Availability and Modifications</h2>
+        <p>The platform is provided "as is" without warranties of any kind. The development team reserves the right to
+            modify, suspend, or discontinue any aspect of the service at any time without prior notice.</p>
+
+        <h2>9. Privacy and Data Use</h2>
+        <p>Your use of the platform is also governed by the Research Portal <a href="{% url 'privacy' %}">Privacy
+                Policy</a>, which outlines how personal data, research uploads, and usage information are collected,
+            processed, stored, and protected.</p>
+
+        <h2>10. Intellectual Property and Copyright</h2>
+        <p>You must not upload or share content that infringes upon the intellectual property rights of others. You
+            agree to indemnify the platform and its developers against any claim related to your violation of copyright
+            or intellectual property laws.</p>
+
+        <h2>11. Compliance with Laws</h2>
+        <p>You agree to use the platform in accordance with all applicable laws and regulations, including international
+            academic standards, the Digital Personal Data Protection Act (India), and the General Data Protection
+            Regulation (GDPR) where applicable.</p>
+
+        <h2>12. Termination of Use</h2>
+        <p>The platform reserves the right to suspend or terminate your account at its sole discretion, with or without
+            notice, in cases of suspected misuse, violation of these terms, or legal requirement.</p>
+
+        <h2>13. Limitation of Liability</h2>
+        <p>To the fullest extent permitted by law, the developers and maintainers of the Research Portal shall not be
+            liable for any direct, indirect, incidental, or consequential damages resulting from the use or inability to
+            use the platform or any of its features.</p>
+
+        <h2>14. Changes to the Terms</h2>
+        <p>These Terms and Conditions may be updated periodically. Any changes will be reflected on this page along with
+            a revised effective date. Continued use of the platform after such updates constitutes acceptance of the
+            revised terms.</p>
+
+        <h2>15. Contact Information</h2>
+        <p>For questions, feedback, or legal concerns, please contact: <a
+                href="mailto:seraphyl@orravyn.cloud">seraphyl@orravyn.cloud</a>. Expected response time is 48 to 72
+            hours.</p>
+    </div>
+</div>
+{% endblock %}

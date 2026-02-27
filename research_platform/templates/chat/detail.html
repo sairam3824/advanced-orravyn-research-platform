@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Chat Room - {{ paper.title }} - Research Platform{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card glossy-card">
+            <div class="card-header">
+                <h5>Discussion: {{ paper.title }}</h5>
+                <small class="text-muted">{{ messages.count }} messages</small>
+            </div>
+            <div class="card-body">
+                <div style="height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 15px;">
+                    {% for message in messages %}
+                        <div class="mb-3">
+                            {% if message.is_bot_message %}
+                                <strong class="text-primary">Research Bot</strong>
+                            {% else %}
+                                <strong>{{ message.user.username }}</strong>
+                            {% endif %}
+                            <small class="text-muted">{{ message.timestamp|date:"M d, H:i" }}</small>
+                            <div class="mt-1">{{ message.message }}</div>
+                        </div>
+                    {% empty %}
+                        <p class="text-muted">No messages yet.</p>
+                    {% endfor %}
+                </div>
+                
+                <div class="mt-3">
+                    <a href="{% url 'chat:paper_chat' paper.pk %}" class="btn btn-primary">
+                        Join Discussion
+                    </a>
+                    <a href="{% url 'papers:detail' paper.pk %}" class="btn btn-outline-secondary">
+                        Back to Paper
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

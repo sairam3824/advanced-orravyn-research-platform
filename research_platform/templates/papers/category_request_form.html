@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Request New Category - Research Platform{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card glossy-card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="fas fa-folder-plus me-2"></i>Request a New Category
+                </h4>
+            </div>
+            <div class="card-body">
+                <p class="text-secondary mb-4">
+                    Propose a new category for the platform. A moderator or admin will review your
+                    request. Once approved, the category will be available for all users.
+                </p>
+
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">
+                            Category Name <span class="text-danger">*</span>
+                        </label>
+                        {{ form.name }}
+                        {% if form.name.errors %}
+                            <div class="text-danger small mt-1">{{ form.name.errors|join:", " }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">
+                            Description <span class="text-danger">*</span>
+                        </label>
+                        {{ form.description }}
+                        <div class="form-text text-secondary">
+                            Briefly describe what kinds of papers would belong to this category.
+                        </div>
+                        {% if form.description.errors %}
+                            <div class="text-danger small mt-1">{{ form.description.errors|join:", " }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="{{ form.reason.id_for_label }}" class="form-label">
+                            Reason for Request <span class="text-danger">*</span>
+                        </label>
+                        {{ form.reason }}
+                        <div class="form-text text-secondary">
+                            Explain why this category is needed and how it benefits the research community.
+                        </div>
+                        {% if form.reason.errors %}
+                            <div class="text-danger small mt-1">{{ form.reason.errors|join:", " }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex gap-3">
+                        <button type="submit" class="feature-btn">
+                            <i class="fas fa-paper-plane"></i>Submit Request
+                        </button>
+                        <a href="{% url 'papers:categories' %}" class="feature-btn feature-btn-danger">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

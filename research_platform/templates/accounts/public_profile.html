@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+{% block title %}{{ profile_user.profile.full_name }} - Research Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-header {
+        display: flex;
+        gap: 2rem;
+        margin-bottom: 2rem;
+        align-items: flex-start;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .profile-avatar {
+        flex-shrink: 0;
+    }
+
+    .avatar-circle {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 3px solid rgba(37, 99, 235, 0.15);
+    }
+
+    .avatar-circle img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .avatar-placeholder {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: rgba(37, 99, 235, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        color: var(--accent-color);
+    }
+
+    .profile-info h1 {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.3rem;
+    }
+
+    .user-role {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        padding: 0.2rem 0.7rem;
+        border-radius: 50px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        background: rgba(37, 99, 235, 0.08);
+        color: var(--accent-color);
+        margin-bottom: 0.5rem;
+    }
+
+    .verified-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        padding: 0.2rem 0.6rem;
+        border-radius: 50px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+        margin-left: 0.5rem;
+    }
+
+    .profile-meta {
+        font-size: 0.88rem;
+        color: var(--text-secondary);
+        margin: 0.5rem 0;
+    }
+
+    .follow-btn {
+        padding: 0.5rem 1.5rem;
+        border: 1.5px solid var(--accent-color);
+        background: transparent;
+        color: var(--accent-color);
+        border-radius: 8px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+
+    .follow-btn:hover {
+        background: var(--accent-color);
+        color: #fff;
+    }
+
+    .follow-btn.following {
+        background: var(--accent-color);
+        color: #fff;
+    }
+
+    .follow-btn.following:hover {
+        background: #dc2626;
+        border-color: #dc2626;
+    }
+
+    .stats-bar {
+        display: flex;
+        gap: 2rem;
+        margin: 1.5rem 0;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .stats-bar span {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .info-section {
+        margin: 2rem 0;
+    }
+
+    .info-section h3 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.8rem;
+    }
+
+    .info-section p {
+        font-size: 0.92rem;
+        color: var(--text-secondary);
+        line-height: 1.6;
+    }
+
+    @media (max-width: 768px) {
+        .profile-header {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-header">
+    <div class="profile-avatar">
+        {% if profile_user.profile.avatar %}
+        <div class="avatar-circle"><img src="{{ profile_user.profile.avatar.url }}" alt="Avatar"></div>
+        {% else %}
+        <div class="avatar-placeholder"><i class="fas fa-user"></i></div>
+        {% endif %}
+    </div>
+    <div class="profile-info flex-grow-1">
+        <h1>
+            {{ profile_user.profile.full_name }}
+            {% if profile_user.profile.is_credentials_verified %}
+            <span class="verified-badge"><i class="fas fa-check-circle"></i> Verified</span>
+            {% endif %}
+        </h1>
+        <span class="user-role"><i class="fas fa-id-badge"></i> {{ profile_user.user_type|title }}</span>
+        <div class="profile-meta">
+            {% if profile_user.profile.institution %}
+            <i class="fas fa-university"></i> {{ profile_user.profile.institution }}
+            {% endif %}
+        </div>
+        <div class="stats-bar">
+            <span><i class="fas fa-users"></i> {{ followers_count }} followers</span>
+            <span><i class="fas fa-user-friends"></i> {{ following_count }} following</span>
+            {% if profile_user.user_type == 'publisher' %}
+            <span><i class="fas fa-file-alt"></i> {{ total_papers }} papers</span>
+            {% endif %}
+        </div>
+    </div>
+    {% if user.is_authenticated and user != profile_user %}
+    <div>
+        <button class="follow-btn {% if is_following %}following{% endif %}" 
+                data-user-id="{{ profile_user.id }}"
+                onclick="toggleFollow(this)">
+            <i class="fas fa-user-{% if is_following %}check{% else %}plus{% endif %}"></i>
+            <span>{% if is_following %}Following{% else %}Follow{% endif %}</span>
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+{% if profile_user.profile.bio %}
+<div class="info-section">
+    <h3>About</h3>
+    <p>{{ profile_user.profile.bio }}</p>
+</div>
+{% endif %}
+
+{% if profile_user.profile.research_interests %}
+<div class="info-section">
+    <h3>Research Interests</h3>
+    <p>{{ profile_user.profile.research_interests }}</p>
+</div>
+{% endif %}
+
+{% if profile_user.user_type == 'publisher' and papers %}
+<div class="info-section">
+    <h3>Recent Papers</h3>
+    {% for paper in papers %}
+    <div style="padding: 0.8rem 0; border-bottom: 1px solid rgba(0,0,0,0.06);">
+        <a href="{% url 'papers:detail' paper.pk %}" style="color: var(--accent-color); text-decoration: none; font-weight: 600;">
+            {{ paper.title }}
+        </a>
+        <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.3rem;">
+            {{ paper.publication_date|date:"Y" }}
+        </div>
+    </div>
+    {% endfor %}
+    {% if total_papers > 10 %}
+    <div style="margin-top: 1rem;">
+        <a href="{% url 'papers:list' %}?author={{ profile_user.profile.full_name }}" class="feature-btn">
+            View All Papers
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleFollow(btn) {
+    const userId = btn.dataset.userId;
+    const icon = btn.querySelector('i');
+    const text = btn.querySelector('span');
+    
+    fetch(`/accounts/follow/${userId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            if (data.action === 'followed') {
+                btn.classList.add('following');
+                icon.className = 'fas fa-user-check';
+                text.textContent = 'Following';
+            } else {
+                btn.classList.remove('following');
+                icon.className = 'fas fa-user-plus';
+                text.textContent = 'Follow';
+            }
+        }
+    })
+    .catch(err => console.error('Error:', err));
+}
+</script>
+{% endblock %}

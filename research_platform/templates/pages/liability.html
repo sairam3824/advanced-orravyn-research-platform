@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block title %}User Liability Agreement - Orravyn Research Platform{% endblock %}
+{% block meta_description %}User Liability Agreement for the Orravyn Research Platform.{% endblock %}
+{% block extra_css %}{% include 'pages/_legal_css.html' %}{% endblock %}
+
+{% block content %}
+<div class="legal-page">
+    <a href="{% url 'home' %}" class="legal-back"><i class="fas fa-arrow-left"></i> Back to Home</a>
+    <div class="legal-hero">
+        <div class="legal-hero-icon"><i class="fas fa-user-shield"></i></div>
+        <h1>User Liability Agreement</h1>
+        <div class="legal-meta">
+            <span><i class="fas fa-calendar-alt"></i> Effective: August 4, 2025</span>
+            <span><i class="fas fa-tag"></i> Version 1.0</span>
+        </div>
+    </div>
+    <div class="legal-body">
+        <h2>1. Introduction</h2>
+        <p>This User Liability Agreement ("Agreement") governs your responsibilities and liabilities as a user of the
+            Research Portal. By accessing or using the platform, you agree to be legally bound by the terms of this
+            Agreement.</p>
+
+        <h2>2. Scope and Purpose</h2>
+        <p>The Research Portal is an open-source, student-developed, non-commercial platform for academic research
+            sharing and collaboration. It is intended strictly for educational and research use.</p>
+
+        <h2>3. Accurate Information</h2>
+        <p>You agree to provide accurate, complete, and current information when registering for an account or uploading
+            content. You are solely responsible for maintaining the confidentiality of your credentials and for all
+            activity under your account.</p>
+
+        <h2>4. Content Upload Responsibility</h2>
+        <p>If you upload or share content, you acknowledge and affirm that:</p>
+        <ul>
+            <li>You own the content or have obtained explicit legal rights or licenses to distribute it</li>
+            <li>The content is accurate and does not misrepresent academic authorship</li>
+            <li>The content does not contain malicious code, copyright infringement, or unauthorized materials</li>
+            <li>You comply with the terms of any original license</li>
+        </ul>
+
+        <h2>5. Use of Platform Features</h2>
+        <p>You agree not to misuse the platform, including but not limited to:</p>
+        <ul>
+            <li>Attempting to reverse engineer or compromise the platform</li>
+            <li>Using automated systems (bots, scrapers) without authorization</li>
+            <li>Uploading content that promotes plagiarism or academic dishonesty</li>
+            <li>Bypassing any access controls or data protection mechanisms</li>
+        </ul>
+
+        <h2>6. Data and Privacy Obligations</h2>
+        <p>You agree to the use of your data as described in our <a href="{% url 'privacy' %}">Privacy Policy</a>. You
+            are responsible for protecting your own data and must not share personal information of others without
+            consent.</p>
+
+        <h2>7. No Commercial Use</h2>
+        <p>You agree not to use the platform or any of its content for commercial gain, resale, advertisement, or any
+            business activity.</p>
+
+        <h2>8. Indemnification</h2>
+        <p>You agree to indemnify and hold harmless the platform's developers and maintainers from any claims, damages,
+            liabilities, or legal expenses arising from your use of the platform.</p>
+
+        <h2>9. Disclaimer of Warranties</h2>
+        <p>The Research Portal is provided "as is" and "as available." The platform makes no guarantees regarding the
+            accuracy, availability, performance, or suitability of its services or content.</p>
+
+        <h2>10. Limitation of Liability</h2>
+        <p>To the maximum extent permitted by law, the platform's developers shall not be liable for any indirect,
+            incidental, special, or consequential damages arising from your use or inability to use the platform.</p>
+
+        <h2>11. Termination of Access</h2>
+        <p>The platform may suspend or permanently terminate your access without prior notice if you violate this
+            Agreement or applicable laws.</p>
+
+        <h2>12. Governing Law and Jurisdiction</h2>
+        <p>This Agreement shall be governed by the laws of India. Any disputes arising under this Agreement shall be
+            subject to the exclusive jurisdiction of the courts located in India.</p>
+
+        <h2>13. Contact Information</h2>
+        <p>For legal inquiries or content disputes, please contact: <a
+                href="mailto:sairam.maruri@gmail.com">sairam.maruri@gmail.com</a>.</p>
+    </div>
+</div>
+{% endblock %}

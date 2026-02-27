@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}Discussion - {{ paper.title }} - Research Platform{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        <div class="card glossy-card">
+            <div class="card-header">
+                <h6>Paper Information</h6>
+            </div>
+            <div class="card-body">
+                <h6><a href="{% url 'papers:detail' paper.pk %}">{{ paper.title|truncatechars:50 }}</a></h6>
+                <p><small><strong>Authors:</strong> {{ paper.authors }}</small></p>
+                <p><small><strong>Published:</strong> {{ paper.publication_date|date:"Y" }}</small></p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card glossy-card">
+            <div class="card-header">
+                <h5>Discussion Room ({{ messages.count }} messages)</h5>
+            </div>
+            <div class="card-body">
+                <div id="chat-messages" style="height: 400px; overflow-y: auto; border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; background-color: #f8f9fa;">
+                    {% for message in messages %}
+                        <div class="mb-3">
+                            <div class="d-flex align-items-start">
+                                {% if message.is_bot_message %}
+                                    <div class="me-2">
+                                        <i class="fas fa-robot text-primary"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <strong class="text-primary">Research Bot</strong>
+                                        <small class="text-muted ms-2">{{ message.timestamp|date:"M d, H:i" }}</small>
+                                        <div class="alert alert-info py-2 px-3 mt-1">
+                                            {{ message.message }}
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div class="me-2">
+                                        <i class="fas fa-user text-secondary"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <strong>{{ message.user.username }}</strong>
+                                        <small class="text-muted ms-2">{{ message.timestamp|date:"M d, H:i" }}</small>
+                                        <div class="bg-white border rounded p-2 mt-1">
+                                            {{ message.message }}
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="text-center text-muted">
+                            <i class="fas fa-comments fa-2x mb-2"></i>
+                            <p>No messages yet. Start the discussion!</p>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <form method="post" action="">
+                    {% csrf_token %}
+                    <div class="input-group">
+                        <input type="text" name="message" class="form-control" 
+                               placeholder="Type your message..." required maxlength="1000">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fas fa-paper-plane"></i> Send
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="mt-2">
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle"></i> 
+                        Tip: Start your message with "@bot" to ask the research assistant about this paper.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-scroll to bottom on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const messagesContainer = document.getElementById('chat-messages');
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+});
+</script>
+{% endblock %}

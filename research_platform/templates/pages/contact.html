@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}Contact Us - Orravyn Research Platform{% endblock %}
+{% block meta_description %}Get in touch with the Orravyn Research Platform team for support, inquiries, or feedback.{% endblock %}
+{% block extra_css %}{% include 'pages/_legal_css.html' %}{% endblock %}
+
+{% block content %}
+<div class="legal-page">
+    <a href="{% url 'home' %}" class="legal-back"><i class="fas fa-arrow-left"></i> Back to Home</a>
+    <div class="legal-hero">
+        <div class="legal-hero-icon"><i class="fas fa-headset"></i></div>
+        <h1>Contact Us</h1>
+        <div class="legal-meta">
+            <span>We typically respond within 48 hours</span>
+        </div>
+    </div>
+    <div class="legal-body">
+        <h2>Get in Touch</h2>
+        <p>For all general inquiries, support requests, legal concerns, or platform-related feedback, please reach out
+            to us using the contact details below.</p>
+
+        <div class="about-grid" style="margin-top: 1.5rem;">
+            <div class="about-card">
+                <div class="card-icon"><i class="fas fa-envelope"></i></div>
+                <h3>Email Support</h3>
+                <p><a href="mailto:sairam.maruri@gmail.com"
+                        style="color: var(--accent-color);">sairam.maruri@gmail.com</a></p>
+            </div>
+            <div class="about-card">
+                <div class="card-icon"><i class="fab fa-github"></i></div>
+                <h3>GitHub Issues</h3>
+                <p><a href="https://github.com/sairam3824" target="_blank" style="color: var(--accent-color);">Report
+                        bugs or request features</a></p>
+            </div>
+            <div class="about-card">
+                <div class="card-icon"><i class="fas fa-clock"></i></div>
+                <h3>Response Time</h3>
+                <p>We aim to respond to all inquiries within 48 to 72 hours.</p>
+            </div>
+        </div>
+
+        <h2>Reporting Content Issues</h2>
+        <p>If your content has been plagiarised or misused on this platform, or if you believe any content violates your
+            intellectual property rights, please email us immediately with relevant details. We take copyright and
+            academic integrity seriously and will act promptly to review and resolve your report.</p>
+
+        <h2>DMCA &amp; Legal Notices</h2>
+        <p>For DMCA takedown requests, legal inquiries, or content disputes, please email <a
+                href="mailto:sairam.maruri@gmail.com">sairam.maruri@gmail.com</a> with the subject line "Legal Notice"
+            for
+            expedited processing.</p>
+    </div>
+</div>
+{% endblock %}

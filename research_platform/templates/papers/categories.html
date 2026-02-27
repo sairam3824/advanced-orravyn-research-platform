@@ -1,0 +1,231 @@
+{% extends 'base.html' %}
+{% block title %}Categories - Orravyn Research Platform{% endblock %}
+{% block meta_description %}Browse research categories on the Orravyn Research Platform.{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+    }
+
+    .page-header h1 {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .search-container input {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 2.75rem;
+        border: 1.5px solid rgba(0, 0, 0, 0.1);
+        border-radius: 25px;
+        font-size: 0.95rem;
+        outline: none;
+        transition: all 0.2s ease;
+    }
+
+    .search-container input:focus {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .categories-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+        gap: clamp(1rem, 2vw, 1.5rem);
+    }
+
+    .cat-card {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 1.5rem 0;
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        text-decoration: none;
+        color: var(--text-primary);
+        transition: all 0.3s ease;
+        min-height: 160px;
+        position: relative;
+    }
+
+    .cat-card::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: var(--primary-gradient);
+        transition: width 0.3s ease;
+    }
+
+    .cat-card:hover::after {
+        width: 100%;
+    }
+
+    .cat-card:hover {
+        transform: translateY(-3px) scale(1.02);
+        color: var(--text-primary);
+    }
+
+    .cat-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: rgba(37, 99, 235, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        color: var(--accent-color);
+        margin-bottom: 1rem;
+    }
+
+    .cat-name {
+        font-size: 0.95rem;
+        font-weight: 600;
+        line-height: 1.4;
+        margin-bottom: 0.2rem;
+    }
+
+    .cat-count {
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+    }
+
+    .cat-arrow {
+        color: var(--accent-color);
+        font-size: 0.85rem;
+        margin-top: 0.75rem;
+        opacity: 0.4;
+        transition: all 0.25s ease;
+    }
+
+    .cat-card:hover .cat-arrow {
+        opacity: 1;
+        transform: translateX(3px);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1.5rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state i {
+        font-size: 2.5rem;
+        opacity: 0.2;
+        margin-bottom: 1rem;
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Research Categories</h1>
+    {% if user.is_authenticated and user.user_type != 'reader' %}
+    <a href="{% url 'papers:request_category' %}" class="feature-btn">
+        <i class="fas fa-folder-plus"></i> Request Category
+    </a>
+    {% endif %}
+</div>
+
+<!-- Live Search Bar -->
+<div class="search-container" style="margin-bottom: 2rem;">
+    <div style="position: relative; max-width: 500px;">
+        <input 
+            type="text" 
+            id="categorySearch" 
+            placeholder="Search categories..." 
+            style="width: 100%; padding: 0.75rem 1rem 0.75rem 2.75rem; border: 1.5px solid rgba(0,0,0,0.1); border-radius: 25px; font-size: 0.95rem; outline: none; transition: all 0.2s ease;"
+        >
+        <i class="fas fa-search" style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: 0.9rem;"></i>
+        <div id="searchSpinner" style="display: none; position: absolute; right: 1rem; top: 50%; transform: translateY(-50%);">
+            <i class="fas fa-spinner fa-spin" style="color: var(--accent-color);"></i>
+        </div>
+    </div>
+</div>
+
+<div id="categoriesContainer">
+{% if categories %}
+<div class="categories-grid">
+    {% for category in categories %}
+    <a href="{% url 'papers:category_detail' category.pk %}" class="cat-card">
+        <div>
+            <div class="cat-icon"><i class="fas fa-folder"></i></div>
+            <div class="cat-name">{{ category.name }}</div>
+            <div class="cat-count">{{ category.paper_set.count }} paper{{ category.paper_set.count|pluralize }}</div>
+        </div>
+        <div class="cat-arrow"><i class="fas fa-arrow-right"></i></div>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <i class="fas fa-tags"></i>
+    <p>No categories available yet.</p>
+</div>
+{% endif %}
+</div>
+
+<script>
+let searchTimeout;
+const searchInput = document.getElementById('categorySearch');
+const spinner = document.getElementById('searchSpinner');
+const container = document.getElementById('categoriesContainer');
+
+searchInput.addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    const query = this.value.trim();
+    
+    spinner.style.display = 'block';
+    
+    searchTimeout = setTimeout(() => {
+        fetch(`/papers/categories/search/?q=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                spinner.style.display = 'none';
+                renderCategories(data.categories);
+            })
+            .catch(error => {
+                console.error('Search error:', error);
+                spinner.style.display = 'none';
+            });
+    }, 300);
+});
+
+function renderCategories(categories) {
+    if (categories.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-search"></i>
+                <p>No categories found matching your search.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '<div class="categories-grid">';
+    categories.forEach(cat => {
+        html += `
+            <a href="${cat.url}" class="cat-card">
+                <div>
+                    <div class="cat-icon"><i class="fas fa-folder"></i></div>
+                    <div class="cat-name">${cat.name}</div>
+                    <div class="cat-count">${cat.paper_count} paper${cat.paper_count !== 1 ? 's' : ''}</div>
+                </div>
+                <div class="cat-arrow"><i class="fas fa-arrow-right"></i></div>
+            </a>
+        `;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+}
+</script>
+{% endblock %}

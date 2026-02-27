@@ -1,0 +1,313 @@
+{% extends 'base.html' %}
+{% block title %}Collaboration Network - Research Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        margin-bottom: 2rem;
+    }
+
+    .page-header h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .network-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: transparent;
+        border: none;
+        border-bottom: 2px solid rgba(0, 0, 0, 0.06);
+        padding: 1.5rem 0;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-3px);
+        border-bottom-color: var(--accent-color);
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        background: rgba(37, 99, 235, 0.1);
+        color: var(--accent-color);
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 900;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1;
+        margin-bottom: 0.3rem;
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .collaborator-card {
+        background: transparent;
+        border: none;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        padding: 1.5rem 0;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .collaborator-card::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 3px;
+        height: 100%;
+        background: var(--primary-gradient);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .collaborator-card:hover {
+        transform: translateX(8px);
+    }
+
+    .collaborator-card:hover::before {
+        opacity: 1;
+    }
+
+    .collaborator-header {
+        display: flex;
+        gap: 1.5rem;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .collaborator-avatar {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background: rgba(37, 99, 235, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: var(--accent-color);
+        flex-shrink: 0;
+    }
+
+    .collaborator-info {
+        flex-grow: 1;
+    }
+
+    .collaborator-name {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.3rem;
+    }
+
+    .collaborator-name a {
+        color: inherit;
+        text-decoration: none;
+        transition: color 0.25s ease;
+    }
+
+    .collaborator-name a:hover {
+        color: var(--accent-color);
+    }
+
+    .collaborator-meta {
+        display: flex;
+        gap: 1.5rem;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .collaborator-meta span {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .strength-bar {
+        width: 100%;
+        height: 8px;
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 50px;
+        overflow: hidden;
+        margin-top: 0.5rem;
+    }
+
+    .strength-fill {
+        height: 100%;
+        background: var(--primary-gradient);
+        border-radius: 50px;
+        transition: width 0.5s ease;
+    }
+
+    .shared-papers {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .shared-papers-title {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin-bottom: 0.5rem;
+    }
+
+    .paper-link {
+        font-size: 0.85rem;
+        color: var(--accent-color);
+        text-decoration: none;
+        display: block;
+        margin-bottom: 0.3rem;
+    }
+
+    .paper-link:hover {
+        text-decoration: underline;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1.5rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state i {
+        font-size: 2.5rem;
+        opacity: 0.2;
+        margin-bottom: 1rem;
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Collaboration Network</h1>
+    <p style="color: var(--text-secondary);">Discover your research collaborators and shared work</p>
+</div>
+
+<div style="background: rgba(37, 99, 235, 0.05); border: 1px solid rgba(37, 99, 235, 0.1); border-radius: 12px; padding: 1rem 1.25rem; margin-bottom: 2rem;">
+    <div style="display: flex; align-items: start; gap: 0.75rem;">
+        <i class="fas fa-info-circle" style="color: var(--accent-color); font-size: 1.2rem; margin-top: 0.1rem;"></i>
+        <div style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6;">
+            <strong style="color: var(--text-primary);">Understanding Your Network:</strong><br>
+            <strong>Collaborators</strong> = Researchers you work with on projects, groups, or co-authored papers<br>
+            <strong>Collaborations</strong> = Number of joint activities (projects, papers, groups)<br>
+            <strong>Shared Papers</strong> = Papers you've worked on together with collaborators<br>
+            <strong>Social Shares</strong> = Times you've shared papers on social media (Twitter, LinkedIn, etc.)
+        </div>
+    </div>
+</div>
+
+<div class="network-stats">
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-value">{{ total_collaborators }}</div>
+        <div class="stat-label">Collaborators</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-handshake"></i>
+        </div>
+        <div class="stat-value">{{ total_collaborations }}</div>
+        <div class="stat-label">Collaborations</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-file-alt"></i>
+        </div>
+        <div class="stat-value">{{ shared_papers_count }}</div>
+        <div class="stat-label">Shared Papers</div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon">
+            <i class="fas fa-share-alt"></i>
+        </div>
+        <div class="stat-value">{{ total_social_shares }}</div>
+        <div class="stat-label">Social Shares</div>
+    </div>
+</div>
+
+<div class="collaborators-list">
+    {% for collab in collaborations %}
+    <div class="collaborator-card">
+        <div class="collaborator-header">
+            <div class="collaborator-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="collaborator-info">
+                <div class="collaborator-name">
+                    <a href="{% url 'accounts:user_profile' collab.collaborator.pk %}">
+                        {{ collab.collaborator.username }}
+                    </a>
+                </div>
+                <div class="collaborator-meta">
+                    <span><i class="fas fa-handshake"></i> {{ collab.collaboration_count }} collaboration{{ collab.collaboration_count|pluralize }}</span>
+                    <span><i class="fas fa-chart-line"></i> Strength: {{ collab.strength_score|floatformat:1 }}</span>
+                    {% if collab.last_collaboration %}
+                    <span><i class="fas fa-clock"></i> Last: {{ collab.last_collaboration|timesince }} ago</span>
+                    {% endif %}
+                </div>
+                <div class="strength-bar">
+                    <div class="strength-fill" style="width: {{ collab.strength_score }}%;"></div>
+                </div>
+            </div>
+        </div>
+        
+        {% if collab.shared_papers.all %}
+        <div class="shared-papers">
+            <div class="shared-papers-title">Shared Papers:</div>
+            {% for paper in collab.shared_papers.all|slice:":3" %}
+            <a href="{% url 'papers:detail' paper.pk %}" class="paper-link">
+                <i class="fas fa-file-alt"></i> {{ paper.title|truncatewords:15 }}
+            </a>
+            {% endfor %}
+            {% if collab.shared_papers.count > 3 %}
+            <span style="font-size: 0.8rem; color: var(--text-secondary);">
+                +{{ collab.shared_papers.count|add:"-3" }} more
+            </span>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <i class="fas fa-users"></i>
+        <p>No collaborations found yet.</p>
+        <p style="font-size: 0.9rem; margin-top: 0.5rem;">
+            Collaborate with other researchers by working on shared papers, joining groups, or co-authoring research.
+        </p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

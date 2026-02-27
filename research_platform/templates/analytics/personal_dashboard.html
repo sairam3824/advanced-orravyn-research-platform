@@ -1,0 +1,318 @@
+{% extends 'base.html' %}
+{% block title %}Research Dashboard - Research Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-header {
+        margin-bottom: 2rem;
+    }
+
+    .dashboard-header h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: transparent;
+        border: none;
+        border-bottom: 2px solid rgba(0, 0, 0, 0.06);
+        padding: 1.5rem 0;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-3px);
+        border-bottom-color: var(--accent-color);
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .stat-icon.blue { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+    .stat-icon.green { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+    .stat-icon.purple { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+    .stat-icon.orange { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 900;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1;
+        margin-bottom: 0.3rem;
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .section-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 2rem 0 1rem;
+    }
+
+    .activity-item {
+        background: transparent;
+        border: none;
+        border-left: 3px solid transparent;
+        padding: 1rem 0 1rem 1rem;
+        margin-bottom: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .activity-item:hover {
+        border-left-color: var(--accent-color);
+        transform: translateX(5px);
+    }
+
+    .activity-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.2rem;
+    }
+
+    .activity-meta {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+
+    .trending-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.8rem 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .trending-name {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .trending-score {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--accent-color);
+    }
+
+    .collaborator-item {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        padding: 0.8rem 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .collaborator-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(37, 99, 235, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        color: var(--accent-color);
+    }
+
+    .collaborator-info {
+        flex-grow: 1;
+    }
+
+    .collaborator-name {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .collaborator-score {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <h1>Research Dashboard</h1>
+    <p style="color: var(--text-secondary);">Track your research activity and impact</p>
+</div>
+
+<div class="dashboard-grid">
+    <div class="stat-card">
+        <div class="stat-icon blue">
+            <i class="fas fa-book-open"></i>
+        </div>
+        <div class="stat-value">{{ reading_stats.total_papers_read }}</div>
+        <div class="stat-label">Papers Read</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon green">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-value">{{ reading_stats.papers_completed }}</div>
+        <div class="stat-label">Completed</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon purple">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-value">{{ reading_stats.total_reading_time_minutes }}</div>
+        <div class="stat-label">Minutes Reading</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon orange">
+            <i class="fas fa-fire"></i>
+        </div>
+        <div class="stat-value">{{ reading_stats.reading_streak_days }}</div>
+        <div class="stat-label">Day Streak</div>
+    </div>
+</div>
+
+{% if user.user_type == 'publisher' %}
+<div class="dashboard-grid">
+    <div class="stat-card">
+        <div class="stat-icon blue">
+            <i class="fas fa-file-alt"></i>
+        </div>
+        <div class="stat-value">{{ uploaded_papers_count }}</div>
+        <div class="stat-label">Papers Published</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon green">
+            <i class="fas fa-eye"></i>
+        </div>
+        <div class="stat-value">{{ total_views }}</div>
+        <div class="stat-label">Total Views</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon purple">
+            <i class="fas fa-download"></i>
+        </div>
+        <div class="stat-value">{{ total_downloads }}</div>
+        <div class="stat-label">Downloads</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon orange">
+            <i class="fas fa-quote-right"></i>
+        </div>
+        <div class="stat-value">{{ total_citations }}</div>
+        <div class="stat-label">Citations</div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row">
+    <div class="col-md-6">
+        <h2 class="section-title">Recent Reading</h2>
+        {% for progress in recent_reading %}
+        <div class="activity-item">
+            <div class="activity-title">
+                <a href="{% url 'papers:detail' progress.paper.pk %}" style="color: inherit; text-decoration: none;">
+                    {{ progress.paper.title|truncatewords:10 }}
+                </a>
+            </div>
+            <div class="activity-meta">
+                {{ progress.progress_percentage|floatformat:0 }}% complete • {{ progress.updated_at|timesince }} ago
+            </div>
+        </div>
+        {% empty %}
+        <p style="color: var(--text-secondary);">No reading activity yet.</p>
+        {% endfor %}
+    </div>
+
+    <div class="col-md-6">
+        <h2 class="section-title">Recent Bookmarks</h2>
+        {% for bookmark in recent_bookmarks %}
+        <div class="activity-item">
+            <div class="activity-title">
+                <a href="{% url 'papers:detail' bookmark.paper.pk %}" style="color: inherit; text-decoration: none;">
+                    {{ bookmark.paper.title|truncatewords:10 }}
+                </a>
+            </div>
+            <div class="activity-meta">
+                {{ bookmark.created_at|timesince }} ago
+            </div>
+        </div>
+        {% empty %}
+        <p style="color: var(--text-secondary);">No bookmarks yet.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="row" style="margin-top: 2rem;">
+    <div class="col-md-6">
+        <h2 class="section-title">Trending Topics</h2>
+        {% for topic in trending_topics %}
+        <div class="trending-item">
+            <div class="trending-name">{{ topic.name }}</div>
+            <div class="trending-score">{{ topic.trend_score|floatformat:0 }}</div>
+        </div>
+        {% empty %}
+        <p style="color: var(--text-secondary);">No trending topics available.</p>
+        {% endfor %}
+        <a href="{% url 'analytics:trending_topics' %}" style="font-size: 0.85rem; color: var(--accent-color); margin-top: 1rem; display: inline-block;">
+            View All Trending Topics →
+        </a>
+    </div>
+
+    <div class="col-md-6">
+        <h2 class="section-title">Collaboration Network</h2>
+        {% for collab in collaborators %}
+        <div class="collaborator-item">
+            <div class="collaborator-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="collaborator-info">
+                <div class="collaborator-name">
+                    <a href="{% url 'accounts:user_profile' collab.collaborator.pk %}" style="color: inherit; text-decoration: none;">
+                        {{ collab.collaborator.username }}
+                    </a>
+                </div>
+                <div class="collaborator-score">
+                    {{ collab.collaboration_count }} collaborations • Strength: {{ collab.strength_score|floatformat:1 }}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <p style="color: var(--text-secondary);">No collaborations yet.</p>
+        {% endfor %}
+        <a href="{% url 'analytics:collaboration_network' %}" style="font-size: 0.85rem; color: var(--accent-color); margin-top: 1rem; display: inline-block;">
+            View Full Network →
+        </a>
+    </div>
+</div>
+{% endblock %}

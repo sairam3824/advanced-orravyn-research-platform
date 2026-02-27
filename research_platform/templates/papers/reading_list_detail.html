@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% block title %}{{ reading_list.name }} - Research Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .list-header {
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .list-header h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .list-meta {
+        display: flex;
+        gap: 1.5rem;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+    }
+
+    .list-meta span {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .list-description {
+        font-size: 0.95rem;
+        color: var(--text-secondary);
+        line-height: 1.6;
+    }
+
+    .paper-item {
+        background: transparent;
+        border: none;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        padding: 1.25rem 0;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .paper-item::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 3px;
+        height: 100%;
+        background: var(--primary-gradient);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .paper-item:hover {
+        transform: translateX(8px);
+    }
+
+    .paper-item:hover::before {
+        opacity: 1;
+    }
+
+    .paper-title {
+        font-size: 1.05rem;
+        font-weight: 600;
+        margin-bottom: 0.3rem;
+    }
+
+    .paper-title a {
+        color: var(--accent-color);
+        text-decoration: none;
+    }
+
+    .paper-title a:hover {
+        color: #1d4ed8;
+    }
+
+    .paper-meta {
+        font-size: 0.82rem;
+        color: var(--text-secondary);
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1.5rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state i {
+        font-size: 2.5rem;
+        opacity: 0.2;
+        margin-bottom: 1rem;
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="list-header">
+    <h1>{{ reading_list.name }}</h1>
+    <div class="list-meta">
+        <span><i class="fas fa-user"></i> {{ reading_list.owner.username }}</span>
+        <span><i class="fas fa-file-alt"></i> {{ reading_list.papers.count }} papers</span>
+        <span><i class="fas fa-calendar"></i> Updated {{ reading_list.updated_at|timesince }} ago</span>
+        {% if reading_list.is_public %}
+        <span><i class="fas fa-globe"></i> Public</span>
+        {% else %}
+        <span><i class="fas fa-lock"></i> Private</span>
+        {% endif %}
+    </div>
+    {% if reading_list.description %}
+    <p class="list-description">{{ reading_list.description }}</p>
+    {% endif %}
+</div>
+
+<div class="papers-list">
+    {% for item in reading_list.readinglistpaper_set.all %}
+    <div class="paper-item">
+        <div class="paper-title">
+            <a href="{% url 'papers:detail' item.paper.pk %}">{{ item.paper.title }}</a>
+        </div>
+        <div class="paper-meta">
+            <span><i class="fas fa-user"></i> {{ item.paper.authors }}</span>
+            <span><i class="fas fa-calendar-alt"></i> {{ item.paper.publication_date|date:"Y" }}</span>
+            <span><i class="fas fa-clock"></i> Added {{ item.added_at|timesince }} ago</span>
+        </div>
+        {% if item.notes %}
+        <p style="font-size: 0.88rem; color: var(--text-secondary); margin-top: 0.5rem;">
+            <strong>Notes:</strong> {{ item.notes }}
+        </p>
+        {% endif %}
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <i class="fas fa-file-alt"></i>
+        <p>No papers in this list yet.</p>
+        <a href="{% url 'papers:list' %}" class="feature-btn">Browse Papers</a>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

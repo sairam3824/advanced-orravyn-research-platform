@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block title %}FAQ - Orravyn Research Platform{% endblock %}
+{% block meta_description %}Frequently Asked Questions about the Orravyn Research Platform.{% endblock %}
+{% block extra_css %}{% include 'pages/_legal_css.html' %}{% endblock %}
+
+{% block content %}
+<div class="legal-page">
+    <a href="{% url 'home' %}" class="legal-back"><i class="fas fa-arrow-left"></i> Back to Home</a>
+    <div class="legal-hero">
+        <div class="legal-hero-icon"><i class="fas fa-question-circle"></i></div>
+        <h1>Frequently Asked Questions</h1>
+        <div class="legal-meta">
+            <span>Common questions about the platform</span>
+        </div>
+    </div>
+
+    <div style="margin-top: 0.5rem;">
+        <div class="faq-item">
+            <details>
+                <summary>Who owns the research I upload?</summary>
+                <div class="faq-answer">You do. Users retain full ownership and control of the content they upload. By
+                    uploading, you grant the platform a non-exclusive license simply to store, display, and distribute
+                    the content for academic purposes on the Research Portal.</div>
+            </details>
+        </div>
+
+        <div class="faq-item">
+            <details>
+                <summary>Is my personal data sold for advertising?</summary>
+                <div class="faq-answer">No, never. The platform is strictly non-commercial. No personal data is
+                    exploited for commercial gain or advertising. We do not include any third-party trackers or
+                    advertising integrations.</div>
+            </details>
+        </div>
+
+        <div class="faq-item">
+            <details>
+                <summary>Can I delete my account and data?</summary>
+                <div class="faq-answer">Yes. You can request to delete your account, personal information, and any
+                    individual documents you have uploaded. Upon your request, the platform developers will proceed with
+                    the deletion of your data.</div>
+            </details>
+        </div>
+
+        <div class="faq-item">
+            <details>
+                <summary>Can I use the platform for commercial purposes?</summary>
+                <div class="faq-answer">No. The Research Portal and all of its content are intended solely for
+                    non-commercial academic use. Any use for profit, resale, or business activity is strictly
+                    prohibited.</div>
+            </details>
+        </div>
+
+        <div class="faq-item">
+            <details>
+                <summary>Is my data shared with third parties?</summary>
+                <div class="faq-answer">No. Your data is not shared with any third-party services without your explicit
+                    consent. The platform only uses essential third-party tools for infrastructure support and does not
+                    include any third-party trackers or advertising integrations.</div>
+            </details>
+        </div>
+
+        <div class="faq-item">
+            <details>
+                <summary>What kind of content can I upload?</summary>
+                <div class="faq-answer">You are responsible for uploading only content that you own or have the explicit
+                    legal right to share. The content must not violate copyright, contain malicious code, or
+                    misrepresent academic authorship.</div>
+            </details>
+        </div>
+
+        <div class="faq-item">
+            <details>
+                <summary>What technologies power this platform?</summary>
+                <div class="faq-answer">The platform is built using Django, Django REST Framework, PyTorch, TensorFlow,
+                    Sentence-Transformers, Elasticsearch, and more. The entire codebase is open-source under the Apache
+                    License 2.0. Visit our <a href="{% url 'opensource' %}" style="color: var(--accent-color);">Open
+                        Source</a> page for full details.</div>
+            </details>
+        </div>
+
+        <div class="faq-item">
+            <details>
+                <summary>How do I report plagiarised or misused content?</summary>
+                <div class="faq-answer">Please email <a href="mailto:sairam.maruri@gmail.com"
+                        style="color: var(--accent-color);">sairam.maruri@gmail.com</a> with details about the content
+                    in
+                    question. We aim to review and respond to all reports within 72 hours.</div>
+            </details>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,981 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - Orravyn Research Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        position: relative;
+        overflow: hidden;
+        border-radius: 0;
+        margin-bottom: clamp(2rem, 5vw, 4rem);
+        padding: clamp(2.5rem, 6vw, 6rem) clamp(1rem, 5vw, 3rem) clamp(2rem, 5vw, 4.5rem);
+        text-align: center;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+    }
+
+    /* Background gradient removed */
+
+    .hero-content {
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Orbit logo */
+    .hero-logo {
+        width: 72px;
+        height: 72px;
+        margin: 0 auto 1.5rem;
+        position: relative;
+    }
+
+    .hero-logo .orbit-ring {
+        position: absolute;
+        width: 72px;
+        height: 72px;
+        border: 1.5px solid rgba(37, 99, 235, 0.15);
+        border-radius: 50%;
+        animation: spin 10s linear infinite;
+    }
+
+    .hero-logo .orbit-dot {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background: var(--accent-color);
+        border-radius: 50%;
+        top: -5px;
+        left: 50%;
+        transform: translateX(-50%);
+        box-shadow: 0 0 10px rgba(37, 99, 235, 0.4);
+    }
+
+    .hero-logo .center-icon {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: rgba(37, 99, 235, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        color: var(--accent-color);
+    }
+
+    @keyframes spin {
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .hero-brand {
+        font-size: clamp(2rem, 8vw, 3.8rem);
+        font-weight: 800;
+        letter-spacing: -1px;
+        margin-bottom: 1.5rem;
+        color: var(--text-primary);
+    }
+
+    .hero-brand .accent {
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    /* Search bar */
+    .hero-search {
+        max-width: 620px;
+        margin: 0 auto 1.5rem;
+        display: flex;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.95);
+        border: 1.5px solid rgba(0, 0, 0, 0.08);
+        border-radius: 16px;
+        padding: 0.35rem 0.35rem 0.35rem 1.25rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+    }
+
+    .hero-search:focus-within {
+        border-color: var(--accent-color);
+        box-shadow: 0 4px 24px rgba(37, 99, 235, 0.12);
+    }
+
+    .hero-search input {
+        flex: 1;
+        border: none;
+        outline: none;
+        font-size: 1rem;
+        color: var(--text-primary);
+        background: transparent;
+        padding: 0.6rem 0;
+    }
+
+    .hero-search input::placeholder {
+        color: #94a3b8;
+    }
+
+    .hero-search .search-icon {
+        color: #94a3b8;
+        margin-right: 0.75rem;
+        font-size: 0.95rem;
+    }
+
+    .hero-search-btn {
+        padding: 0.65rem 1.5rem;
+        background: transparent;
+        color: var(--accent-color);
+        border: none;
+        border-radius: 0;
+        font-weight: 600;
+        font-size: 0.92rem;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        position: relative;
+    }
+
+    .hero-search-btn::after {
+        content: '';
+        position: absolute;
+        bottom: 0.5rem;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 2px;
+        background: var(--primary-gradient);
+        transition: width 0.3s ease;
+    }
+
+    .hero-search-btn:hover::after {
+        width: 80%;
+    }
+
+    .hero-search-btn:hover {
+        color: #1d4ed8;
+        transform: translateY(-1px);
+    }
+
+    .hero-tagline {
+        font-size: 0.95rem;
+        color: var(--text-secondary);
+        margin-bottom: 1.5rem;
+        line-height: 1.6;
+    }
+
+    /* Feature badges */
+    .hero-badges {
+        display: flex;
+        gap: 1.5rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-bottom: 2rem;
+    }
+
+    .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.84rem;
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+
+    .hero-badge i {
+        color: var(--accent-color);
+        font-size: 0.85rem;
+    }
+
+    /* CTA buttons */
+    .hero-cta-group {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-bottom: 0.5rem;
+    }
+
+    .hero-cta {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.7rem 1.6rem;
+        background: transparent;
+        color: var(--accent-color);
+        font-weight: 600;
+        font-size: 0.92rem;
+        border-radius: 0;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border: none;
+        box-shadow: none;
+        position: relative;
+    }
+
+    .hero-cta::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: var(--primary-gradient);
+        transition: width 0.3s ease;
+    }
+
+    .hero-cta:hover::after {
+        width: 100%;
+    }
+
+    .hero-cta:hover {
+        transform: translateY(-2px);
+        color: var(--accent-color);
+    }
+
+    .hero-cta-secondary {
+        background: transparent;
+        color: var(--accent-color);
+        border: none;
+        box-shadow: none;
+    }
+
+    .hero-cta-secondary:hover {
+        background: transparent;
+        color: var(--accent-color);
+    }
+
+    /* Stats */
+    .stats-bar {
+        display: flex;
+        justify-content: center;
+        gap: 0;
+        margin-top: 2.5rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--glass-border);
+    }
+
+    .stat-item {
+        flex: 1;
+        text-align: center;
+        padding: 0 1.5rem;
+        max-width: 160px;
+        transition: transform 0.3s ease;
+        cursor: default;
+    }
+
+    .stat-item:hover {
+        transform: scale(1.1);
+    }
+
+    .stat-item+.stat-item {
+        border-left: 1px solid var(--glass-border);
+    }
+
+    .stat-number {
+        font-size: clamp(1.5rem, 5vw, 2.2rem);
+        font-weight: 800;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1;
+        margin-bottom: 0.3rem;
+        transition: transform 0.3s ease;
+    }
+
+    .stat-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+    }
+
+    /* ── Section headers ───────────────────────────── */
+    .section-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.25rem;
+    }
+
+    .section-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .section-title i {
+        color: var(--accent-color);
+        font-size: 1.1rem;
+    }
+
+    .section-link {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        transition: all 0.25s ease;
+    }
+
+    .section-link:hover {
+        gap: 0.5rem;
+        color: #1d4ed8;
+    }
+
+    /* ── Feature cards ─────────────────────────────── */
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+        gap: clamp(1.25rem, 3vw, 2rem);
+        margin-bottom: clamp(2.5rem, 6vw, 4rem);
+    }
+
+    .feature-card {
+        background: transparent;
+        backdrop-filter: none;
+        border: none;
+        border-radius: 0;
+        padding: 1.75rem 0;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .feature-card::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: var(--primary-gradient);
+        transition: width 0.3s ease;
+    }
+
+    .feature-card:hover::after {
+        width: 100%;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-4px) scale(1.02);
+    }
+
+    .feature-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+    }
+
+    .feature-icon.blue {
+        background: rgba(37, 99, 235, 0.1);
+        color: #2563eb;
+    }
+
+    .feature-icon.teal {
+        background: rgba(8, 145, 178, 0.1);
+        color: #0891b2;
+    }
+
+    .feature-icon.green {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .feature-card h4 {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .feature-card p {
+        font-size: 0.88rem;
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin-bottom: 1rem;
+    }
+
+    .feature-card-link {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        transition: gap 0.25s ease;
+    }
+
+    .feature-card-link:hover {
+        gap: 0.5rem;
+        color: #1d4ed8;
+    }
+
+    /* ── Papers list ───────────────────────────────── */
+    .content-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 450px), 1fr));
+        gap: clamp(1.5rem, 4vw, 2.5rem);
+        margin-bottom: 2rem;
+    }
+
+    .paper-card {
+        background: transparent;
+        backdrop-filter: none;
+        border: none;
+        border-radius: 0;
+        padding: 1.25rem 0;
+        text-decoration: none;
+        display: block;
+        transition: all 0.3s ease;
+        position: relative;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .paper-card::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 3px;
+        height: 100%;
+        background: var(--primary-gradient);
+        border-radius: 3px 0 0 3px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .paper-card:hover {
+        transform: translateX(5px) scale(1.02);
+    }
+
+    .paper-card:hover::before {
+        opacity: 1;
+    }
+
+    .paper-card-title {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.4rem;
+        line-height: 1.5;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .paper-card-meta {
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+        display: flex;
+        gap: 0.9rem;
+        flex-wrap: wrap;
+        margin-bottom: 0.5rem;
+    }
+
+    .paper-card-meta span {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .paper-card-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+    }
+
+    .paper-tag {
+        display: inline-block;
+        padding: 0.15rem 0.6rem;
+        border-radius: 50px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        background: rgba(37, 99, 235, 0.08);
+        color: var(--accent-color);
+        border: 1px solid rgba(37, 99, 235, 0.12);
+    }
+
+    .categories-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+        gap: clamp(0.75rem, 2vw, 1.25rem);
+    }
+
+    .category-card {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 1.25rem 0;
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        text-decoration: none;
+        color: var(--text-primary);
+        transition: all 0.3s ease;
+        min-height: 130px;
+        position: relative;
+    }
+
+    .category-card::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: var(--primary-gradient);
+        transition: width 0.3s ease;
+    }
+
+    .category-card:hover::after {
+        width: 100%;
+    }
+
+    .category-card:hover {
+        transform: translateY(-2px) scale(1.03);
+        color: var(--text-primary);
+    }
+
+    .category-card-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: rgba(37, 99, 235, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        color: var(--accent-color);
+        margin-bottom: 0.75rem;
+    }
+
+    .category-card-name {
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        line-height: 1.4;
+    }
+
+    .category-card-count {
+        font-size: 0.72rem;
+        color: var(--text-secondary);
+        margin-top: 0.15rem;
+    }
+
+    .category-card-arrow {
+        color: var(--accent-color);
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+        opacity: 0.5;
+        transition: all 0.25s ease;
+    }
+
+    .category-card:hover .category-card-arrow {
+        opacity: 1;
+        transform: translateX(3px);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 2.5rem 1.5rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state i {
+        font-size: 2.5rem;
+        opacity: 0.25;
+        margin-bottom: 0.75rem;
+        display: block;
+    }
+
+    /* ── Hero search dropdown ──────────────────────── */
+    .hero-search-wrap {
+        position: relative;
+        max-width: 620px;
+        margin: 0 auto 1.5rem;
+    }
+
+    .hero-search-wrap .hero-search {
+        margin: 0;
+    }
+
+    .hero-search-dropdown {
+        display: none;
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        right: 0;
+        background: #fff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 14px;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+        z-index: 1000;
+        overflow: hidden;
+        max-height: 420px;
+        overflow-y: auto;
+    }
+
+    .hero-search-dropdown.open {
+        display: block;
+    }
+
+    .hsd-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        padding: 0.85rem 1.1rem;
+        text-decoration: none;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+        transition: background 0.15s ease;
+        cursor: pointer;
+    }
+
+    .hsd-item:last-child {
+        border-bottom: none;
+    }
+
+    .hsd-item:hover {
+        background: rgba(37, 99, 235, 0.04);
+    }
+
+    .hsd-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 9px;
+        background: rgba(37, 99, 235, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        font-size: 0.78rem;
+        color: var(--accent-color);
+        margin-top: 1px;
+    }
+
+    .hsd-title {
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .hsd-meta {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        margin-top: 0.2rem;
+    }
+
+    .hsd-footer {
+        padding: 0.65rem 1.1rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        text-align: center;
+        border-top: 1px solid rgba(0, 0, 0, 0.05);
+        background: rgba(37, 99, 235, 0.02);
+        cursor: pointer;
+        transition: background 0.15s ease;
+    }
+
+    .hsd-footer:hover {
+        background: rgba(37, 99, 235, 0.06);
+    }
+
+    .hsd-empty {
+        padding: 1.25rem 1.1rem;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        text-align: center;
+    }
+
+    /* ── Responsive ────────────────────────────────── */
+    @media (max-width: 768px) {
+        .stats-bar {
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .stat-item+.stat-item {
+            border-left: none;
+        }
+
+        .stat-item {
+            max-width: 50%;
+            min-width: 100px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ── Hero ─── -->
+<div class="hero-section">
+    <div class="hero-content">
+
+        <div class="hero-logo">
+            <div class="orbit-ring">
+                <div class="orbit-dot"></div>
+            </div>
+            <div class="center-icon">
+                <i class="fas fa-graduation-cap"></i>
+            </div>
+        </div>
+
+        <h1 class="hero-brand">
+            <span class="accent">Orravyn</span> Research
+        </h1>
+
+        <div class="hero-search-wrap">
+            <form action="{% url 'search:search' %}" method="get" class="hero-search" id="hero-search-form">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" name="q" id="hero-search-input" placeholder="Search research papers..." autocomplete="off">
+                <button type="submit" class="hero-search-btn">Search</button>
+            </form>
+            <div class="hero-search-dropdown" id="hero-search-dropdown"></div>
+        </div>
+
+        <p class="hero-tagline">Accelerate scientific discovery through intelligent collaboration and AI-driven research insights</p>
+
+        <div class="hero-badges">
+            <span class="hero-badge"><i class="fas fa-search"></i> Advanced search</span>
+            <span class="hero-badge"><i class="fas fa-brain"></i> AI-powered analysis</span>
+            <span class="hero-badge"><i class="fas fa-users"></i> Global collaboration</span>
+        </div>
+
+        <div class="hero-cta-group">
+            <a href="{% url 'papers:list' %}" class="hero-cta">
+                <i class="fas fa-file-alt"></i> Browse Papers
+            </a>
+            <a href="{% url 'groups:list' %}" class="hero-cta hero-cta-secondary">
+                <i class="fas fa-users"></i> Explore Groups
+            </a>
+            <a href="{% url 'papers:categories' %}" class="hero-cta hero-cta-secondary">
+                <i class="fas fa-tags"></i> Categories
+            </a>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-number">{{ total_papers }}</div>
+                <div class="stat-label">Papers</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ total_users }}</div>
+                <div class="stat-label">Researchers</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ total_categories }}</div>
+                <div class="stat-label">Categories</div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ── Features ─── -->
+<div class="section-row">
+    <div class="section-title"><i class="fas fa-th-large"></i> What you can do</div>
+</div>
+
+<div class="features-grid">
+    <div class="feature-card lazy-load">
+        <div class="feature-icon blue"><i class="fas fa-search"></i></div>
+        <h4>Intelligent Discovery</h4>
+        <p>Access a comprehensive repository of peer-reviewed research with advanced semantic search and personalized recommendations.</p>
+        <a href="{% url 'papers:list' %}" class="feature-card-link">Explore Research <i class="fas fa-arrow-right"></i></a>
+    </div>
+    <div class="feature-card lazy-load">
+        <div class="feature-icon teal"><i class="fas fa-users"></i></div>
+        <h4>Research Collaboration</h4>
+        <p>Connect with researchers worldwide, form interdisciplinary teams, and engage in meaningful academic discourse.</p>
+        <a href="{% url 'groups:list' %}" class="feature-card-link">Join Community <i class="fas fa-arrow-right"></i></a>
+    </div>
+    <div class="feature-card lazy-load">
+        <div class="feature-icon green"><i class="fas fa-upload"></i></div>
+        <h4>Publish & Disseminate</h4>
+        <p>Share your research with a global audience and contribute to the advancement of scientific knowledge.</p>
+        {% if user.is_authenticated and user.user_type != 'reader' %}
+        <a href="{% url 'papers:upload' %}" class="feature-card-link">Publish Research <i
+                class="fas fa-arrow-right"></i></a>
+        {% else %}
+        <a href="{% url 'accounts:register' %}" class="feature-card-link">Get Started <i
+                class="fas fa-arrow-right"></i></a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ── Content: Recent Papers + Categories ─── -->
+<div class="content-grid">
+
+    <!-- Recent Papers -->
+    <div>
+        <div class="section-row">
+            <div class="section-title"><i class="fas fa-clock"></i> Recent Papers</div>
+            <a href="{% url 'papers:list' %}" class="section-link">View all <i class="fas fa-arrow-right"></i></a>
+        </div>
+        {% for paper in recent_papers %}
+        <a href="{% url 'papers:detail' paper.pk %}" class="paper-card">
+            <div class="paper-card-title">{{ paper.title }}</div>
+            <div class="paper-card-meta">
+                <span><i class="fas fa-calendar-alt"></i> {{ paper.created_at|date:"M d, Y" }}</span>
+                <span><i class="fas fa-user"></i> {{ paper.authors|truncatechars:40 }}</span>
+            </div>
+            <div class="paper-card-tags">
+                {% for category in paper.categories.all|slice:":3" %}
+                <span class="paper-tag">{{ category.name }}</span>
+                {% endfor %}
+            </div>
+        </a>
+        {% empty %}
+        <div class="empty-state">
+            <i class="fas fa-file-alt"></i>
+            <p>No papers yet. Be the first to share your research!</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Popular Categories -->
+    <div>
+        <div class="section-row">
+            <div class="section-title"><i class="fas fa-tags"></i> Popular Categories</div>
+            <a href="{% url 'papers:categories' %}" class="section-link">View all <i class="fas fa-arrow-right"></i></a>
+        </div>
+        {% if popular_categories %}
+        <div class="categories-grid">
+            {% for category in popular_categories %}
+            <a href="{% url 'papers:category_detail' category.pk %}" class="category-card">
+                <div>
+                    <div class="category-card-icon"><i class="fas fa-folder"></i></div>
+                    <div class="category-card-name">{{ category.name }}</div>
+                    <div class="category-card-count">{{ category.paper_count }} paper{{ category.paper_count|pluralize }}</div>
+                </div>
+                <div class="category-card-arrow"><i class="fas fa-arrow-right"></i></div>
+            </a>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <i class="fas fa-tags"></i>
+            <p>Categories will appear as papers are uploaded.</p>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const input = document.getElementById('hero-search-input');
+    const dropdown = document.getElementById('hero-search-dropdown');
+    const form = document.getElementById('hero-search-form');
+    const LIVE_URL = '{% url "search:live" %}';
+
+    let debounceTimer = null;
+    let currentController = null;
+
+    function escapeHTML(str) {
+        const d = document.createElement('div');
+        d.appendChild(document.createTextNode(String(str)));
+        return d.innerHTML;
+    }
+
+    function showDropdown(papers, query) {
+        if (!papers.length) {
+            dropdown.innerHTML = '<div class="hsd-empty"><i class="fas fa-search" style="opacity:.25;margin-right:.4rem"></i>No results for "' + escapeHTML(query) + '"</div>';
+            dropdown.classList.add('open');
+            return;
+        }
+
+        const items = papers.slice(0, 3).map(function (p) {
+            const url = '/papers/' + p.id + '/';
+            const authors = p.authors ? p.authors.split(',')[0].trim() : '';
+            return '<a class="hsd-item" href="' + url + '">'
+                + '<div class="hsd-icon"><i class="fas fa-file-alt"></i></div>'
+                + '<div>'
+                + '<div class="hsd-title">' + escapeHTML(p.title) + '</div>'
+                + '<div class="hsd-meta">' + escapeHTML(authors) + (p.year ? ' · ' + p.year : '') + '</div>'
+                + '</div>'
+                + '</a>';
+        }).join('');
+
+        const footerText = 'View all results for "' + escapeHTML(query) + '" <i class="fas fa-arrow-right" style="margin-left:.25rem;font-size:.75rem"></i>';
+        const footer = '<div class="hsd-footer" id="hsd-view-all">' + footerText + '</div>';
+
+        dropdown.innerHTML = items + footer;
+        dropdown.classList.add('open');
+
+        document.getElementById('hsd-view-all').addEventListener('click', function () {
+            form.submit();
+        });
+    }
+
+    function hideDropdown() {
+        dropdown.classList.remove('open');
+        dropdown.innerHTML = '';
+    }
+
+    function fetchResults(query) {
+        if (currentController) currentController.abort();
+        currentController = new AbortController();
+
+        fetch(LIVE_URL + '?q=' + encodeURIComponent(query), { signal: currentController.signal })
+            .then(function (r) { return r.json(); })
+            .then(function (data) { showDropdown(data.papers, query); })
+            .catch(function () {});
+    }
+
+    if (input) {
+        input.addEventListener('input', function () {
+            var q = this.value.trim();
+            clearTimeout(debounceTimer);
+            if (!q) { hideDropdown(); return; }
+            debounceTimer = setTimeout(function () { fetchResults(q); }, 280);
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('.hero-search-wrap')) hideDropdown();
+        });
+
+        input.addEventListener('focus', function () {
+            if (this.value.trim()) fetchResults(this.value.trim());
+        });
+
+        input.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') hideDropdown();
+        });
+    }
+})();
+</script>
+{% endblock %}

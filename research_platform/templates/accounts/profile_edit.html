@@ -1,0 +1,243 @@
+{% extends 'base.html' %}
+{% block title %}Edit Profile - Orravyn Research Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-page {
+        max-width: 640px;
+        margin: 0 auto;
+    }
+
+    .form-header {
+        margin-bottom: 1.75rem;
+    }
+
+    .form-header h1 {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .form-section-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--accent-color);
+        margin-bottom: 0.75rem;
+        margin-top: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .form-section-label:first-child {
+        margin-top: 0;
+    }
+
+    .form-section-label::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--glass-border);
+    }
+
+    .form-control,
+    .form-select {
+        border: 1.5px solid rgba(0, 0, 0, 0.08);
+        border-radius: 12px;
+        padding: 0.6rem 0.85rem;
+        font-size: 0.9rem;
+        transition: all 0.25s ease;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+    }
+
+    .form-label {
+        font-weight: 600;
+        font-size: 0.88rem;
+        color: var(--text-primary);
+    }
+
+    .form-text {
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 1.75rem;
+    }
+
+    .form-submit {
+        padding: 0.65rem 1.5rem;
+        background: var(--accent-color);
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.92rem;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .form-submit:hover {
+        background: #1d4ed8;
+        box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+        transform: translateY(-1px);
+    }
+
+    .form-cancel {
+        padding: 0.65rem 1.5rem;
+        border: 1.5px solid rgba(0, 0, 0, 0.08);
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.92rem;
+        color: var(--text-secondary);
+        text-decoration: none;
+        transition: all 0.25s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: #fff;
+    }
+
+    .form-cancel:hover {
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+    }
+
+    .current-avatar {
+        display: inline-block;
+        margin-top: 0.5rem;
+    }
+
+    .current-avatar img {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        border: 2px solid rgba(37, 99, 235, 0.15);
+        object-fit: cover;
+    }
+
+    .current-avatar-label {
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+        display: block;
+        margin-top: 0.3rem;
+    }
+
+    .error-box {
+        background: rgba(220, 38, 38, 0.04);
+        border: 1px solid rgba(220, 38, 38, 0.15);
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .error-box strong {
+        font-size: 0.88rem;
+        color: #dc2626;
+    }
+
+    .error-box ul {
+        margin: 0.4rem 0 0;
+        padding-left: 1.25rem;
+    }
+
+    .error-box li {
+        font-size: 0.82rem;
+        color: #dc2626;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-page">
+    <div class="form-header">
+        <h1>Edit Profile</h1>
+    </div>
+
+    {% if form.errors %}
+    <div class="error-box">
+        <strong>Please correct the errors below:</strong>
+        <ul>
+            {% for field, errors in form.errors.items %}
+            {% for error in errors %}
+            <li>{{ field|title }}: {{ error }}</li>
+            {% endfor %}
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="form-section-label"><i class="fas fa-user"></i> Personal Info</div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="{{ form.first_name.id_for_label }}" class="form-label">First Name</label>
+                    {{ form.first_name }}
+                    {% if form.first_name.help_text %}<div class="form-text">{{ form.first_name.help_text }}</div>{%
+                    endif %}
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="{{ form.last_name.id_for_label }}" class="form-label">Last Name</label>
+                    {{ form.last_name }}
+                    {% if form.last_name.help_text %}<div class="form-text">{{ form.last_name.help_text }}</div>{% endif
+                    %}
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section-label"><i class="fas fa-graduation-cap"></i> Academic Details</div>
+        <div class="mb-3">
+            <label for="{{ form.institution.id_for_label }}" class="form-label">Institution</label>
+            {{ form.institution }}
+            {% if form.institution.help_text %}<div class="form-text">{{ form.institution.help_text }}</div>{% endif %}
+        </div>
+        <div class="mb-3">
+            <label for="{{ form.research_interests.id_for_label }}" class="form-label">Research Interests</label>
+            {{ form.research_interests }}
+            {% if form.research_interests.help_text %}<div class="form-text">{{ form.research_interests.help_text }}
+            </div>{% endif %}
+        </div>
+        <div class="mb-3">
+            <label for="{{ form.bio.id_for_label }}" class="form-label">Bio</label>
+            {{ form.bio }}
+            {% if form.bio.help_text %}<div class="form-text">{{ form.bio.help_text }}</div>{% endif %}
+        </div>
+
+        <div class="form-section-label"><i class="fas fa-camera"></i> Profile Picture</div>
+        <div class="mb-3">
+            <label for="{{ form.avatar.id_for_label }}" class="form-label">Upload Avatar</label>
+            {{ form.avatar }}
+            {% if form.avatar.help_text %}<div class="form-text">{{ form.avatar.help_text }}</div>{% endif %}
+            {% if object.avatar %}
+            <div class="current-avatar">
+                <img src="{{ object.avatar.url }}" alt="Current avatar">
+                <span class="current-avatar-label">Current picture</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="form-submit"><i class="fas fa-save"></i> Update Profile</button>
+            <a href="{% url 'accounts:profile' %}" class="form-cancel">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

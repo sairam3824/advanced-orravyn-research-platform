@@ -1,0 +1,562 @@
+{% extends 'base.html' %}
+
+{% block title %}Papers - Orravyn Research Platform{% endblock %}
+{% block meta_description %}Browse and discover research papers on the Orravyn Research Platform.{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ── Page header ──────────────────────────────── */
+    .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+    }
+
+    .page-header h1 {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    /* ── Filter & Sort panel ──────────────────────── */
+    .filter-panel {
+        background: transparent;
+        backdrop-filter: none;
+        border: none;
+        border-radius: 0;
+        padding: 1.5rem 0;
+        margin-bottom: 1.75rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .filter-panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.25rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .filter-label {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .filter-label i {
+        color: var(--accent-color);
+        font-size: 0.9rem;
+    }
+
+    .filter-row {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        gap: 0.75rem;
+        align-items: center;
+    }
+
+    .search-input-wrapper {
+        position: relative;
+        grid-column: 1;
+    }
+
+    .filter-input {
+        width: 100%;
+        padding: 0.6rem 2.5rem 0.6rem 1rem;
+        border: 1.5px solid rgba(0, 0, 0, 0.08);
+        border-radius: 12px;
+        font-size: 0.9rem;
+        color: var(--text-primary);
+        background: #fff;
+        outline: none;
+        transition: all 0.25s ease;
+    }
+
+    .filter-input:focus {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+    }
+
+    .clear-search-btn {
+        position: absolute;
+        right: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background: transparent;
+        border: none;
+        color: var(--text-secondary);
+        cursor: pointer;
+        padding: 0.25rem;
+        font-size: 0.9rem;
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.2s ease;
+        z-index: 10;
+    }
+
+    .clear-search-btn.visible {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .clear-search-btn:hover {
+        color: var(--accent-color);
+    }
+
+    .filter-select {
+        grid-column: 2;
+        min-width: 180px;
+        padding: 0.6rem 2rem 0.6rem 0.85rem;
+        border: 1.5px solid rgba(0, 0, 0, 0.08);
+        border-radius: 12px;
+        font-size: 0.9rem;
+        color: var(--text-primary);
+        background: #fff url('data:image/svg+xml;utf8,<svg fill="%2364748b" height="14" viewBox="0 0 20 20" width="14" xmlns="http://www.w3.org/2000/svg"><path d="M7.293 7.293a1 1 0 011.414 0L10 8.586l1.293-1.293a1 1 0 111.414 1.414l-2 2a1 1 0 01-1.414 0l-2-2a1 1 0 010-1.414z"/></svg>') no-repeat right 0.75rem center;
+        appearance: none;
+        -webkit-appearance: none;
+        outline: none;
+        transition: all 0.25s ease;
+    }
+
+    .filter-select:focus {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+    }
+
+    .filter-btn {
+        grid-column: 3;
+        padding: 0.6rem 1.5rem;
+        background: var(--accent-color);
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        white-space: nowrap;
+    }
+
+    .filter-btn:hover {
+        background: #1d4ed8;
+        box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+    }
+
+    /* Category chips */
+    .filter-categories {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        align-items: center;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid rgba(0, 0, 0, 0.04);
+    }
+
+    .filter-categories-label {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin-right: 0.25rem;
+    }
+
+    .paper-tag {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        background: rgba(37, 99, 235, 0.06);
+        color: var(--accent-color);
+        border: 1px solid rgba(37, 99, 235, 0.1);
+        transition: all 0.2s ease;
+    }
+
+    .paper-tag:hover {
+        background: rgba(37, 99, 235, 0.12);
+        border-color: rgba(37, 99, 235, 0.2);
+        transform: translateY(-1px);
+    }
+
+    /* ── Paper cards (arXplr style) ───────────────── */
+    .papers-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .paper-item {
+        background: transparent;
+        border: none;
+        border-radius: 0;
+        padding: 1.5rem 0;
+        margin-bottom: 0;
+        transition: all 0.3s ease;
+        position: relative;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .paper-item::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 3px;
+        height: 100%;
+        background: var(--primary-gradient);
+        border-radius: 3px 0 0 3px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .paper-item:hover {
+        transform: translateX(5px);
+    }
+
+    .paper-item:hover::before {
+        opacity: 1;
+    }
+
+    .paper-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .paper-item-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+        line-height: 1.45;
+    }
+
+    .paper-item-title a {
+        color: var(--accent-color);
+        text-decoration: none;
+        transition: color 0.2s ease;
+    }
+
+    .paper-item-title a:hover {
+        color: #1d4ed8;
+    }
+
+    .paper-item-link {
+        font-size: 0.78rem;
+        color: var(--accent-color);
+        text-decoration: none;
+        font-weight: 500;
+        white-space: nowrap;
+        margin-left: 0.5rem;
+        transition: color 0.2s ease;
+    }
+
+    .paper-item-link:hover {
+        color: #1d4ed8;
+        text-decoration: underline;
+    }
+
+    .paper-item-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-shrink: 0;
+    }
+
+    .paper-action-btn {
+        width: 34px;
+        height: 34px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        background: #fff;
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .paper-action-btn:hover {
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+        background: rgba(37, 99, 235, 0.04);
+    }
+
+    .paper-action-btn.bookmark {
+        background: #06b6d4;
+        color: #fff;
+        border-color: #06b6d4;
+    }
+
+    .paper-action-btn.bookmark:hover {
+        background: #0891b2;
+        box-shadow: 0 2px 8px rgba(6, 182, 212, 0.3);
+    }
+
+    .paper-action-btn.bookmarked {
+        background: #f59e0b;
+        color: #fff;
+        border-color: #f59e0b;
+    }
+
+    .paper-action-btn.bookmarked:hover {
+        background: #d97706;
+        box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+    }
+
+    .paper-item-abstract {
+        font-size: 0.88rem;
+        color: var(--text-secondary);
+        line-height: 1.65;
+        margin: 0.6rem 0;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .paper-item-meta {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.6rem;
+    }
+
+    .paper-item-meta span {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .paper-item-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+    }
+
+    .paper-tag {
+        display: inline-block;
+        padding: 0.2rem 0.7rem;
+        border-radius: 50px;
+        font-size: 0.72rem;
+        font-weight: 500;
+        background: rgba(37, 99, 235, 0.06);
+        color: var(--accent-color);
+        border: 1px solid rgba(37, 99, 235, 0.1);
+        transition: all 0.2s ease;
+    }
+
+    .paper-tag:first-child {
+        background: var(--accent-color);
+        color: #fff;
+        border-color: var(--accent-color);
+    }
+
+    /* ── Empty state ──────────────────────────────── */
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1.5rem;
+        background: transparent;
+        border: 1px dashed rgba(37, 99, 235, 0.2);
+        border-radius: 8px;
+    }
+
+    .empty-state i {
+        font-size: 2.5rem;
+        opacity: 0.2;
+        margin-bottom: 1rem;
+        display: block;
+        color: var(--text-secondary);
+    }
+
+    .empty-state p {
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+    }
+
+    /* ── Pagination ───────────────────────────────── */
+    .pagination-wrap {
+        display: flex;
+        justify-content: center;
+        margin-top: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .filter-row {
+            grid-template-columns: 1fr;
+            gap: 0.75rem;
+        }
+
+        .search-input-wrapper {
+            grid-column: 1;
+        }
+
+        .filter-select {
+            grid-column: 1;
+            min-width: 100%;
+        }
+
+        .filter-btn {
+            grid-column: 1;
+            width: 100%;
+        }
+
+        .paper-item-header {
+            flex-direction: column;
+        }
+
+        .paper-item-actions {
+            align-self: flex-end;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <h1>Research Papers</h1>
+    {% if user.is_authenticated and user.user_type != 'reader' %}
+    <a href="{% url 'papers:upload' %}" class="feature-btn">
+        <i class="fas fa-cloud-upload-alt"></i> Upload Paper
+    </a>
+    {% endif %}
+</div>
+
+<!-- Filter Panel -->
+<div class="filter-panel">
+    <div class="filter-panel-header">
+        <div class="filter-label"><i class="fas fa-sort"></i> Sort and Filter</div>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <div style="font-size: 0.82rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.5rem;">
+                <span>Sort by:</span>
+                <form method="get" style="display: inline;">
+                    <input type="hidden" name="category" value="{{ selected_category }}">
+                    <select name="sort" class="filter-select" style="min-width: 140px; flex: 0; display: inline-block;"
+                        onchange="this.form.submit()">
+                        <option value="-created_at" {% if sort_by == '-created_at' %}selected{% endif %}>Most Recent</option>
+                        <option value="created_at" {% if sort_by == 'created_at' %}selected{% endif %}>Oldest First</option>
+                        <option value="popular" {% if sort_by == 'popular' %}selected{% endif %}>Most Popular</option>
+                        <option value="rating" {% if sort_by == 'rating' %}selected{% endif %}>Highest Rated</option>
+                        <option value="citations" {% if sort_by == 'citations' %}selected{% endif %}>Most Cited</option>
+                    </select>
+                </form>
+            </div>
+            <div style="font-size: 0.82rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.5rem;">
+                <span>Category:</span>
+                <form method="get" style="display: inline;">
+                    <input type="hidden" name="sort" value="{{ sort_by }}">
+                    <select name="category" class="filter-select" style="min-width: 160px; flex: 0; display: inline-block;"
+                        onchange="this.form.submit()">
+                        <option value="">All Categories</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}" {% if category.id|stringformat:"s" == selected_category %}selected{% endif %}>{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    {% if categories %}
+    <div class="filter-categories">
+        <span class="filter-categories-label">Quick Filter:</span>
+        {% for category in categories|slice:":10" %}
+        <a href="?category={{ category.id }}&sort={{ sort_by }}" class="paper-tag" style="cursor: pointer; text-decoration: none;">{{ category.name }}</a>
+        {% endfor %}
+        {% if selected_category %}
+        <a href="?sort={{ sort_by }}" class="paper-tag" style="cursor: pointer; text-decoration: none; background: #ef4444; color: #fff; border-color: #ef4444;">
+            <i class="fas fa-times" style="margin-right: 0.25rem;"></i> Clear Filter
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Papers List -->
+<div class="papers-list" data-infinite-scroll>
+    {% for paper in papers %}
+    <div class="paper-item lazy-load">
+        <div class="paper-item-header">
+            <div>
+                <div class="paper-item-title">
+                    <a href="{% url 'papers:detail' paper.pk %}">{{ paper.title }}</a>
+                </div>
+                <a href="{% url 'papers:detail' paper.pk %}" class="paper-item-link">View Details</a>
+            </div>
+            <div class="paper-item-actions">
+                {% if user.is_authenticated %}
+                <a href="{% url 'papers:bookmark' paper.pk %}" 
+                   class="paper-action-btn {% if paper.pk in bookmarked_paper_ids %}bookmarked{% else %}bookmark{% endif %}" 
+                   title="{% if paper.pk in bookmarked_paper_ids %}Remove Bookmark{% else %}Bookmark{% endif %}">
+                    <i class="{% if paper.pk in bookmarked_paper_ids %}fas{% else %}far{% endif %} fa-bookmark"></i>
+                </a>
+                {% endif %}
+                <a href="{% url 'papers:detail' paper.pk %}" class="paper-action-btn" title="Open">
+                    <i class="fas fa-external-link-alt"></i>
+                </a>
+            </div>
+        </div>
+
+        {% if paper.abstract %}
+        <p class="paper-item-abstract">{{ paper.abstract|truncatechars:200 }}</p>
+        {% endif %}
+
+        <div class="paper-item-meta">
+            <span><i class="fas fa-calendar-alt"></i> {{ paper.created_at|date:"d/m/Y" }}</span>
+            <span><i class="fas fa-user"></i> {{ paper.authors|truncatechars:60 }}</span>
+            <span><i class="fas fa-eye"></i> {{ paper.view_count }} views</span>
+        </div>
+
+        <div class="paper-item-tags">
+            {% for category in paper.categories.all %}
+            <span class="paper-tag">{{ category.name }}</span>
+            {% endfor %}
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <i class="fas fa-file-alt"></i>
+        <p>No papers found matching your criteria.</p>
+        <a href="{% url 'papers:list' %}" class="feature-btn">View All Papers</a>
+    </div>
+    {% endfor %}
+</div>
+
+{% if is_paginated %}
+<nav aria-label="Papers pagination" class="pagination-wrap">
+    <ul class="pagination">
+        {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link"
+                href="?category={{ selected_category }}&sort={{ sort_by }}&page={{ page_obj.previous_page_number }}">Previous</a>
+        </li>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+        {% else %}
+        <li class="page-item"><a class="page-link"
+                href="?category={{ selected_category }}&sort={{ sort_by }}&page={{ num }}">{{
+                num }}</a></li>
+        {% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link"
+                href="?category={{ selected_category }}&sort={{ sort_by }}&page={{ page_obj.next_page_number }}">Next</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% endblock %}

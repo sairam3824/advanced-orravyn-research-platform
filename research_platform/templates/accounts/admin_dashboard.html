@@ -1,0 +1,358 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard - Orravyn Research Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-header {
+        margin-bottom: 1.75rem;
+    }
+
+    .admin-header h1 {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.2rem;
+    }
+
+    .admin-header p {
+        font-size: 0.88rem;
+        color: var(--text-secondary);
+        margin: 0;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+        gap: clamp(1rem, 2vw, 1.5rem);
+        margin-bottom: clamp(1.5rem, 4vw, 2.5rem);
+    }
+
+    .stat-card {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        padding: 1.25rem;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        border-color: rgba(37, 99, 235, 0.15);
+        transform: translateY(-2px);
+    }
+
+    .stat-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .stat-icon.users {
+        background: rgba(37, 99, 235, 0.08);
+        color: var(--accent-color);
+    }
+
+    .stat-icon.approved {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .stat-icon.pending {
+        background: rgba(245, 158, 11, 0.1);
+        color: #d97706;
+    }
+
+    .stat-icon.total {
+        background: rgba(8, 145, 178, 0.1);
+        color: #0891b2;
+    }
+
+    .stat-number {
+        font-size: 1.75rem;
+        font-weight: 800;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .stat-label {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .stat-card .stat-action {
+        display: inline-block;
+        margin-top: 0.5rem;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        text-decoration: none;
+        transition: gap 0.25s ease;
+    }
+
+    .stat-card .stat-action:hover {
+        color: #1d4ed8;
+    }
+
+    .manage-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-decoration: none;
+        border: 1.5px solid rgba(0, 0, 0, 0.08);
+        color: var(--text-secondary);
+        background: #fff;
+        transition: all 0.25s ease;
+        margin-bottom: 1.5rem;
+    }
+
+    .manage-link:hover {
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+    }
+
+    .section-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .section-title i {
+        color: var(--accent-color);
+        margin-right: 0.4rem;
+        font-size: 0.9rem;
+    }
+
+    .pending-item {
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+        border-left: 3px solid #f59e0b;
+        background: rgba(245, 158, 11, 0.03);
+        border-radius: 0 12px 12px 0;
+    }
+
+    .pending-item h6 {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .pending-item p {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin: 0 0 0.3rem;
+    }
+
+    .pending-item small {
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+    }
+
+    .pending-actions {
+        display: flex;
+        gap: 0.35rem;
+        margin-top: 0.5rem;
+    }
+
+    .pending-act {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        padding: 0.3rem 0.65rem;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        border: none;
+        cursor: pointer;
+    }
+
+    .pending-act.view {
+        background: rgba(37, 99, 235, 0.08);
+        color: var(--accent-color);
+    }
+
+    .pending-act.approve {
+        background: #10b981;
+        color: #fff;
+    }
+
+    .pending-act.reject {
+        background: #dc2626;
+        color: #fff;
+    }
+
+    .recent-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .recent-table th {
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-secondary);
+        padding: 0.5rem 0.75rem;
+        border-bottom: 1px solid var(--glass-border);
+    }
+
+    .recent-table td {
+        font-size: 0.88rem;
+        padding: 0.6rem 0.75rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+        color: var(--text-primary);
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.15rem;
+        padding: 0.12rem 0.5rem;
+        border-radius: 50px;
+        font-size: 0.68rem;
+        font-weight: 600;
+    }
+
+    .status-badge.approved {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .status-badge.pending {
+        background: rgba(245, 158, 11, 0.1);
+        color: #d97706;
+    }
+
+    .table-act {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        text-decoration: none;
+        margin-right: 0.5rem;
+    }
+
+    .table-act:hover {
+        color: #1d4ed8;
+    }
+
+    .table-act.approve {
+        color: #10b981;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header">
+    <h1>Admin Dashboard</h1>
+    <p>Welcome, {{ user.username }} ({{ user.user_type|title }})</p>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon users"><i class="fas fa-users"></i></div>
+        <div class="stat-number">{{ total_users }}</div>
+        <div class="stat-label">Total Users</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon approved"><i class="fas fa-check-circle"></i></div>
+        <div class="stat-number">{{ approved_papers }}</div>
+        <div class="stat-label">Approved Papers</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon pending"><i class="fas fa-clock"></i></div>
+        <div class="stat-number">{{ pending_count }}</div>
+        <div class="stat-label">Pending Approval</div>
+        {% if pending_count > 0 %}<a href="{% url 'papers:pending_approval' %}" class="stat-action">Review →</a>{% endif
+        %}
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon total"><i class="fas fa-file-alt"></i></div>
+        <div class="stat-number">{{ total_papers }}</div>
+        <div class="stat-label">Total Papers</div>
+    </div>
+</div>
+
+<a href="{% url 'papers:admin_paper_manage' %}" class="manage-link"><i class="fas fa-cogs"></i> Manage All Papers</a>
+
+{% if pending_count > 0 %}
+<div class="section-title">
+    <span><i class="fas fa-exclamation-circle"></i> Papers Pending Approval</span>
+    <a href="{% url 'papers:pending_approval' %}" class="table-act">View All →</a>
+</div>
+{% for paper in pending_papers|slice:":5" %}
+<div class="pending-item">
+    <h6>{{ paper.title }}</h6>
+    <p>{{ paper.abstract|truncatechars:150 }}</p>
+    <small>Uploaded by {{ paper.uploaded_by.username }} on {{ paper.created_at|date:"M d, Y" }}</small>
+    <div class="pending-actions">
+        <a href="{% url 'papers:detail' paper.pk %}" class="pending-act view"><i class="fas fa-eye"></i> Review</a>
+        <a href="{% url 'papers:approve' paper.pk %}" class="pending-act approve"><i class="fas fa-check"></i>
+            Approve</a>
+        <a href="{% url 'papers:reject' paper.pk %}" class="pending-act reject"
+            onclick="return confirmAction(event, 'Reject this paper?')"><i class="fas fa-times"></i> Reject</a>
+    </div>
+</div>
+{% endfor %}
+{% endif %}
+
+<div class="section-title" style="margin-top: 1.5rem;"><span><i class="fas fa-history"></i> Recent Papers</span></div>
+<div style="overflow-x: auto;">
+    <table class="recent-table">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Uploaded By</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for paper in recent_papers %}
+            <tr>
+                <td>{{ paper.title|truncatechars:50 }}</td>
+                <td>{{ paper.authors|truncatechars:30 }}</td>
+                <td>{{ paper.uploaded_by.username }}</td>
+                <td>
+                    {% if paper.is_approved %}
+                    <span class="status-badge approved"><i class="fas fa-check-circle"></i> Approved</span>
+                    {% else %}
+                    <span class="status-badge pending"><i class="fas fa-clock"></i> Pending</span>
+                    {% endif %}
+                </td>
+                <td>{{ paper.created_at|date:"M d, Y" }}</td>
+                <td>
+                    <a href="{% url 'papers:detail' paper.pk %}" class="table-act"><i class="fas fa-eye"></i> View</a>
+                    {% if not paper.is_approved %}
+                    <a href="{% url 'papers:approve' paper.pk %}" class="table-act approve"><i class="fas fa-check"></i>
+                        Approve</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

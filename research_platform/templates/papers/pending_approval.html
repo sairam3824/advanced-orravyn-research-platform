@@ -1,0 +1,251 @@
+{% extends 'base.html' %}
+{% block title %}Pending Approval - Orravyn Research Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+    }
+
+    .page-header h1 {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .page-header p {
+        color: var(--text-secondary);
+        font-size: 0.92rem;
+        margin: 0;
+    }
+
+    .pending-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        background: rgba(245, 158, 11, 0.1);
+        color: #d97706;
+    }
+
+    .paper-review {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 14px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+        border-left: 3px solid #f59e0b;
+    }
+
+    .paper-review:hover {
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+    }
+
+    .paper-review-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        margin-bottom: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .paper-review-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .paper-review-abstract {
+        font-size: 0.88rem;
+        color: var(--text-secondary);
+        line-height: 1.65;
+        margin-bottom: 0.75rem;
+    }
+
+    .paper-review-meta {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+        gap: clamp(0.5rem, 2vw, 1rem);
+        font-size: 0.82rem;
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+        padding: 0.75rem;
+        background: rgba(245, 158, 11, 0.04);
+        border-radius: 10px;
+    }
+
+    .paper-review-meta strong {
+        color: var(--text-primary);
+        font-weight: 600;
+    }
+
+    .paper-tag {
+        display: inline-block;
+        padding: 0.15rem 0.6rem;
+        border-radius: 50px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        background: rgba(37, 99, 235, 0.06);
+        color: var(--accent-color);
+        border: 1px solid rgba(37, 99, 235, 0.1);
+        margin-right: 0.25rem;
+    }
+
+    .review-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .review-act {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.45rem 1rem;
+        border-radius: 10px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.25s ease;
+        border: none;
+        cursor: pointer;
+    }
+
+    .review-act.view {
+        background: rgba(37, 99, 235, 0.08);
+        color: var(--accent-color);
+    }
+
+    .review-act.view:hover {
+        background: rgba(37, 99, 235, 0.15);
+    }
+
+    .review-act.pdf {
+        background: rgba(8, 145, 178, 0.08);
+        color: #0891b2;
+    }
+
+    .review-act.pdf:hover {
+        background: rgba(8, 145, 178, 0.15);
+    }
+
+    .review-act.approve {
+        background: #10b981;
+        color: #fff;
+    }
+
+    .review-act.approve:hover {
+        background: #059669;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .review-act.reject {
+        background: #dc2626;
+        color: #fff;
+    }
+
+    .review-act.reject:hover {
+        background: #b91c1c;
+        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1.5rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state i {
+        font-size: 2.5rem;
+        opacity: 0.2;
+        margin-bottom: 1rem;
+        display: block;
+        color: #10b981;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Papers Pending Approval</h1>
+        <p>Review and approve submitted research papers</p>
+    </div>
+    <span class="pending-badge"><i class="fas fa-clock"></i> {{ papers|length }} pending</span>
+</div>
+
+{% if papers %}
+{% for paper in papers %}
+<div class="paper-review">
+    <div class="paper-review-header">
+        <div class="paper-review-title">{{ paper.title }}</div>
+        <span class="pending-badge" style="font-size: 0.72rem; padding: 0.15rem 0.55rem;">Pending</span>
+    </div>
+
+    <p class="paper-review-abstract">{{ paper.abstract }}</p>
+
+    <div class="paper-review-meta">
+        <div><strong>Authors:</strong> {{ paper.authors }}</div>
+        <div><strong>DOI:</strong> {{ paper.doi|default:"Not provided" }}</div>
+        <div><strong>Published:</strong> {{ paper.publication_date }}</div>
+        <div><strong>Uploaded by:</strong> {{ paper.uploaded_by.username }}</div>
+        <div><strong>Upload date:</strong> {{ paper.created_at|date:"M d, Y H:i" }}</div>
+        <div>
+            {% for category in paper.categories.all %}
+            <span class="paper-tag">{{ category.name }}</span>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="review-actions">
+        <a href="{% url 'papers:detail' paper.pk %}" class="review-act view"><i class="fas fa-eye"></i> View Details</a>
+        {% if paper.pdf_path %}
+        <a href="{% url 'papers:view_pdf' paper.pk %}" target="_blank" class="review-act pdf"><i
+                class="fas fa-file-pdf"></i> View PDF</a>
+        {% endif %}
+        <a href="{% url 'papers:approve' paper.pk %}" class="review-act approve"
+            onclick="return confirmAction(event, 'Approve this paper?')"><i class="fas fa-check"></i> Approve</a>
+        <a href="{% url 'papers:reject' paper.pk %}" class="review-act reject"
+            onclick="return confirmAction(event, 'Reject and delete this paper? This cannot be undone.')"><i
+                class="fas fa-times"></i> Reject</a>
+    </div>
+</div>
+{% endfor %}
+
+{% if is_paginated %}
+<nav aria-label="Pending papers pagination" style="margin-top: 1.5rem;">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}<li class="page-item"><a class="page-link"
+                href="?page={{ page_obj.previous_page_number }}">Previous</a></li>{% endif %}
+        {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}<li class="page-item active"><span class="page-link">{{ num }}</span></li>{% else
+        %}<li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>{% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}<li class="page-item"><a class="page-link"
+                href="?page={{ page_obj.next_page_number }}">Next</a></li>{% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<div class="empty-state">
+    <i class="fas fa-clipboard-check"></i>
+    <p>All submitted papers have been reviewed. Great job!</p>
+    <div style="display: flex; gap: 0.75rem; justify-content: center; margin-top: 1rem;">
+        <a href="{% url 'papers:list' %}" class="feature-btn">View Papers</a>
+        <a href="{% url 'accounts:admin_dashboard' %}" class="feature-btn"
+            style="background: transparent; color: var(--accent-color); border: 1.5px solid rgba(37,99,235,0.2);">Admin
+            Dashboard</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,335 @@
+{% extends 'base.html' %}
+{% block title %}{% if object %}Edit Post{% else %}Write New Post{% endif %} - Research Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .page-header {
+        margin-bottom: 2rem;
+    }
+
+    .page-header h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.7rem 1rem;
+        border: 1.5px solid rgba(0, 0, 0, 0.08);
+        border-radius: 10px;
+        font-size: 0.95rem;
+        transition: all 0.25s ease;
+        background: #fff;
+        color: var(--text-primary);
+    }
+
+    .form-control:focus {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+        outline: none;
+    }
+
+    textarea.form-control {
+        min-height: 300px;
+        resize: vertical;
+        font-family: inherit;
+    }
+
+    .form-select {
+        width: 100%;
+        padding: 0.7rem 1rem;
+        border: 1.5px solid rgba(0, 0, 0, 0.08);
+        border-radius: 10px;
+        font-size: 0.95rem;
+        transition: all 0.25s ease;
+        background: #fff;
+        color: var(--text-primary);
+    }
+
+    .form-select:focus {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+        outline: none;
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .btn-submit {
+        padding: 0.7rem 1.5rem;
+        background: transparent;
+        color: var(--accent-color);
+        border: 1.5px solid var(--accent-color);
+        border-radius: 10px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+
+    .btn-submit:hover {
+        background: var(--accent-color);
+        color: #fff;
+    }
+
+    .btn-cancel {
+        padding: 0.7rem 1.5rem;
+        background: transparent;
+        color: var(--text-secondary);
+        border: 1.5px solid rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+
+    .btn-cancel:hover {
+        background: rgba(0, 0, 0, 0.03);
+        color: var(--text-primary);
+    }
+
+    .form-help {
+        font-size: 0.82rem;
+        color: var(--text-secondary);
+        margin-top: 0.3rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="page-header">
+        <h1>{% if object %}Edit Post{% else %}Write New Post{% endif %}</h1>
+    </div>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label class="form-label" for="id_title">Title *</label>
+            <input type="text" name="title" id="id_title" class="form-control" 
+                   value="{{ form.title.value|default:'' }}" required>
+            <div class="form-help">A clear, descriptive title for your blog post</div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="id_excerpt">Excerpt</label>
+            <textarea name="excerpt" id="id_excerpt" class="form-control" 
+                      style="min-height: 100px;">{{ form.excerpt.value|default:'' }}</textarea>
+            <div class="form-help">A brief summary (max 500 characters) - will be shown in the blog list</div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="id_content">Content *</label>
+            <textarea name="content" id="id_content" class="form-control" required>{{ form.content.value|default:'' }}</textarea>
+            <div class="form-help">The main content of your blog post</div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="id_featured_image">Featured Image</label>
+            <input type="file" name="featured_image" id="id_featured_image" class="form-control" accept="image/*">
+            <div class="form-help">Optional image to display with your post</div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="id_tags">Tags</label>
+            <input type="text" name="tags" id="id_tags" class="form-control" 
+                   value="{{ form.tags.value|default:'' }}" placeholder="machine learning, AI, research">
+            <div class="form-help">Comma-separated tags for categorization</div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="id_related_papers">Related Papers</label>
+            
+            <!-- Selected Papers Display -->
+            <div id="selectedPapers" style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.75rem; min-height: 50px; padding: 0.75rem; background: rgba(37, 99, 235, 0.02); border-radius: 10px; border: 1px dashed rgba(37, 99, 235, 0.2); align-items: center;">
+                <span style="color: var(--text-secondary); font-size: 0.85rem;">No papers selected</span>
+            </div>
+            
+            <!-- Search and Add Papers -->
+            <div style="position: relative; margin-bottom: 0.5rem;">
+                <input type="text" id="paperSearch" class="form-control" placeholder="Search papers to add..." style="padding-right: 2.5rem;">
+                <i class="fas fa-search" style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary); pointer-events: none;"></i>
+                
+                <!-- Search Results Dropdown -->
+                <div id="searchResults" style="display: none; position: absolute; z-index: 100; background: #fff; border: 1.5px solid rgba(37, 99, 235, 0.15); border-radius: 10px; margin-top: 0.5rem; max-height: 300px; overflow-y: auto; box-shadow: 0 8px 24px rgba(0,0,0,0.12); width: 100%; left: 0;"></div>
+            </div>
+            
+            <!-- Hidden input to store selected paper IDs -->
+            <input type="hidden" name="related_papers" id="id_related_papers" value="">
+            
+            <div class="form-help">Search and select papers related to this blog post (click X to remove)</div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-submit">
+                <i class="fas fa-paper-plane"></i> Submit for Approval
+            </button>
+            <a href="{% url 'papers:blog_list' %}" class="btn-cancel">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Paper selection management
+const selectedPapers = new Map(); // Map of paper ID to paper object
+const allPapers = [
+    {% for paper in papers %}
+    {id: {{ paper.id }}, title: "{{ paper.title|escapejs }}"},
+    {% endfor %}
+];
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    updateSelectedPapersDisplay();
+});
+
+// Search papers
+const searchInput = document.getElementById('paperSearch');
+const searchResults = document.getElementById('searchResults');
+let searchTimeout;
+
+searchInput.addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    const query = this.value.trim().toLowerCase();
+    
+    if (query.length < 2) {
+        searchResults.style.display = 'none';
+        return;
+    }
+    
+    searchTimeout = setTimeout(() => {
+        const filtered = allPapers.filter(paper => 
+            paper.title.toLowerCase().includes(query) && !selectedPapers.has(paper.id)
+        );
+        
+        if (filtered.length > 0) {
+            let html = '';
+            filtered.slice(0, 10).forEach(paper => {
+                html += `
+                    <div onclick="addPaper(${paper.id}, '${paper.title.replace(/'/g, "\\'")}');" 
+                         class="search-result-item"
+                         style="padding: 0.85rem 1.25rem; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.04); transition: all 0.2s ease; display: flex; align-items: center; gap: 0.75rem;">
+                        <i class="fas fa-file-alt" style="color: var(--accent-color); font-size: 0.9rem; opacity: 0.6;"></i>
+                        <div style="flex: 1;">
+                            <div style="font-size: 0.9rem; color: var(--text-primary); font-weight: 500; line-height: 1.4;">${paper.title}</div>
+                        </div>
+                        <i class="fas fa-plus" style="color: var(--accent-color); font-size: 0.85rem; opacity: 0.5;"></i>
+                    </div>
+                `;
+            });
+            searchResults.innerHTML = html;
+            searchResults.style.display = 'block';
+        } else {
+            searchResults.innerHTML = '<div style="padding: 1.5rem; text-align: center; color: var(--text-secondary); font-size: 0.85rem;"><i class="fas fa-search" style="display: block; font-size: 1.5rem; opacity: 0.3; margin-bottom: 0.5rem;"></i>No papers found</div>';
+            searchResults.style.display = 'block';
+        }
+    }, 300);
+});
+
+// Add hover effect to search results
+document.addEventListener('mouseover', function(e) {
+    const item = e.target.closest('.search-result-item');
+    if (item) {
+        item.style.background = 'rgba(37, 99, 235, 0.06)';
+        item.querySelector('.fa-plus').style.opacity = '1';
+    }
+});
+
+document.addEventListener('mouseout', function(e) {
+    const item = e.target.closest('.search-result-item');
+    if (item) {
+        item.style.background = 'transparent';
+        item.querySelector('.fa-plus').style.opacity = '0.5';
+    }
+});
+
+// Close search results when clicking outside
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('#paperSearch') && !e.target.closest('#searchResults')) {
+        searchResults.style.display = 'none';
+    }
+});
+
+// Add paper to selection
+function addPaper(id, title) {
+    selectedPapers.set(id, {id, title});
+    updateSelectedPapersDisplay();
+    searchInput.value = '';
+    searchResults.style.display = 'none';
+}
+
+// Remove paper from selection
+function removePaper(id) {
+    selectedPapers.delete(id);
+    updateSelectedPapersDisplay();
+}
+
+// Update the display of selected papers
+function updateSelectedPapersDisplay() {
+    const container = document.getElementById('selectedPapers');
+    const hiddenInput = document.getElementById('id_related_papers');
+    
+    if (selectedPapers.size === 0) {
+        container.innerHTML = '<span style="color: var(--text-secondary); font-size: 0.85rem;">No papers selected</span>';
+        hiddenInput.value = '';
+    } else {
+        let html = '';
+        selectedPapers.forEach((paper, id) => {
+            html += `
+                <div style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.85rem; background: var(--accent-color); color: #fff; border-radius: 20px; font-size: 0.85rem; font-weight: 500; box-shadow: 0 2px 6px rgba(37, 99, 235, 0.2);">
+                    <i class="fas fa-file-alt" style="font-size: 0.8rem; opacity: 0.9;"></i>
+                    <span style="max-width: 350px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${paper.title}</span>
+                    <button type="button" onclick="removePaper(${id})" style="background: rgba(255,255,255,0.2); border: none; color: #fff; cursor: pointer; padding: 0.15rem 0.35rem; display: flex; align-items: center; border-radius: 50%; transition: all 0.2s; margin-left: 0.25rem;">
+                        <i class="fas fa-times" style="font-size: 0.75rem;"></i>
+                    </button>
+                </div>
+            `;
+        });
+        container.innerHTML = html;
+        
+        // Update hidden input with comma-separated IDs
+        hiddenInput.value = Array.from(selectedPapers.keys()).join(',');
+    }
+}
+
+// Convert tags input to JSON array on submit
+document.querySelector('form').addEventListener('submit', function(e) {
+    const tagsInput = document.getElementById('id_tags');
+    if (tagsInput.value) {
+        const tags = tagsInput.value.split(',').map(t => t.trim()).filter(t => t);
+        tagsInput.value = JSON.stringify(tags);
+    } else {
+        tagsInput.value = '[]';
+    }
+});
+</script>
+{% endblock %}

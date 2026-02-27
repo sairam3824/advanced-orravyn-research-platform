@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% block title %}Recommendations - Orravyn Research Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        margin-bottom: 1.5rem;
+    }
+
+    .page-header h1 {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .page-header p {
+        font-size: 0.92rem;
+        color: var(--text-secondary);
+        margin: 0;
+    }
+
+    .rec-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+        gap: clamp(1rem, 2vw, 1.5rem);
+    }
+
+    .rec-card {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 16px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .rec-card:hover {
+        border-color: rgba(37, 99, 235, 0.2);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+        transform: translateY(-3px);
+    }
+
+    .rec-title {
+        font-size: 1rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .rec-title a {
+        color: var(--accent-color);
+        text-decoration: none;
+    }
+
+    .rec-title a:hover {
+        color: #1d4ed8;
+    }
+
+    .rec-abstract {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin-bottom: 0.75rem;
+        flex: 1;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .rec-score {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.15rem 0.6rem;
+        border-radius: 50px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+        margin-bottom: 0.5rem;
+    }
+
+    .rec-reason {
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.75rem;
+    }
+
+    .rec-link {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        transition: gap 0.25s ease;
+    }
+
+    .rec-link:hover {
+        gap: 0.5rem;
+        color: #1d4ed8;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1.5rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state i {
+        font-size: 2.5rem;
+        opacity: 0.2;
+        margin-bottom: 1rem;
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Recommended Papers</h1>
+    <p>Based on your reading history and preferences</p>
+</div>
+
+{% if recommendations %}
+<div class="rec-grid">
+    {% for rec in recommendations %}
+    <div class="rec-card">
+        <div class="rec-title"><a href="{% url 'papers:detail' rec.paper.pk %}">{{ rec.paper.title|truncatechars:60
+                }}</a></div>
+        <p class="rec-abstract">{{ rec.paper.abstract|truncatechars:120 }}</p>
+        <span class="rec-score"><i class="fas fa-star"></i> {{ rec.score|floatformat:2 }}</span>
+        <p class="rec-reason">{{ rec.reason }}</p>
+        <a href="{% url 'papers:detail' rec.paper.pk %}" class="rec-link">Read Paper <i
+                class="fas fa-arrow-right"></i></a>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <i class="fas fa-lightbulb"></i>
+    <p>No recommendations available yet.</p>
+    <p>Start bookmarking and rating papers to get personalized recommendations!</p>
+    <a href="{% url 'papers:list' %}" class="feature-btn">Browse Papers</a>
+</div>
+{% endif %}
+{% endblock %}

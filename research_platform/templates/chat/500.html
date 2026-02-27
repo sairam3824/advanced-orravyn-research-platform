@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Server Error - Research Platform{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 text-center">
+        <div class="card glossy-card">
+            <div class="card-body">
+                <h1 class="display-1 text-muted">500</h1>
+                <h2>Server Error</h2>
+                <p class="lead">Either this service is currently unavailable or under maintenance. Please try again later. </p>
+                <div class="mt-4">
+                    <a href="{% url 'home' %}" class="btn btn-primary">Go Home</a>
+                    <button onclick="history.back()" class="btn btn-outline-primary">Go Back</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

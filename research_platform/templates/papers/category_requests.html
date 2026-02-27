@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+
+{% block title %}Category Requests - Research Platform{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Category Requests
+        {% if pending_count %}
+        <span class="badge bg-warning ms-2" style="font-size:0.75rem;">{{ pending_count }} pending</span>
+        {% endif %}
+    </h2>
+</div>
+
+<!-- Status filter tabs -->
+<div class="card glossy-card mb-4">
+    <div class="card-body py-2">
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="?status=pending"
+                class="feature-btn btn-sm {% if status_filter == 'pending' %}active{% else %}feature-btn-muted{% endif %}"
+                style="font-size:0.9rem; padding:0.4rem 1.2rem;">
+                <i class="fas fa-clock"></i>Pending
+            </a>
+            <a href="?status=approved"
+                class="feature-btn btn-sm {% if status_filter == 'approved' %}active{% else %}feature-btn-muted{% endif %}"
+                style="font-size:0.9rem; padding:0.4rem 1.2rem;">
+                <i class="fas fa-check-circle"></i>Approved
+            </a>
+            <a href="?status=rejected" class="feature-btn feature-btn-danger btn-sm"
+                style="font-size:0.9rem; padding:0.4rem 1.2rem; {% if status_filter != 'rejected' %}opacity:0.6;{% endif %}">
+                <i class="fas fa-times-circle"></i>Rejected
+            </a>
+        </div>
+    </div>
+</div>
+
+{% if requests %}
+<div class="row">
+    {% for req in requests %}
+    <div class="col-12 mb-4">
+        <div class="card glossy-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                    <div class="flex-grow-1">
+                        <h5 class="mb-1">{{ req.name }}</h5>
+                        <small class="text-secondary">
+                            Requested by <strong>{{ req.requested_by.username }}</strong>
+                            ({{ req.requested_by.user_type|title }})
+                            &nbsp;&bull;&nbsp;
+                            {{ req.created_at|date:"M d, Y H:i" }}
+                        </small>
+                    </div>
+                    <div>
+                        {% if req.status == 'pending' %}
+                        <span class="badge bg-warning" style="font-size:0.8rem;">Pending</span>
+                        {% elif req.status == 'approved' %}
+                        <span class="badge bg-success" style="font-size:0.8rem;">Approved</span>
+                        {% else %}
+                        <span class="badge bg-danger"
+                            style="font-size:0.8rem; background:var(--secondary-gradient)!important;">Rejected</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <p class="mb-1"><strong>Description:</strong></p>
+                    <p class="text-secondary mb-3">{{ req.description }}</p>
+
+                    <p class="mb-1"><strong>Reason for Request:</strong></p>
+                    <p class="text-secondary mb-0">{{ req.reason }}</p>
+                </div>
+
+                {% if req.reviewed_by %}
+                <div class="mt-3 pt-3" style="border-top:1px solid var(--glass-border);">
+                    <small class="text-secondary">
+                        <i class="fas fa-user-shield me-1"></i>
+                        Reviewed by <strong>{{ req.reviewed_by.username }}</strong>
+                        on {{ req.reviewed_at|date:"M d, Y H:i" }}
+                    </small>
+                </div>
+                {% endif %}
+
+                {% if req.status == 'pending' %}
+                <div class="mt-3 d-flex gap-2">
+                    <form method="post" action="{% url 'papers:approve_category_request' req.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="feature-btn" style="font-size:0.9rem; padding:0.4rem 1.2rem;"
+                            onclick="return confirmAction(event, 'Approve and create category \'{{ req.name }}\'?')">
+                            <i class="fas fa-check"></i>Approve
+                        </button>
+                    </form>
+                    <form method="post" action="{% url 'papers:reject_category_request' req.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="feature-btn feature-btn-danger"
+                            style="font-size:0.9rem; padding:0.4rem 1.2rem;"
+                            onclick="return confirmAction(event, 'Reject category request \'{{ req.name }}\'?')">
+                            <i class="fas fa-times"></i>Reject
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if is_paginated %}
+<nav aria-label="Category requests pagination">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link"
+                href="?status={{ status_filter }}&page={{ page_obj.previous_page_number }}">Previous</a>
+        </li>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+        {% else %}
+        <li class="page-item">
+            <a class="page-link" href="?status={{ status_filter }}&page={{ num }}">{{ num }}</a>
+        </li>
+        {% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?status={{ status_filter }}&page={{ page_obj.next_page_number }}">Next</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+
+{% else %}
+<div class="text-center text-secondary py-5">
+    <i class="fas fa-inbox" style="font-size:3rem; opacity:0.4;"></i>
+    <p class="mt-3">No {{ status_filter }} category requests.</p>
+    {% if status_filter != 'pending' %}
+    <a href="?status=pending" class="feature-btn mt-2" style="font-size:0.9rem; padding:0.4rem 1.2rem;">
+        View Pending
+    </a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

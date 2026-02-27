@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+{% block title %}My Groups - Orravyn Research Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+    }
+
+    .page-header h1 {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .groups-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .group-card {
+        background: transparent;
+        border: none;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        border-radius: 0;
+        padding: 1.5rem 0;
+        transition: all 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+
+    .group-card::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 3px;
+        height: 100%;
+        background: var(--primary-gradient);
+        border-radius: 3px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .group-card:hover {
+        transform: translateX(5px);
+    }
+
+    .group-card:hover::before {
+        opacity: 1;
+    }
+
+    .group-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: rgba(37, 99, 235, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        color: var(--accent-color);
+        margin-bottom: 1rem;
+    }
+
+    .group-name {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .group-desc {
+        font-size: 0.88rem;
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin-bottom: 0.75rem;
+        flex: 1;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .group-meta {
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+
+    .group-meta span {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .group-role {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        padding: 0.15rem 0.55rem;
+        border-radius: 50px;
+        font-size: 0.68rem;
+        font-weight: 600;
+        background: rgba(37, 99, 235, 0.08);
+        color: var(--accent-color);
+    }
+
+    .group-link {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--accent-color);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        transition: gap 0.25s ease;
+    }
+
+    .group-link:hover {
+        gap: 0.5rem;
+        color: #1d4ed8;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1.5rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state i {
+        font-size: 2.5rem;
+        opacity: 0.2;
+        margin-bottom: 1rem;
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>My Groups</h1>
+    <a href="{% url 'groups:create' %}" class="feature-btn"><i class="fas fa-plus"></i> Create Group</a>
+</div>
+
+{% if memberships %}
+<div class="groups-grid">
+    {% for membership in memberships %}
+    <div class="group-card">
+        <div class="group-icon"><i class="fas fa-users"></i></div>
+        <div class="group-name">{{ membership.group.name }}</div>
+        <p class="group-desc">{{ membership.group.description|truncatechars:100 }}</p>
+        <div class="group-meta">
+            <span class="group-role"><i class="fas fa-id-badge"></i> {{ membership.role|title }}</span>
+            <span><i class="fas fa-calendar-alt"></i> Joined {{ membership.joined_at|date:"M d, Y" }}</span>
+        </div>
+        <a href="{% url 'groups:detail' membership.group.pk %}" class="group-link">View Group <i
+                class="fas fa-arrow-right"></i></a>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <i class="fas fa-users"></i>
+    <p>You haven't joined any groups yet.</p>
+    <a href="{% url 'groups:list' %}" class="feature-btn">Browse Groups</a>
+</div>
+{% endif %}
+
+{% if is_paginated %}
+<nav aria-label="My groups pagination" style="margin-top: 1.5rem;">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}<li class="page-item"><a class="page-link"
+                href="?page={{ page_obj.previous_page_number }}">Previous</a></li>{% endif %}
+        {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}<li class="page-item active"><span class="page-link">{{ num }}</span></li>{% else
+        %}<li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>{% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}<li class="page-item"><a class="page-link"
+                href="?page={{ page_obj.next_page_number }}">Next</a></li>{% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

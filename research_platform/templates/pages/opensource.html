@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Open Source - Orravyn Research Platform{% endblock %}
+{% block meta_description %}Learn about the open-source nature and licensing of the Orravyn Research Platform.{% endblock %}
+{% block extra_css %}{% include 'pages/_legal_css.html' %}{% endblock %}
+
+{% block content %}
+<div class="legal-page">
+    <a href="{% url 'home' %}" class="legal-back"><i class="fas fa-arrow-left"></i> Back to Home</a>
+    <div class="legal-hero">
+        <div class="legal-hero-icon"><i class="fab fa-osi"></i></div>
+        <h1>Open Source</h1>
+        <div class="legal-meta">
+            <span><i class="fas fa-balance-scale"></i> Apache License 2.0</span>
+            <span><i class="fab fa-github"></i> <a href="https://github.com/sairam3824" target="_blank"
+                    style="color: var(--accent-color); text-decoration: none;">View on GitHub</a></span>
+        </div>
+    </div>
+    <div class="legal-body">
+        <h2>Our Commitment to Open Source</h2>
+        <p>This platform is built on open-source principles, with all code governed by the Apache License 2.0. We are
+            committed to transparency and plan to make the source code repository public for community contributions.
+        </p>
+
+        <h2>Technology Stack</h2>
+        <div class="about-grid">
+            <div class="about-card">
+                <div class="card-icon"><i class="fab fa-python"></i></div>
+                <h3>Backend</h3>
+                <p>Django, Django REST Framework, Celery, Django Channels, Redis</p>
+            </div>
+            <div class="about-card">
+                <div class="card-icon"><i class="fas fa-brain"></i></div>
+                <h3>AI / ML</h3>
+                <p>PyTorch, TensorFlow, Transformers, Sentence-Transformers, Scikit-learn, PEFT</p>
+            </div>
+            <div class="about-card">
+                <div class="card-icon"><i class="fas fa-database"></i></div>
+                <h3>Data &amp; Search</h3>
+                <p>SQLite, MySQL, Elasticsearch, PyPDF2</p>
+            </div>
+            <div class="about-card">
+                <div class="card-icon"><i class="fas fa-palette"></i></div>
+                <h3>Frontend</h3>
+                <p>HTML5, CSS3, JavaScript, Bootstrap 5, Font Awesome</p>
+            </div>
+        </div>
+
+        <h2>Licensing</h2>
+        <p>All software tools and libraries used in development are retained under their original licenses. The platform
+            codebase, including all enhancements, is released under the <a
+                href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank">Apache License 2.0</a> to ensure
+            transparency and encourage community development.</p>
+        <p>Content sourced from open-access repositories remains subject to its original licensing terms. Users must not
+            redistribute or repurpose any materials beyond what is permitted under the relevant open-source or academic
+            license.</p>
+
+        <h2>Contributing</h2>
+        <p>We welcome community contributions! If you'd like to contribute, please visit our <a
+                href="https://github.com/sairam3824" target="_blank">GitHub repository</a> for guidelines and open
+            issues.</p>
+    </div>
+</div>
+{% endblock %}

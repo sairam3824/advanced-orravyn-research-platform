@@ -1,0 +1,321 @@
+{% extends 'base.html' %}
+{% block title %}Pending Blog Posts - Research Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        margin-bottom: 2rem;
+    }
+
+    .page-header h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .pending-post {
+        background: #fff;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    .pending-post:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        transform: translateY(-2px);
+    }
+
+    .pending-post::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(135deg, #f59e0b, #ef4444);
+        border-radius: 12px 0 0 12px;
+    }
+
+    .post-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .post-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.75rem;
+        line-height: 1.4;
+    }
+
+    .post-meta {
+        display: flex;
+        gap: 1.5rem;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+    }
+
+    .post-meta span {
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .post-excerpt {
+        font-size: 0.95rem;
+        color: var(--text-secondary);
+        line-height: 1.7;
+        margin-bottom: 1.25rem;
+        padding: 1rem;
+        background: rgba(37, 99, 235, 0.02);
+        border-radius: 8px;
+        border-left: 3px solid rgba(37, 99, 235, 0.2);
+    }
+
+    .post-actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        padding-top: 0.5rem;
+        border-top: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .btn-approve {
+        padding: 0.5rem 1rem;
+        background: transparent;
+        color: #10b981;
+        border: 1.5px solid #10b981;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+
+    .btn-approve:hover {
+        background: #10b981;
+        color: #fff;
+    }
+
+    .btn-reject {
+        padding: 0.5rem 1rem;
+        background: transparent;
+        color: #ef4444;
+        border: 1.5px solid #ef4444;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+
+    .btn-reject:hover {
+        background: #ef4444;
+        color: #fff;
+    }
+
+    .btn-view {
+        padding: 0.5rem 1rem;
+        background: transparent;
+        color: var(--accent-color);
+        border: 1.5px solid var(--accent-color);
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+
+    .btn-view:hover {
+        background: var(--accent-color);
+        color: #fff;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal.active {
+        display: flex;
+    }
+
+    .modal-content {
+        background: #fff;
+        padding: 2rem;
+        border-radius: 12px;
+        max-width: 500px;
+        width: 90%;
+    }
+
+    .modal-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+    }
+
+    .modal-actions {
+        display: flex;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1.5rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state i {
+        font-size: 2.5rem;
+        opacity: 0.2;
+        margin-bottom: 1rem;
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Pending Blog Posts</h1>
+    <p style="color: var(--text-secondary); font-size: 0.95rem;">Review and approve blog posts submitted by users</p>
+</div>
+
+<div class="pending-posts">
+    {% for post in posts %}
+    <div class="pending-post">
+        <h3 class="post-title">{{ post.title }}</h3>
+        
+        <div class="post-meta">
+            <span><i class="fas fa-user"></i> {{ post.author.username }}</span>
+            <span><i class="fas fa-calendar"></i> {{ post.created_at|date:"M d, Y" }}</span>
+        </div>
+        
+        {% if post.excerpt %}
+        <div class="post-excerpt">{{ post.excerpt }}</div>
+        {% else %}
+        <div class="post-excerpt">{{ post.content|truncatewords:50 }}</div>
+        {% endif %}
+        
+        <div class="post-actions">
+            <form method="post" action="{% url 'papers:approve_blog_post' post.pk %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn-approve">
+                    <i class="fas fa-check"></i> Approve
+                </button>
+            </form>
+            <button class="btn-reject" onclick="showRejectModal({{ post.pk }}, '{{ post.title|escapejs }}')">
+                <i class="fas fa-times"></i> Reject
+            </button>
+            <a href="#" class="btn-view" onclick="showPreview({{ post.pk }}); return false;">
+                <i class="fas fa-eye"></i> Preview
+            </a>
+        </div>
+        
+        <!-- Preview content (hidden by default) -->
+        <div id="preview-{{ post.pk }}" style="display: none; margin-top: 1.25rem; padding: 1.25rem; background: rgba(37, 99, 235, 0.03); border-radius: 8px; border: 1px solid rgba(37, 99, 235, 0.1);">
+            <h4 style="font-size: 0.9rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.75rem;">Full Preview:</h4>
+            <div style="white-space: pre-wrap; color: var(--text-secondary); line-height: 1.7; font-size: 0.9rem;">{{ post.content|truncatewords:200 }}</div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <i class="fas fa-inbox"></i>
+        <p>No pending blog posts to review.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Reject Modal -->
+<div id="rejectModal" class="modal">
+    <div class="modal-content">
+        <h3 class="modal-title">Reject Blog Post</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 1rem;">Please provide a reason for rejection:</p>
+        <form id="rejectForm" method="post">
+            {% csrf_token %}
+            <textarea name="reason" class="form-control" rows="4" placeholder="Reason for rejection..." required style="width: 100%; padding: 0.7rem; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 8px; font-size: 0.9rem;"></textarea>
+            <div class="modal-actions">
+                <button type="submit" class="btn-reject">
+                    <i class="fas fa-times"></i> Reject Post
+                </button>
+                <button type="button" class="btn-view" onclick="closeRejectModal()">
+                    Cancel
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if is_paginated %}
+<nav aria-label="Pagination" style="margin-top: 2rem;">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+        </li>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+        {% else %}
+        <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+        {% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showRejectModal(postId, postTitle) {
+    const modal = document.getElementById('rejectModal');
+    const form = document.getElementById('rejectForm');
+    form.action = `/papers/blog/${postId}/reject/`;
+    modal.classList.add('active');
+}
+
+function closeRejectModal() {
+    const modal = document.getElementById('rejectModal');
+    modal.classList.remove('active');
+}
+
+function showPreview(postId) {
+    const preview = document.getElementById(`preview-${postId}`);
+    if (preview.style.display === 'none') {
+        preview.style.display = 'block';
+    } else {
+        preview.style.display = 'none';
+    }
+}
+
+// Close modal when clicking outside
+document.getElementById('rejectModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeRejectModal();
+    }
+});
+</script>
+{% endblock %}

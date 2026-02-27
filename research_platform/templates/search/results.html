@@ -1,0 +1,523 @@
+{% extends 'base.html' %}
+{% block title %}Search Results - Orravyn Research Platform{% endblock %}
+{% block extra_css %}
+<style>
+    .filter-sidebar {
+        position: sticky;
+        top: 1rem;
+    }
+
+    .filter-title {
+        font-size: .82rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+    }
+
+    .filter-label {
+        font-weight: 600;
+        font-size: .85rem;
+        color: var(--text-primary);
+        display: block;
+        margin-bottom: .35rem;
+    }
+
+    .filter-input {
+        border: 1.5px solid rgba(0, 0, 0, .08);
+        border-radius: 10px;
+        padding: .5rem .75rem;
+        font-size: .88rem;
+        transition: all .25s ease;
+        width: 100%;
+        background: #fff;
+        color: var(--text-primary);
+    }
+
+    .filter-input:focus {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, .08);
+        outline: none;
+    }
+
+    .filter-btn {
+        padding: .55rem 1.25rem;
+        background: var(--accent-color);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: .85rem;
+        cursor: pointer;
+        transition: all .25s ease;
+        width: 100%;
+    }
+
+    .filter-btn:hover {
+        background: #1d4ed8;
+    }
+
+    .search-bar-wrap {
+        display: flex;
+        gap: .5rem;
+        margin-bottom: 1.25rem;
+        position: relative;
+    }
+
+    .search-bar-input {
+        flex: 1;
+        border: 1.5px solid rgba(0, 0, 0, .08);
+        border-radius: 12px;
+        padding: .6rem 1rem;
+        font-size: .95rem;
+        transition: all .25s ease;
+        background: #fff;
+        color: var(--text-primary);
+    }
+
+    .search-bar-input:focus {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, .08);
+        outline: none;
+    }
+
+    .search-bar-btn {
+        padding: .6rem 1.25rem;
+        background: var(--accent-color);
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: .88rem;
+        cursor: pointer;
+        transition: all .25s ease;
+        white-space: nowrap;
+    }
+
+    .search-bar-btn:hover {
+        background: #1d4ed8;
+    }
+
+    .search-spinner {
+        position: absolute;
+        right: 110px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: .85rem;
+        color: var(--accent-color);
+        display: none;
+    }
+
+    .results-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+
+    .results-header h2 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .results-count {
+        font-size: .82rem;
+        color: var(--accent-color);
+        font-weight: 600;
+    }
+
+    .paper-item {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 14px;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: .75rem;
+        transition: all .3s ease;
+        position: relative;
+    }
+
+    .paper-item::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 3px;
+        height: 100%;
+        background: var(--primary-gradient);
+        border-radius: 3px 0 0 3px;
+        opacity: 0;
+        transition: opacity .3s ease;
+    }
+
+    .paper-item:hover {
+        border-color: rgba(37, 99, 235, .15);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, .05);
+    }
+
+    .paper-item:hover::before {
+        opacity: 1;
+    }
+
+    .paper-item-title {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: .3rem;
+    }
+
+    .paper-item-title a {
+        color: var(--accent-color);
+        text-decoration: none;
+    }
+
+    .paper-item-title a:hover {
+        color: #1d4ed8;
+    }
+
+    .paper-item-abstract {
+        font-size: .88rem;
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin: .4rem 0 .5rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .paper-item-meta {
+        font-size: .78rem;
+        color: var(--text-secondary);
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .paper-item-meta span {
+        display: flex;
+        align-items: center;
+        gap: .25rem;
+    }
+
+    .paper-tag {
+        display: inline-block;
+        padding: .15rem .6rem;
+        border-radius: 50px;
+        font-size: .7rem;
+        font-weight: 500;
+        background: rgba(37, 99, 235, .06);
+        color: var(--accent-color);
+        border: 1px solid rgba(37, 99, 235, .1);
+        margin-right: .25rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1.5rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state i {
+        font-size: 2rem;
+        opacity: .2;
+        margin-bottom: .75rem;
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Filters sidebar (left) -->
+    <div class="col-md-3">
+        <div class="filter-sidebar">
+            <div class="filter-title">Filters</div>
+            <form method="get" id="filter-form">
+                <input type="hidden" name="q" id="filter-q-hidden" value="{{ query }}">
+
+                <div class="mb-3">
+                    <label class="filter-label">Category</label>
+                    <select name="category" class="filter-input" id="filter-category">
+                        <option value="">All Categories</option>
+                        {% for cat in categories %}
+                        {% with cat_id=cat.id|stringformat:"s" %}
+                        {% with cat_str="|"|add:cat_id|add:"|" sel_str="|"|add:selected_category|add:"|" %}
+                        <option value="{{ cat.id }}" {% if cat_str in sel_str %}selected{% endif %}>{{ cat.name }}</option>
+                        {% endwith %}
+                        {% endwith %}
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="filter-label">Author</label>
+                    <input type="text" name="author" class="filter-input" id="filter-author" value="{{ author }}" placeholder="Author name...">
+                </div>
+
+                <div class="mb-3">
+                    <label class="filter-label">Year From</label>
+                    <input type="number" name="year_from" class="filter-input" id="filter-year-from" value="{{ year_from }}" placeholder="e.g. 2020">
+                </div>
+
+                <div class="mb-3">
+                    <label class="filter-label">Year To</label>
+                    <input type="number" name="year_to" class="filter-input" id="filter-year-to" value="{{ year_to }}" placeholder="e.g. 2025">
+                </div>
+
+                <div class="mb-3">
+                    <label class="filter-label">Min Citations</label>
+                    <input type="number" name="citation_min" class="filter-input" id="filter-citation-min" value="{{ citation_min }}" placeholder="e.g. 10" min="0">
+                </div>
+
+                <div class="mb-3">
+                    <label class="filter-label">Max Citations</label>
+                    <input type="number" name="citation_max" class="filter-input" id="filter-citation-max" value="{{ citation_max }}" placeholder="e.g. 100" min="0">
+                </div>
+
+                <div class="mb-3">
+                    <label class="filter-label">
+                        <input type="checkbox" name="boolean" value="on" {% if boolean_mode == 'on' %}checked{% endif %} style="margin-right: 0.3rem;">
+                        Boolean Search (AND, OR, NOT)
+                    </label>
+                </div>
+
+                <button type="submit" class="filter-btn"><i class="fas fa-filter"></i> Apply Filters</button>
+            </form>
+
+            {% if user.is_authenticated %}
+            <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(0,0,0,0.06);">
+                <button onclick="saveCurrentSearch()" class="filter-btn" style="background: #10b981;">
+                    <i class="fas fa-save"></i> Save Search
+                </button>
+                
+                {% if saved_searches %}
+                <div style="margin-top: 1rem;">
+                    <div class="filter-title" style="font-size: 0.75rem;">Saved Searches</div>
+                    {% for saved in saved_searches %}
+                    <div style="padding: 0.4rem 0; font-size: 0.82rem;">
+                        <a href="?q={{ saved.query }}&category={{ saved.filters.category }}&author={{ saved.filters.author }}&year_from={{ saved.filters.year_from }}&year_to={{ saved.filters.year_to }}&citation_min={{ saved.filters.citation_min }}&citation_max={{ saved.filters.citation_max }}&boolean={{ saved.filters.boolean }}" 
+                           style="color: var(--accent-color); text-decoration: none;">
+                            {{ saved.name }}
+                        </a>
+                    </div>
+                    {% endfor %}
+                    <a href="{% url 'search:saved_searches' %}" style="font-size: 0.75rem; color: var(--text-secondary);">View all →</a>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Results panel (right) -->
+    <div class="col-md-9" id="results-panel">
+        <!-- Top search bar -->
+        <form method="get" class="search-bar-wrap" id="search-form">
+            <input type="text" name="q" id="live-search-input" class="search-bar-input" value="{{ query }}" placeholder="Search by paper title, author, or keyword..." autocomplete="off">
+            <input type="hidden" name="category" value="{{ selected_category }}">
+            <input type="hidden" name="author" value="{{ author }}">
+            <input type="hidden" name="year_from" value="{{ year_from }}">
+            <input type="hidden" name="year_to" value="{{ year_to }}">
+            <i class="fas fa-circle-notch fa-spin search-spinner" id="search-spinner"></i>
+            <button type="submit" class="search-bar-btn"><i class="fas fa-search"></i> Search</button>
+        </form>
+
+        <div class="results-header">
+            <h2 id="results-heading">{% if query %}Results for "{{ query }}"{% else %}All Papers{% endif %}</h2>
+            <span class="results-count" id="results-count">{{ page_obj.paginator.count|default:0 }} result{{ page_obj.paginator.count|default:0|pluralize }} found</span>
+        </div>
+
+        <div id="paper-results-list">
+            {% for paper in papers %}
+            <div class="paper-item">
+                <div class="paper-item-title"><a href="{% url 'papers:detail' paper.pk %}">{{ paper.title }}</a></div>
+                <p class="paper-item-abstract">{{ paper.abstract|truncatechars:200 }}</p>
+                <div class="paper-item-meta">
+                    <span><i class="fas fa-user"></i> {{ paper.authors }}</span>
+                    <span><i class="fas fa-calendar-alt"></i> {{ paper.publication_date|date:"Y" }}</span>
+                    <span><i class="fas fa-eye"></i> {{ paper.view_count }}</span>
+                    <span><i class="fas fa-download"></i> {{ paper.download_count }}</span>
+                </div>
+                <div style="margin-top: .4rem">
+                    {% for c in paper.categories.all %}<span class="paper-tag">{{ c.name }}</span>{% endfor %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <i class="fas fa-search"></i>
+                <p>No papers found matching your search criteria.</p>
+                <a href="{% url 'papers:list' %}" class="feature-btn">Browse All Papers</a>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div id="results-pagination">
+            {% if is_paginated %}
+            <nav aria-label="Search pagination" style="margin-top: 1.5rem">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?q={{ query }}&category={{ selected_category }}&author={{ author }}&year_from={{ year_from }}&year_to={{ year_to }}&page={{ page_obj.previous_page_number }}">Previous</a>
+                    </li>
+                    {% endif %}
+                    {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% else %}
+                    <li class="page-item"><a class="page-link" href="?q={{ query }}&category={{ selected_category }}&author={{ author }}&year_from={{ year_from }}&year_to={{ year_to }}&page={{ num }}">{{ num }}</a></li>
+                    {% endif %}
+                    {% endfor %}
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?q={{ query }}&category={{ selected_category }}&author={{ author }}&year_from={{ year_from }}&year_to={{ year_to }}&page={{ page_obj.next_page_number }}">Next</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const searchInput = document.getElementById('live-search-input');
+    const resultsList = document.getElementById('paper-results-list');
+    const resultsCount = document.getElementById('results-count');
+    const resultsHeading = document.getElementById('results-heading');
+    const pagination = document.getElementById('results-pagination');
+    const spinner = document.getElementById('search-spinner');
+    const LIVE_URL = '{% url "search:live" %}';
+
+    let debounceTimer = null;
+    let currentRequest = null;
+
+    function paperHTML(paper) {
+        const cats = paper.categories.map(c => `<span class="paper-tag">${escapeHTML(c)}</span>`).join('');
+        const detailUrl = '/papers/' + paper.id + '/';
+        return `<div class="paper-item">
+            <div class="paper-item-title"><a href="${detailUrl}">${escapeHTML(paper.title)}</a></div>
+            <p class="paper-item-abstract">${escapeHTML(paper.abstract)}</p>
+            <div class="paper-item-meta">
+                <span><i class="fas fa-user"></i> ${escapeHTML(paper.authors)}</span>
+                <span><i class="fas fa-calendar-alt"></i> ${paper.year}</span>
+                <span><i class="fas fa-eye"></i> ${paper.view_count}</span>
+                <span><i class="fas fa-download"></i> ${paper.download_count}</span>
+            </div>
+            <div style="margin-top:.4rem">${cats}</div>
+        </div>`;
+    }
+
+    function escapeHTML(str) {
+        const d = document.createElement('div');
+        d.appendChild(document.createTextNode(String(str)));
+        return d.innerHTML;
+    }
+
+    function fetchResults() {
+        const q = searchInput.value.trim();
+        const category = document.getElementById('filter-category').value;
+        const author = document.getElementById('filter-author').value;
+        const yearFrom = document.getElementById('filter-year-from').value;
+        const yearTo = document.getElementById('filter-year-to').value;
+
+        // Keep filter form's hidden q in sync
+        document.getElementById('filter-q-hidden').value = q;
+
+        const params = new URLSearchParams({ q, category, author, year_from: yearFrom, year_to: yearTo });
+
+        if (currentRequest) currentRequest.abort();
+
+        spinner.style.display = 'block';
+        currentRequest = new AbortController();
+
+        fetch(LIVE_URL + '?' + params.toString(), { signal: currentRequest.signal })
+            .then(r => r.json())
+            .then(data => {
+                spinner.style.display = 'none';
+
+                // Update heading & count
+                resultsHeading.textContent = q ? `Results for "${q}"` : 'All Papers';
+                const n = data.count;
+                resultsCount.textContent = n + ' result' + (n !== 1 ? 's' : '') + ' found';
+
+                // Render papers
+                if (data.papers.length === 0) {
+                    resultsList.innerHTML = `<div class="empty-state">
+                        <i class="fas fa-search"></i>
+                        <p>No papers found matching your search criteria.</p>
+                    </div>`;
+                } else {
+                    resultsList.innerHTML = data.papers.map(paperHTML).join('');
+                }
+
+                // Hide pagination during live search
+                pagination.style.display = 'none';
+            })
+            .catch(err => {
+                if (err.name !== 'AbortError') spinner.style.display = 'none';
+            });
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(fetchResults, 300);
+        });
+    }
+
+    // Sidebar filter changes also trigger live fetch
+    ['filter-category', 'filter-author', 'filter-year-from', 'filter-year-to'].forEach(function (id) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('input', function () {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(fetchResults, 300);
+            });
+            el.addEventListener('change', function () {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(fetchResults, 300);
+            });
+        }
+    });
+})();
+
+function saveCurrentSearch() {
+    const name = prompt('Enter a name for this search:');
+    if (!name) return;
+    
+    const formData = new FormData();
+    formData.append('name', name);
+    formData.append('query', document.getElementById('live-search-input').value);
+    formData.append('category', document.getElementById('filter-category').value);
+    formData.append('author', document.getElementById('filter-author').value);
+    formData.append('year_from', document.getElementById('filter-year-from').value);
+    formData.append('year_to', document.getElementById('filter-year-to').value);
+    formData.append('citation_min', document.getElementById('filter-citation-min').value);
+    formData.append('citation_max', document.getElementById('filter-citation-max').value);
+    formData.append('boolean', document.querySelector('input[name="boolean"]').checked ? 'on' : 'off');
+    
+    fetch('{% url "search:save_search" %}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: formData
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            alert('Search saved successfully!');
+            location.reload();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(err => console.error('Error:', err));
+}
+</script>
+{% endblock %}

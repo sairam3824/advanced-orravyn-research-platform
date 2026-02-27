@@ -1,0 +1,800 @@
+{% extends 'base.html' %}
+{% block title %}{{ paper.title }} - Orravyn Research Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .paper-detail {
+        max-width: 900px;
+    }
+
+    .paper-detail-header {
+        margin-bottom: 1.75rem;
+    }
+
+    .paper-detail-title {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        line-height: 1.4;
+        margin-bottom: 0.75rem;
+    }
+
+    .paper-detail-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+
+    .paper-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.5rem 1rem;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.25s ease;
+        border: 1.5px solid rgba(37, 99, 235, 0.2);
+        background: #fff;
+        color: var(--text-secondary);
+        cursor: pointer;
+    }
+
+    .paper-action:hover {
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+        background: rgba(37, 99, 235, 0.04);
+        transform: translateY(-1px);
+    }
+
+    /* Special states for bookmark and like */
+    .paper-action.bookmarked {
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+        background: rgba(37, 99, 235, 0.08);
+    }
+
+    .paper-action.liked {
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+        background: rgba(37, 99, 235, 0.08);
+    }
+
+    .paper-action.completed-btn {
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+        background: rgba(37, 99, 235, 0.08);
+    }
+
+    .paper-meta-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+        gap: clamp(0.75rem, 2vw, 1.25rem);
+        margin-bottom: 1.75rem;
+        padding: 1.25rem;
+        background: rgba(37, 99, 235, 0.03);
+        border-radius: 14px;
+        border: 1px solid rgba(37, 99, 235, 0.06);
+    }
+
+    .paper-meta-item {
+        font-size: 0.88rem;
+        color: var(--text-secondary);
+    }
+
+    .paper-meta-item strong {
+        color: var(--text-primary);
+        font-weight: 600;
+        display: block;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.15rem;
+    }
+
+    .paper-tag {
+        display: inline-block;
+        padding: 0.2rem 0.7rem;
+        border-radius: 50px;
+        font-size: 0.72rem;
+        font-weight: 500;
+        background: rgba(37, 99, 235, 0.08);
+        color: var(--accent-color);
+        border: 1px solid rgba(37, 99, 235, 0.12);
+        margin-right: 0.3rem;
+        margin-bottom: 0.3rem;
+    }
+
+    .section-label {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .section-label i {
+        color: var(--accent-color);
+        font-size: 0.95rem;
+    }
+
+    .abstract-text {
+        font-size: 0.95rem;
+        color: var(--text-secondary);
+        line-height: 1.8;
+        margin-bottom: 2rem;
+    }
+
+    .sidebar-section {
+        margin-bottom: 1.5rem;
+    }
+
+    .sidebar-title {
+        font-size: 0.82rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-primary);
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--glass-border);
+    }
+
+    .sidebar-item {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+    }
+
+    .sidebar-item:last-child {
+        border-bottom: none;
+    }
+
+    .sidebar-item a {
+        font-size: 0.88rem;
+        color: var(--accent-color);
+        text-decoration: none;
+    }
+
+    .sidebar-item a:hover {
+        color: #1d4ed8;
+    }
+
+    .sidebar-empty {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+    }
+
+    .rating-card {
+        background: rgba(37, 99, 235, 0.03);
+        border: 1px solid rgba(37, 99, 235, 0.06);
+        border-radius: 14px;
+        padding: 1.25rem;
+        margin-top: 1.5rem;
+    }
+
+    .rating-item {
+        padding: 0.75rem 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+    }
+
+    .rating-item:last-child {
+        border-bottom: none;
+    }
+
+    .rating-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        padding: 0.15rem 0.55rem;
+        border-radius: 50px;
+        font-size: 0.72rem;
+        font-weight: 700;
+        background: rgba(245, 158, 11, 0.12);
+        color: #d97706;
+    }
+
+    .form-control,
+    .form-select {
+        border: 1.5px solid rgba(0, 0, 0, 0.08);
+        border-radius: 12px;
+        padding: 0.6rem 0.85rem;
+        font-size: 0.9rem;
+        transition: all 0.25s ease;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+    }
+
+    .complete-btn {
+        background: rgba(37, 99, 235, 0.06);
+        color: var(--accent-color);
+        border: 1.5px solid rgba(37, 99, 235, 0.2) !important;
+    }
+    .complete-btn:hover { background: rgba(37, 99, 235, 0.12); }
+    .completed-btn {
+        background: rgba(16, 185, 129, 0.08);
+        color: #059669;
+        border: 1.5px solid rgba(16, 185, 129, 0.25) !important;
+    }
+    .completed-btn:hover { background: rgba(16, 185, 129, 0.15); }
+
+    /* Toast Notification */
+    .custom-toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #fff;
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        z-index: 10000;
+        min-width: 320px;
+        transform: translateX(400px);
+        opacity: 0;
+        transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        border-left: 4px solid #10b981;
+    }
+
+    .custom-toast.show {
+        transform: translateX(0);
+        opacity: 1;
+    }
+
+    @media (max-width: 768px) {
+        .custom-toast {
+            right: 10px;
+            left: 10px;
+            min-width: auto;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 paper-detail">
+        <div class="paper-detail-header">
+            <h1 class="paper-detail-title">{{ paper.title }}</h1>
+
+            <div class="paper-detail-actions">
+                {% if user.is_authenticated %}
+                <a href="{% url 'papers:bookmark' paper.pk %}" class="paper-action {% if user_bookmark %}bookmarked{% endif %}">
+                    {% if user_bookmark %}<i class="fas fa-bookmark"></i> Bookmarked{% else %}<i
+                        class="far fa-bookmark"></i> Bookmark{% endif %}
+                </a>
+                <button onclick="toggleLike()" id="likeBtn" class="paper-action {% if user_liked %}liked{% endif %}" style="border: 1.5px solid rgba(37, 99, 235, 0.2);">
+                    <i class="{% if user_liked %}fas{% else %}far{% endif %} fa-heart"></i> 
+                    <span id="likeText">{% if user_liked %}Liked{% else %}Like{% endif %}</span>
+                    <span id="likeCount">({{ paper.likes.count }})</span>
+                </button>
+                <button onclick="showShareModal()" class="paper-action" style="border: 1.5px solid rgba(37, 99, 235, 0.2);">
+                    <i class="fas fa-share-alt"></i> Share
+                </button>
+                <button onclick="showReadingListModal()" class="paper-action" style="border: 1.5px solid rgba(37, 99, 235, 0.2);">
+                    <i class="fas fa-list"></i> Add to List
+                </button>
+                {% endif %}
+                <a href="{% url 'chat:paper_chat' paper.pk %}" class="paper-action"><i
+                        class="fas fa-comments"></i> Discussion</a>
+                {% if paper.pdf_path %}
+                <a href="{% url 'papers:view_pdf' paper.pk %}" target="_blank" class="paper-action"><i
+                        class="fas fa-file-pdf"></i> View PDF</a>
+                <a href="{% url 'papers:download' paper.pk %}" class="paper-action"><i
+                        class="fas fa-download"></i> Download</a>
+                {% endif %}
+                <a href="{% url 'papers:summary' paper.pk %}" class="paper-action"><i
+                        class="fas fa-lightbulb"></i> Summary</a>
+                {% if user.is_authenticated %}
+                <button id="markCompleteBtn" class="paper-action {% if reading_progress.completed %}completed-btn{% endif %}"
+                    onclick="toggleComplete()" style="border: 1.5px solid rgba(37, 99, 235, 0.2);">
+                    {% if reading_progress.completed %}
+                        <i class="fas fa-check-circle"></i> Completed
+                    {% else %}
+                        <i class="far fa-check-circle"></i> Mark Complete
+                    {% endif %}
+                </button>
+                {% endif %}
+            </div>
+            {% if user.is_authenticated and reading_progress %}
+            <div style="margin-top:0.75rem;">
+                <div style="display:flex;align-items:center;gap:0.6rem;font-size:0.85rem;color:var(--text-secondary);">
+                    <span><i class="fas fa-book-open"></i> Reading progress</span>
+                    <span id="progressLabel">{{ reading_progress.progress_percentage|floatformat:0 }}%</span>
+                    {% if reading_progress.reading_time_minutes > 0 %}
+                    <span style="margin-left:auto;"><i class="fas fa-clock"></i> {{ reading_progress.reading_time_minutes }} min read</span>
+                    {% endif %}
+                </div>
+                <div style="height:4px;background:rgba(0,0,0,0.08);border-radius:4px;margin-top:0.3rem;">
+                    <div id="progressBar" style="height:100%;border-radius:4px;background:var(--primary-gradient);width:{{ reading_progress.progress_percentage|floatformat:0 }}%;transition:width 0.4s ease;"></div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="paper-meta-grid">
+            <div class="paper-meta-item"><strong>Authors</strong> {{ paper.authors }}</div>
+            <div class="paper-meta-item"><strong>Published</strong> {{ paper.publication_date }}</div>
+            {% if paper.doi %}<div class="paper-meta-item"><strong>DOI</strong> {{ paper.doi }}</div>{% endif %}
+            <div class="paper-meta-item"><strong>Uploaded by</strong> {{ paper.uploaded_by.username }}</div>
+            <div class="paper-meta-item"><strong>Views</strong> {{ paper.view_count }}</div>
+            <div class="paper-meta-item"><strong>Downloads</strong> {{ paper.download_count }}</div>
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+            {% for category in paper.categories.all %}
+            <span class="paper-tag">{{ category.name }}</span>
+            {% endfor %}
+        </div>
+
+        <div class="section-label"><i class="fas fa-align-left"></i> Abstract</div>
+        <p class="abstract-text">{{ paper.abstract }}</p>
+
+        {% if user.is_authenticated %}
+        <div class="rating-card">
+            <div class="section-label"><i class="fas fa-star"></i> Rate This Paper</div>
+            {% if user_rating %}
+            <p style="font-size: 0.9rem; color: var(--text-secondary);">
+                Your rating: <span class="rating-badge"><i class="fas fa-star"></i> {{ user_rating.rating }}/5</span>
+            </p>
+            {% if user_rating.review_text %}
+            <p style="font-size: 0.88rem; color: var(--text-secondary);">{{ user_rating.review_text }}</p>
+            {% endif %}
+            {% else %}
+            <form method="post" action="{% url 'papers:rate' paper.pk %}">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label" style="font-weight: 600; font-size: 0.88rem;">Rating</label>
+                    {{ rating_form.rating }}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label" style="font-weight: 600; font-size: 0.88rem;">Review (Optional)</label>
+                    {{ rating_form.review_text }}
+                </div>
+                <button type="submit" class="feature-btn" style="font-size: 0.88rem; padding: 0.5rem 1.25rem;">Submit
+                    Rating</button>
+            </form>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="rating-card" style="margin-top: 1rem;">
+            <div class="section-label"><i class="fas fa-users"></i> User Ratings</div>
+            {% for rating in ratings %}
+            <div class="rating-item">
+                <strong style="font-size: 0.9rem;">{{ rating.user.username }}</strong>
+                <span class="rating-badge"><i class="fas fa-star"></i> {{ rating.rating }}/5</span>
+                <small style="color: var(--text-secondary); margin-left: 0.5rem;">{{ rating.created_at|date:"M d, Y" }}</small>
+                {% if rating.review_text %}
+                <p style="font-size: 0.88rem; color: var(--text-secondary); margin: 0.3rem 0 0;">{{ rating.review_text }}</p>
+                {% endif %}
+            </div>
+            {% empty %}
+            <p class="sidebar-empty">No ratings yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="sidebar-section">
+            <div class="sidebar-title">Citations ({{ citations.count }})</div>
+            {% for citation in citations %}
+            <div class="sidebar-item"><a href="{% url 'papers:detail' citation.citing_paper.pk %}">{{
+                    citation.citing_paper.title|truncatechars:60 }}</a></div>
+            {% empty %}
+            <p class="sidebar-empty">No citations yet.</p>
+            {% endfor %}
+        </div>
+
+        <div class="sidebar-section">
+            <div class="sidebar-title">References ({{ cited_papers.count }})</div>
+            {% for citation in cited_papers %}
+            <div class="sidebar-item"><a href="{% url 'papers:detail' citation.cited_paper.pk %}">{{
+                    citation.cited_paper.title|truncatechars:60 }}</a></div>
+            {% empty %}
+            <p class="sidebar-empty">No references listed.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% if user.is_authenticated %}
+<script>
+const progressUrl = "{% url 'papers:update_progress' paper.pk %}";
+const csrfToken = "{{ csrf_token }}";
+let isCompleted = {{ reading_progress.completed|yesno:"true,false" }};
+let userLiked = {{ user_liked|yesno:"true,false" }};
+
+// Active reading time tracking (only counts when tab is visible)
+let activeSeconds = 0;
+let tickInterval = null;
+let flushInterval = null;
+
+function startTicking() {
+    if (tickInterval) return;
+    tickInterval = setInterval(() => { activeSeconds++; }, 1000);
+}
+
+function stopTicking() {
+    clearInterval(tickInterval);
+    tickInterval = null;
+}
+
+// Start/stop when tab visibility changes
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) stopTicking(); else startTicking();
+});
+
+// Start immediately if tab is visible
+if (!document.hidden) startTicking();
+
+function flushTime(forceMinutes) {
+    const minutes = forceMinutes !== undefined
+        ? forceMinutes
+        : Math.floor(activeSeconds / 60);
+    if (minutes < 1) return;
+    activeSeconds -= minutes * 60;
+
+    fetch(progressUrl, {
+        method: 'POST',
+        keepalive: true,
+        headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': csrfToken},
+        body: `time_spent=${minutes}&completed=${isCompleted}&progress=0`
+    });
+}
+
+// Flush every 60 seconds of active reading time
+flushInterval = setInterval(() => {
+    const minutes = Math.floor(activeSeconds / 60);
+    if (minutes >= 1) flushTime();
+}, 60000);
+
+// Save remaining time when user leaves the page
+window.addEventListener('beforeunload', () => {
+    stopTicking();
+    const minutes = Math.floor(activeSeconds / 60);
+    if (minutes >= 1) flushTime(minutes);
+});
+
+function toggleComplete() {
+    isCompleted = !isCompleted;
+    const minutes = Math.floor(activeSeconds / 60);
+    activeSeconds = 0;
+
+    fetch(progressUrl, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded', 'X-CSRFToken': csrfToken},
+        body: `completed=${isCompleted}&progress=${isCompleted ? 100 : 0}&time_spent=${minutes}`
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            const btn = document.getElementById('markCompleteBtn');
+            if (isCompleted) {
+                btn.className = btn.className.replace('complete-btn', 'completed-btn');
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> Completed';
+                const bar = document.getElementById('progressBar');
+                const label = document.getElementById('progressLabel');
+                if (bar) bar.style.width = '100%';
+                if (label) label.textContent = '100%';
+            } else {
+                btn.className = btn.className.replace('completed-btn', 'complete-btn');
+                btn.innerHTML = '<i class="far fa-check-circle"></i> Mark Complete';
+            }
+        }
+    });
+}
+
+// Like functionality
+function toggleLike() {
+    fetch("{% url 'papers:like_paper' paper.pk %}", {
+        method: 'POST',
+        headers: {'X-CSRFToken': csrfToken}
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            userLiked = data.liked;
+            const btn = document.getElementById('likeBtn');
+            const icon = btn.querySelector('i');
+            const text = document.getElementById('likeText');
+            const count = document.getElementById('likeCount');
+            
+            if (userLiked) {
+                icon.className = 'fas fa-heart';
+                text.textContent = 'Liked';
+                btn.classList.add('liked');
+            } else {
+                icon.className = 'far fa-heart';
+                text.textContent = 'Like';
+                btn.classList.remove('liked');
+            }
+            count.textContent = `(${data.like_count})`;
+        }
+    });
+}
+
+// Share functionality
+function showShareModal() {
+    document.getElementById('shareModal').style.display = 'flex';
+}
+
+function closeShareModal() {
+    document.getElementById('shareModal').style.display = 'none';
+}
+
+function sharePaper(platform) {
+    fetch("{% url 'papers:share_paper' paper.pk %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrfToken
+        },
+        body: `platform=${platform}`
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            const paperUrl = window.location.href;
+            const paperTitle = "{{ paper.title|escapejs }}";
+            
+            switch(platform) {
+                case 'twitter':
+                    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(paperTitle)}&url=${encodeURIComponent(paperUrl)}`, '_blank');
+                    break;
+                case 'linkedin':
+                    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(paperUrl)}`, '_blank');
+                    break;
+                case 'facebook':
+                    window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(paperUrl)}`, '_blank');
+                    break;
+                case 'email':
+                    window.location.href = `mailto:?subject=${encodeURIComponent(paperTitle)}&body=${encodeURIComponent('Check out this paper: ' + paperUrl)}`;
+                    break;
+                case 'link':
+                    navigator.clipboard.writeText(paperUrl).then(() => {
+                        showToast('Link copied to clipboard!', 'success');
+                    });
+                    break;
+            }
+            closeShareModal();
+        }
+    });
+}
+
+// Beautiful toast notification
+function showToast(message, type = 'success') {
+    const toast = document.createElement('div');
+    toast.className = 'custom-toast';
+    toast.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: ${type === 'success' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)'};">
+                <i class="fas fa-${type === 'success' ? 'check' : 'times'}" style="color: ${type === 'success' ? '#10b981' : '#ef4444'}; font-size: 1.2rem;"></i>
+            </div>
+            <div>
+                <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 0.1rem;">${type === 'success' ? 'Success!' : 'Error'}</div>
+                <div style="font-size: 0.9rem; color: var(--text-secondary);">${message}</div>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Trigger animation
+    setTimeout(() => toast.classList.add('show'), 10);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// Close modal when clicking outside
+document.addEventListener('click', function(e) {
+    const shareModal = document.getElementById('shareModal');
+    if (e.target === shareModal) {
+        closeShareModal();
+    }
+    
+    const readingListModal = document.getElementById('readingListModal');
+    if (e.target === readingListModal) {
+        closeReadingListModal();
+    }
+});
+
+// Reading List functionality
+function showReadingListModal() {
+    document.getElementById('readingListModal').style.display = 'flex';
+    loadReadingLists();
+}
+
+function closeReadingListModal() {
+    document.getElementById('readingListModal').style.display = 'none';
+    hideCreateListForm();
+}
+
+function loadReadingLists() {
+    const container = document.getElementById('readingListsContainer');
+    
+    container.innerHTML = `
+        <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+            <i class="fas fa-spinner fa-spin" style="font-size: 1.5rem;"></i>
+            <p style="margin-top: 0.5rem;">Loading your reading lists...</p>
+        </div>
+    `;
+    
+    fetch('/papers/reading-lists/api/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.lists && data.lists.length > 0) {
+                let html = '';
+                data.lists.forEach(list => {
+                    html += `
+                        <button onclick="addPaperToList(${list.id})" style="display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 0.85rem 1rem; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 10px; background: #fff; cursor: pointer; transition: all 0.25s ease; text-align: left;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <i class="fas fa-list" style="color: var(--accent-color); font-size: 1.1rem;"></i>
+                                <div>
+                                    <div style="font-weight: 600; color: var(--text-primary); font-size: 0.95rem;">${list.name}</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.15rem;">
+                                        ${list.paper_count} paper${list.paper_count !== 1 ? 's' : ''} • ${list.is_public ? 'Public' : 'Private'}
+                                    </div>
+                                </div>
+                            </div>
+                            <i class="fas fa-plus" style="color: var(--text-secondary); font-size: 0.9rem;"></i>
+                        </button>
+                    `;
+                });
+                container.innerHTML = html;
+            } else {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                        <i class="fas fa-list" style="font-size: 2rem; opacity: 0.3;"></i>
+                        <p style="margin-top: 0.75rem; font-size: 0.95rem;">You don't have any reading lists yet.</p>
+                        <p style="font-size: 0.85rem; margin-top: 0.25rem;">Create your first list below!</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            container.innerHTML = `
+                <div style="text-align: center; padding: 1rem; color: #ef4444;">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <p>Error loading lists. Please try again.</p>
+                </div>
+            `;
+        });
+}
+
+function showCreateListForm() {
+    document.getElementById('createListForm').style.display = 'block';
+    document.getElementById('newListName').focus();
+}
+
+function hideCreateListForm() {
+    document.getElementById('createListForm').style.display = 'none';
+    document.getElementById('newListName').value = '';
+}
+
+function createNewList() {
+    const name = document.getElementById('newListName').value.trim();
+    
+    if (!name) {
+        alert('Please enter a list name');
+        return;
+    }
+    
+    fetch('/papers/reading-lists/create/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: `name=${encodeURIComponent(name)}&is_public=false`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Add paper to the newly created list
+            addPaperToList(data.list_id);
+        } else {
+            alert('Error creating list: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error creating list');
+    });
+}
+
+function addPaperToList(listId) {
+    fetch(`/papers/reading-lists/${listId}/add/{{ paper.pk }}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showToast(data.message || 'Added to reading list!');
+            closeReadingListModal();
+        } else {
+            alert('Error adding to list: ' + (data.error || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error adding to list');
+    });
+}
+</script>
+
+<!-- Share Modal -->
+<div id="shareModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+    <div style="background: #fff; padding: 2rem; border-radius: 16px; max-width: 400px; width: 90%;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin: 0;">Share Paper</h3>
+            <button onclick="closeShareModal()" style="background: none; border: none; font-size: 1.5rem; color: var(--text-secondary); cursor: pointer;">&times;</button>
+        </div>
+        <div style="display: grid; gap: 0.75rem;">
+            <button onclick="sharePaper('twitter')" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 10px; background: #fff; cursor: pointer; transition: all 0.25s ease; font-size: 0.95rem; font-weight: 500;">
+                <i class="fab fa-twitter" style="font-size: 1.2rem; color: #1DA1F2;"></i> Share on Twitter
+            </button>
+            <button onclick="sharePaper('linkedin')" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 10px; background: #fff; cursor: pointer; transition: all 0.25s ease; font-size: 0.95rem; font-weight: 500;">
+                <i class="fab fa-linkedin" style="font-size: 1.2rem; color: #0A66C2;"></i> Share on LinkedIn
+            </button>
+            <button onclick="sharePaper('facebook')" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 10px; background: #fff; cursor: pointer; transition: all 0.25s ease; font-size: 0.95rem; font-weight: 500;">
+                <i class="fab fa-facebook" style="font-size: 1.2rem; color: #1877F2;"></i> Share on Facebook
+            </button>
+            <button onclick="sharePaper('email')" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 10px; background: #fff; cursor: pointer; transition: all 0.25s ease; font-size: 0.95rem; font-weight: 500;">
+                <i class="fas fa-envelope" style="font-size: 1.2rem; color: #EA4335;"></i> Share via Email
+            </button>
+            <button onclick="sharePaper('link')" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border: 1.5px solid rgba(0,0,0,0.08); border-radius: 10px; background: #fff; cursor: pointer; transition: all 0.25s ease; font-size: 0.95rem; font-weight: 500;">
+                <i class="fas fa-link" style="font-size: 1.2rem; color: #6B7280;"></i> Copy Link
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Reading List Modal -->
+<div id="readingListModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+    <div style="background: #fff; padding: 2rem; border-radius: 16px; max-width: 450px; width: 90%; max-height: 80vh; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin: 0;">Add to Reading List</h3>
+            <button onclick="closeReadingListModal()" style="background: none; border: none; font-size: 1.5rem; color: var(--text-secondary); cursor: pointer;">&times;</button>
+        </div>
+        
+        <div id="readingListsContainer" style="display: grid; gap: 0.75rem; margin-bottom: 1.5rem;">
+            <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                <i class="fas fa-spinner fa-spin" style="font-size: 1.5rem;"></i>
+                <p style="margin-top: 0.5rem;">Loading your reading lists...</p>
+            </div>
+        </div>
+        
+        <div style="border-top: 1px solid rgba(0,0,0,0.08); padding-top: 1rem;">
+            <button onclick="showCreateListForm()" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.75rem; border: 1.5px dashed var(--accent-color); border-radius: 10px; background: rgba(37, 99, 235, 0.04); color: var(--accent-color); cursor: pointer; font-size: 0.95rem; font-weight: 600; transition: all 0.25s ease;">
+                <i class="fas fa-plus"></i> Create New List
+            </button>
+        </div>
+        
+        <!-- Create List Form (hidden by default) -->
+        <div id="createListForm" style="display: none; margin-top: 1rem; padding: 1rem; background: rgba(37, 99, 235, 0.04); border-radius: 10px;">
+            <input type="text" id="newListName" placeholder="List name..." style="width: 100%; padding: 0.75rem; border: 1.5px solid rgba(0,0,0,0.1); border-radius: 8px; margin-bottom: 0.75rem; font-size: 0.95rem;">
+            <div style="display: flex; gap: 0.5rem;">
+                <button onclick="createNewList()" style="flex: 1; padding: 0.65rem; background: var(--accent-color); color: #fff; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Create</button>
+                <button onclick="hideCreateListForm()" style="flex: 1; padding: 0.65rem; background: #fff; color: var(--text-secondary); border: 1.5px solid rgba(0,0,0,0.1); border-radius: 8px; font-weight: 600; cursor: pointer;">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

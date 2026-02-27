@@ -1,0 +1,377 @@
+{% extends 'base.html' %}
+{% block title %}{{ publisher.profile.full_name }} - Research Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-header {
+        display: flex;
+        gap: 2rem;
+        margin-bottom: 2rem;
+        align-items: flex-start;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    }
+
+    .profile-avatar {
+        flex-shrink: 0;
+    }
+
+    .avatar-circle {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 3px solid rgba(37, 99, 235, 0.15);
+    }
+
+    .avatar-circle img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .avatar-placeholder {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: rgba(37, 99, 235, 0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        color: var(--accent-color);
+    }
+
+    .profile-info h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .verified-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        padding: 0.2rem 0.6rem;
+        border-radius: 50px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+        margin-left: 0.5rem;
+    }
+
+    .profile-meta {
+        font-size: 0.92rem;
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+    }
+
+    .profile-meta i {
+        margin-right: 0.3rem;
+    }
+
+    .profile-links {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .profile-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        padding: 0.4rem 0.8rem;
+        border: 1.5px solid rgba(37, 99, 235, 0.2);
+        border-radius: 8px;
+        font-size: 0.82rem;
+        color: var(--accent-color);
+        text-decoration: none;
+        transition: all 0.25s ease;
+    }
+
+    .profile-link:hover {
+        background: rgba(37, 99, 235, 0.08);
+        border-color: var(--accent-color);
+    }
+
+    .follow-btn {
+        padding: 0.5rem 1.5rem;
+        border: 1.5px solid var(--accent-color);
+        background: transparent;
+        color: var(--accent-color);
+        border-radius: 8px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+
+    .follow-btn:hover {
+        background: var(--accent-color);
+        color: #fff;
+    }
+
+    .follow-btn.following {
+        background: var(--accent-color);
+        color: #fff;
+    }
+
+    .follow-btn.following:hover {
+        background: #dc2626;
+        border-color: #dc2626;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 1.5rem;
+        margin: 2rem 0;
+    }
+
+    .stat-card {
+        text-align: center;
+        padding: 1.5rem 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-3px);
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 900;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+
+    .section-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 2rem 0 1rem;
+    }
+
+    .paper-item {
+        background: transparent;
+        border: none;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+        padding: 1.25rem 0;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .paper-item::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 3px;
+        height: 100%;
+        background: var(--primary-gradient);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .paper-item:hover {
+        transform: translateX(8px);
+    }
+
+    .paper-item:hover::before {
+        opacity: 1;
+    }
+
+    .paper-title {
+        font-size: 1.05rem;
+        font-weight: 600;
+        margin-bottom: 0.3rem;
+    }
+
+    .paper-title a {
+        color: var(--accent-color);
+        text-decoration: none;
+    }
+
+    .paper-title a:hover {
+        color: #1d4ed8;
+    }
+
+    .paper-meta {
+        font-size: 0.82rem;
+        color: var(--text-secondary);
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    @media (max-width: 768px) {
+        .profile-header {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-header">
+    <div class="profile-avatar">
+        {% if publisher.profile.avatar %}
+        <div class="avatar-circle"><img src="{{ publisher.profile.avatar.url }}" alt="Avatar"></div>
+        {% else %}
+        <div class="avatar-placeholder"><i class="fas fa-user"></i></div>
+        {% endif %}
+    </div>
+    <div class="profile-info flex-grow-1">
+        <h1>
+            {{ publisher.profile.full_name }}
+            {% if publisher.profile.is_credentials_verified %}
+            <span class="verified-badge"><i class="fas fa-check-circle"></i> Verified</span>
+            {% endif %}
+        </h1>
+        <div class="profile-meta">
+            {% if publisher.profile.institution %}
+            <div><i class="fas fa-university"></i> {{ publisher.profile.institution }}</div>
+            {% endif %}
+            {% if publisher.profile.orcid %}
+            <div><i class="fas fa-id-card"></i> ORCID: {{ publisher.profile.orcid }}</div>
+            {% endif %}
+            {% if publisher.profile.h_index > 0 %}
+            <div><i class="fas fa-chart-line"></i> H-index: {{ publisher.profile.h_index }}</div>
+            {% endif %}
+        </div>
+        {% if publisher.profile.bio %}
+        <p style="font-size: 0.92rem; color: var(--text-secondary); margin: 1rem 0;">
+            {{ publisher.profile.bio }}
+        </p>
+        {% endif %}
+        {% if publisher.profile.research_interests %}
+        <p style="font-size: 0.88rem; color: var(--text-secondary); margin: 0.5rem 0;">
+            <strong>Research Interests:</strong> {{ publisher.profile.research_interests }}
+        </p>
+        {% endif %}
+        <div class="profile-links">
+            {% if publisher.profile.website %}
+            <a href="{{ publisher.profile.website }}" target="_blank" class="profile-link">
+                <i class="fas fa-globe"></i> Website
+            </a>
+            {% endif %}
+            {% if publisher.profile.google_scholar %}
+            <a href="{{ publisher.profile.google_scholar }}" target="_blank" class="profile-link">
+                <i class="fas fa-graduation-cap"></i> Google Scholar
+            </a>
+            {% endif %}
+            {% if publisher.profile.research_gate %}
+            <a href="{{ publisher.profile.research_gate }}" target="_blank" class="profile-link">
+                <i class="fas fa-flask"></i> ResearchGate
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% if user.is_authenticated and user != publisher %}
+    <div>
+        <button class="follow-btn {% if is_following %}following{% endif %}" 
+                data-user-id="{{ publisher.id }}"
+                onclick="toggleFollow(this)">
+            <i class="fas fa-user-{% if is_following %}check{% else %}plus{% endif %}"></i>
+            <span>{% if is_following %}Following{% else %}Follow{% endif %}</span>
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-number">{{ total_papers }}</div>
+        <div class="stat-label">Papers</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ total_views }}</div>
+        <div class="stat-label">Views</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ total_downloads }}</div>
+        <div class="stat-label">Downloads</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-number">{{ followers_count }}</div>
+        <div class="stat-label">Followers</div>
+    </div>
+</div>
+
+<h2 class="section-title">Recent Papers</h2>
+<div class="papers-list">
+    {% for paper in papers %}
+    <div class="paper-item">
+        <div class="paper-title">
+            <a href="{% url 'papers:detail' paper.pk %}">{{ paper.title }}</a>
+        </div>
+        <div class="paper-meta">
+            <span><i class="fas fa-calendar-alt"></i> {{ paper.publication_date|date:"Y" }}</span>
+            <span><i class="fas fa-eye"></i> {{ paper.view_count }} views</span>
+            <span><i class="fas fa-download"></i> {{ paper.download_count }} downloads</span>
+        </div>
+    </div>
+    {% empty %}
+    <p style="color: var(--text-secondary); text-align: center; padding: 2rem;">No papers published yet.</p>
+    {% endfor %}
+</div>
+
+{% if total_papers > 10 %}
+<div style="text-align: center; margin-top: 2rem;">
+    <a href="{% url 'papers:list' %}?author={{ publisher.profile.full_name }}" class="feature-btn">
+        View All Papers
+    </a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleFollow(btn) {
+    const userId = btn.dataset.userId;
+    const icon = btn.querySelector('i');
+    const text = btn.querySelector('span');
+    
+    fetch(`/accounts/follow/${userId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            if (data.action === 'followed') {
+                btn.classList.add('following');
+                icon.className = 'fas fa-user-check';
+                text.textContent = 'Following';
+            } else {
+                btn.classList.remove('following');
+                icon.className = 'fas fa-user-plus';
+                text.textContent = 'Follow';
+            }
+        }
+    })
+    .catch(err => console.error('Error:', err));
+}
+</script>
+{% endblock %}

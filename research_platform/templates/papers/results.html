@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+{% block title %}Search Results - Orravyn Research Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-sidebar {
+        position: sticky;
+        top: 1rem;
+    }
+
+    .filter-title {
+        font-size: 0.82rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+    }
+
+    .filter-label {
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: var(--text-primary);
+    }
+
+    .filter-input {
+        border: 1.5px solid rgba(0, 0, 0, 0.08);
+        border-radius: 10px;
+        padding: 0.5rem 0.75rem;
+        font-size: 0.88rem;
+        transition: all 0.25s ease;
+        width: 100%;
+    }
+
+    .filter-input:focus {
+        border-color: var(--accent-color);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+        outline: none;
+    }
+
+    .filter-btn {
+        padding: 0.55rem 1.25rem;
+        background: var(--accent-color);
+        color: #fff;
+        border: none;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        width: 100%;
+    }
+
+    .filter-btn:hover {
+        background: #1d4ed8;
+    }
+
+    .results-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+
+    .results-header h1 {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .results-count {
+        font-size: 0.82rem;
+        color: var(--accent-color);
+        font-weight: 600;
+    }
+
+    .paper-item {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: 14px;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 0.75rem;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .paper-item::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 3px;
+        height: 100%;
+        background: var(--primary-gradient);
+        border-radius: 3px 0 0 3px;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .paper-item:hover {
+        border-color: rgba(37, 99, 235, 0.15);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+    }
+
+    .paper-item:hover::before {
+        opacity: 1;
+    }
+
+    .paper-item-title {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 0.3rem;
+    }
+
+    .paper-item-title a {
+        color: var(--accent-color);
+        text-decoration: none;
+    }
+
+    .paper-item-title a:hover {
+        color: #1d4ed8;
+    }
+
+    .paper-item-abstract {
+        font-size: 0.88rem;
+        color: var(--text-secondary);
+        line-height: 1.6;
+        margin: 0.4rem 0 0.5rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .paper-item-meta {
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .paper-item-meta span {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .paper-tag {
+        display: inline-block;
+        padding: 0.15rem 0.6rem;
+        border-radius: 50px;
+        font-size: 0.7rem;
+        font-weight: 500;
+        background: rgba(37, 99, 235, 0.06);
+        color: var(--accent-color);
+        border: 1px solid rgba(37, 99, 235, 0.1);
+        margin-right: 0.25rem;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1.5rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state i {
+        font-size: 2rem;
+        opacity: 0.2;
+        margin-bottom: 0.75rem;
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-3">
+        <div class="filter-sidebar">
+            <div class="filter-title">Filters</div>
+            <form method="get">
+                <input type="hidden" name="q" value="{{ query }}">
+                <div class="mb-3">
+                    <label class="filter-label">Category</label>
+                    <select name="category" class="filter-input">
+                        <option value="">All Categories</option>
+                        {% for cat in categories %}
+                        {% with cat_id=cat.id|stringformat:"s" %}
+                        {% with cat_str="|"|add:cat_id|add:"|" sel_str="|"|add:selected_category|add:"|" %}
+                        <option value="{{ cat.id }}" {% if cat_str in sel_str %}selected{% endif %}>
+                            {{ cat.name }}
+                        </option>
+                        {% endwith %}
+                        {% endwith %}
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="filter-label">Author</label>
+                    <input type="text" name="author" class="filter-input" value="{{ author }}"
+                        placeholder="Author name...">
+                </div>
+                <div class="mb-3">
+                    <label class="filter-label">Year From</label>
+                    <input type="number" name="year_from" class="filter-input" value="{{ year_from }}"
+                        placeholder="e.g. 2020">
+                </div>
+                <div class="mb-3">
+                    <label class="filter-label">Year To</label>
+                    <input type="number" name="year_to" class="filter-input" value="{{ year_to }}"
+                        placeholder="e.g. 2025">
+                </div>
+                <button type="submit" class="filter-btn"><i class="fas fa-filter"></i> Apply Filters</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-md-9">
+        <div class="results-header">
+            <h1>Search Results {% if query %}for "{{ query }}"{% endif %}</h1>
+            <span class="results-count">{{ papers|length }} results found</span>
+        </div>
+
+        {% for paper in papers %}
+        <div class="paper-item">
+            <div class="paper-item-title"><a href="{% url 'papers:detail' paper.pk %}">{{ paper.title }}</a></div>
+            <p class="paper-item-abstract">{{ paper.abstract|truncatechars:200 }}</p>
+            <div class="paper-item-meta">
+                <span><i class="fas fa-user"></i> {{ paper.authors }}</span>
+                <span><i class="fas fa-calendar-alt"></i> {{ paper.publication_date|date:"Y" }}</span>
+                <span><i class="fas fa-eye"></i> {{ paper.view_count }}</span>
+                <span><i class="fas fa-download"></i> {{ paper.download_count }}</span>
+            </div>
+            <div style="margin-top: 0.4rem;">
+                {% for category in paper.categories.all %}
+                <span class="paper-tag">{{ category.name }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <i class="fas fa-search"></i>
+            <p>No papers found matching your search criteria.</p>
+            <a href="{% url 'papers:list' %}" class="feature-btn">Browse All Papers</a>
+        </div>
+        {% endfor %}
+
+        {% if is_paginated %}
+        <nav aria-label="Results pagination" style="margin-top: 1.5rem;">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}<li class="page-item"><a class="page-link"
+                        href="?q={{ query }}&category={{ selected_category }}&author={{ author }}&year_from={{ year_from }}&year_to={{ year_to }}&page={{ page_obj.previous_page_number }}">Previous</a>
+                </li>{% endif %}
+                {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}<li class="page-item active"><span class="page-link">{{ num }}</span>
+                </li>{% else %}<li class="page-item"><a class="page-link"
+                        href="?q={{ query }}&category={{ selected_category }}&author={{ author }}&year_from={{ year_from }}&year_to={{ year_to }}&page={{ num }}">{{
+                        num }}</a></li>{% endif %}
+                {% endfor %}
+                {% if page_obj.has_next %}<li class="page-item"><a class="page-link"
+                        href="?q={{ query }}&category={{ selected_category }}&author={{ author }}&year_from={{ year_from }}&year_to={{ year_to }}&page={{ page_obj.next_page_number }}">Next</a>
+                </li>{% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

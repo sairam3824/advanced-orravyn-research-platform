@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% block title %}Legal Disclaimer - Orravyn Research Platform{% endblock %}
+{% block meta_description %}Legal Disclaimer for the Orravyn Research Platform.{% endblock %}
+{% block extra_css %}{% include 'pages/_legal_css.html' %}{% endblock %}
+
+{% block content %}
+<div class="legal-page">
+    <a href="{% url 'home' %}" class="legal-back"><i class="fas fa-arrow-left"></i> Back to Home</a>
+    <div class="legal-hero">
+        <div class="legal-hero-icon"><i class="fas fa-gavel"></i></div>
+        <h1>Legal Disclaimer</h1>
+        <div class="legal-meta">
+            <span><i class="fas fa-calendar-alt"></i> Effective: August 4, 2025</span>
+            <span><i class="fas fa-tag"></i> Version 1.0</span>
+        </div>
+    </div>
+    <div class="legal-body">
+        <h2>1. No Legal Advice or Professional Guarantee</h2>
+        <p>The information, content, services, and resources provided by the Research Portal are intended solely for
+            educational and research purposes. Nothing presented on or through this platform constitutes legal or
+            professional advice.</p>
+
+        <h2>2. Open-Source and Non-Commercial Nature</h2>
+        <p>The Research Portal is a non-commercial, student-developed open-source project. It is maintained on a
+            best-effort basis without warranties of any kind. All code, features, and academic resources are provided
+            "as is" under the Apache License 2.0.</p>
+
+        <h2>3. Content Liability</h2>
+        <p>All research papers uploaded by users or sourced from open-access repositories are provided for academic
+            sharing only. The platform does not guarantee the accuracy, originality, or compliance of any uploaded
+            content. If you believe any content violates your rights, please report it to the development team. We aim
+            to respond within 72 hours.</p>
+
+        <h2>4. AI Features and Data Use</h2>
+        <p>Certain features may involve automated systems, including anonymized data analysis and AI-driven
+            recommendations. These features are experimental and subject to ongoing development. The platform is not
+            liable for any decisions drawn from AI-generated outputs.</p>
+
+        <h2>5. External Links and Third-Party Services</h2>
+        <p>The platform may include links to external academic repositories or open-source libraries. These are provided
+            solely for user convenience and do not imply endorsement.</p>
+
+        <h2>6. No Commercial Relationship</h2>
+        <p>Use of the Research Portal does not create any commercial, contractual, academic, or professional
+            relationship between users and the platform developers.</p>
+
+        <h2>7. Jurisdiction and Governing Law</h2>
+        <p>This platform is maintained by individuals based in India. Use of the platform is subject to the laws of
+            India, including the Digital Personal Data Protection Act, 2023. Where applicable, the GDPR is respected in
+            the handling of user data.</p>
+
+        <h2>8. Intellectual Property and Licensing</h2>
+        <p>All platform code is released under the Apache License 2.0. Content sourced from open-access repositories
+            remains subject to its original licensing terms.</p>
+
+        <h2>9. Indemnification</h2>
+        <p>By using the Research Portal, you agree to indemnify and hold harmless its developers and contributors from
+            any claim, liability, loss, or damage arising from your use of the platform.</p>
+
+        <h2>10. Contact</h2>
+        <p>For legal questions or DMCA notices, please contact: <a
+                href="mailto:sairam.maruri@gmail.com">sairam.maruri@gmail.com</a>.</p>
+    </div>
+</div>
+{% endblock %}

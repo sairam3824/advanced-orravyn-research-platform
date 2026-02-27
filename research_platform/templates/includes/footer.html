@@ -1,0 +1,69 @@
+<footer role="contentinfo" class="site-footer">
+    <div class="container">
+
+        <!-- Top row: Brand + navigation columns -->
+        <div class="footer-grid">
+
+            <!-- Brand column -->
+            <div class="footer-brand">
+                <a href="{% url 'home' %}" class="footer-logo">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>Orravyn Research</span>
+                </a>
+                <p class="footer-tagline">Empowering researchers worldwide with AI&#8209;driven discovery, open
+                    collaboration, and seamless knowledge sharing.</p>
+                <div class="footer-social">
+                    <a href="https://github.com/sairam3824" target="_blank" rel="noopener noreferrer"
+                        aria-label="GitHub"><i class="fab fa-github"></i></a>
+                    <a href="mailto:sairam.maruri@gmail.com" aria-label="Email"><i class="fas fa-envelope"></i></a>
+                </div>
+            </div>
+
+            <!-- Platform column -->
+            <div class="footer-col">
+                <h4 class="footer-heading">Platform</h4>
+                <ul>
+                    <li><a href="{% url 'papers:list' %}">Browse Papers</a></li>
+                    <li><a href="{% url 'papers:categories' %}">Categories</a></li>
+                    <li><a href="{% url 'groups:list' %}">Research Groups</a></li>
+                    <li><a href="{% url 'search:search' %}">Search</a></li>
+                    <li><a href="{% url 'chat:yggdrasil_chatbot' %}">Yggdrasil AI</a></li>
+                </ul>
+            </div>
+
+            <!-- Legal column -->
+            <div class="footer-col">
+                <h4 class="footer-heading">Legal</h4>
+                <ul>
+                    <li><a href="{% url 'privacy' %}">Privacy Policy</a></li>
+                    <li><a href="{% url 'terms' %}">Terms &amp; Conditions</a></li>
+                    <li><a href="{% url 'liability' %}">User Liability</a></li>
+                    <li><a href="{% url 'disclaimer' %}">Legal Disclaimer</a></li>
+                </ul>
+            </div>
+
+            <!-- About column -->
+            <div class="footer-col">
+                <h4 class="footer-heading">About</h4>
+                <ul>
+                    <li><a href="{% url 'about' %}">Project Overview</a></li>
+                    <li><a href="{% url 'team' %}">Our Team</a></li>
+                    <li><a href="{% url 'opensource' %}">Open Source</a></li>
+                    <li><a href="{% url 'contact' %}">Contact Us</a></li>
+                    <li><a href="{% url 'faq' %}">FAQ</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Divider -->
+        <div class="footer-divider"></div>
+
+        <!-- Bottom bar -->
+        <div class="footer-bottom">
+            <p>&copy; 2026 Orravyn Research Platform. All rights reserved.</p>
+            <p class="footer-license">Released under the <a href="https://www.apache.org/licenses/LICENSE-2.0"
+                    target="_blank" rel="noopener noreferrer">Apache License 2.0</a></p>
+        </div>
+
+    </div>
+</footer>

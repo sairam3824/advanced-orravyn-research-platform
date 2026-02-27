@@ -1,0 +1,317 @@
+{% extends 'base.html' %}
+
+{% block title %}Page Not Found — Orravyn Research Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .error-page {
+        min-height: 70vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 3rem 1.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Animated background orbs - removed */
+
+    .error-wrapper {
+        max-width: 600px;
+        position: relative;
+        z-index: 1;
+    }
+
+    /* Glitch-style 404 */
+    .error-code-display {
+        font-size: 10rem;
+        font-weight: 900;
+        line-height: 1;
+        letter-spacing: -6px;
+        margin-bottom: 0.5rem;
+        position: relative;
+        user-select: none;
+    }
+
+    .error-code-display .digit {
+        display: inline-block;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: digitPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+
+    .error-code-display .digit:nth-child(1) {
+        animation-delay: 0.1s;
+    }
+
+    .error-code-display .digit:nth-child(2) {
+        animation-delay: 0.25s;
+    }
+
+    .error-code-display .digit:nth-child(3) {
+        animation-delay: 0.4s;
+    }
+
+    @keyframes digitPop {
+        0% {
+            opacity: 0;
+            transform: translateY(40px) scale(0.8);
+        }
+
+        100% {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    /* Floating astronaut/compass icon */
+    .error-illustration {
+        width: 100px;
+        height: 100px;
+        margin: 0 auto 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    .error-illustration .orbit-ring {
+        position: absolute;
+        width: 100px;
+        height: 100px;
+        border: 2px dashed rgba(37, 99, 235, 0.15);
+        border-radius: 50%;
+        animation: spin 12s linear infinite;
+    }
+
+    .error-illustration .orbit-dot {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background: var(--accent-color);
+        border-radius: 50%;
+        top: -5px;
+        left: 50%;
+        transform: translateX(-50%);
+        box-shadow: 0 0 12px rgba(37, 99, 235, 0.5);
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .error-illustration .center-icon {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        background: rgba(37, 99, 235, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: var(--accent-color);
+        z-index: 1;
+        animation: breathe 3s ease-in-out infinite;
+    }
+
+    @keyframes breathe {
+
+        0%,
+        100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.1);
+        }
+
+        50% {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px 8px rgba(37, 99, 235, 0.08);
+        }
+    }
+
+    .error-title {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.75rem;
+    }
+
+    .error-message {
+        font-size: 0.95rem;
+        color: var(--text-secondary);
+        line-height: 1.75;
+        margin-bottom: 2.5rem;
+        max-width: 440px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* Buttons */
+    .error-actions {
+        display: flex;
+        gap: 0.85rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .error-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.6rem;
+        border-radius: 12px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .error-btn-primary {
+        background: var(--primary-gradient);
+        color: #fff;
+        box-shadow: 0 4px 16px rgba(37, 99, 235, 0.3);
+    }
+
+    .error-btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 28px rgba(37, 99, 235, 0.4);
+        color: #fff;
+    }
+
+    .error-btn-ghost {
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        color: var(--accent-color);
+        backdrop-filter: blur(10px);
+    }
+
+    .error-btn-ghost:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-glass);
+        background: rgba(37, 99, 235, 0.06);
+        color: var(--accent-color);
+    }
+
+    /* Quick links */
+    .error-quick-links {
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--glass-border);
+    }
+
+    .error-quick-links-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+        opacity: 0.7;
+    }
+
+    .quick-chips {
+        display: flex;
+        gap: 0.6rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .quick-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.45rem 1rem;
+        border-radius: 50px;
+        font-size: 0.78rem;
+        font-weight: 500;
+        text-decoration: none;
+        color: var(--text-secondary);
+        background: rgba(37, 99, 235, 0.05);
+        border: 1px solid rgba(37, 99, 235, 0.1);
+        transition: all 0.25s ease;
+    }
+
+    .quick-chip:hover {
+        background: rgba(37, 99, 235, 0.12);
+        color: var(--accent-color);
+        border-color: rgba(37, 99, 235, 0.25);
+        transform: translateY(-2px);
+    }
+
+    .quick-chip i {
+        font-size: 0.7rem;
+    }
+
+    @media (max-width: 575.98px) {
+        .error-code-display {
+            font-size: 6rem;
+            letter-spacing: -3px;
+        }
+
+        .error-actions {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .error-btn {
+            width: 100%;
+            max-width: 260px;
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="error-page">
+    <div class="error-wrapper">
+
+        <div class="error-illustration">
+            <div class="orbit-ring">
+                <div class="orbit-dot"></div>
+            </div>
+            <div class="center-icon">
+                <i class="fas fa-satellite"></i>
+            </div>
+        </div>
+
+        <div class="error-code-display">
+            <span class="digit">4</span><span class="digit">0</span><span class="digit">4</span>
+        </div>
+
+        <h1 class="error-title">Lost in Research Space</h1>
+        <p class="error-message">The page you're looking for seems to have drifted into the academic void. It may have
+            been moved, renamed, or it never existed.</p>
+
+        <div class="error-actions">
+            <a href="{% url 'home' %}" class="error-btn error-btn-primary">
+                <i class="fas fa-home"></i> Back to Home
+            </a>
+            <a href="{% url 'search:search' %}" class="error-btn error-btn-ghost">
+                <i class="fas fa-search"></i> Search Papers
+            </a>
+        </div>
+
+        <div class="error-quick-links">
+            <div class="error-quick-links-label">Popular Destinations</div>
+            <div class="quick-chips">
+                <a href="{% url 'papers:list' %}" class="quick-chip"><i class="fas fa-file-alt"></i> Papers</a>
+                <a href="{% url 'papers:categories' %}" class="quick-chip"><i class="fas fa-tags"></i> Categories</a>
+                <a href="{% url 'groups:list' %}" class="quick-chip"><i class="fas fa-users"></i> Groups</a>
+                <a href="{% url 'chat:yggdrasil_chatbot' %}" class="quick-chip"><i class="fas fa-robot"></i>
+                    Yggdrasil</a>
+                <a href="{% url 'faq' %}" class="quick-chip"><i class="fas fa-question-circle"></i> FAQ</a>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block title %}Delete Paper - Orravyn Research Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .delete-page {
+        max-width: 480px;
+        margin: 2rem auto;
+        text-align: center;
+    }
+
+    .delete-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: rgba(220, 38, 38, 0.08);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: #dc2626;
+        margin-bottom: 1.25rem;
+    }
+
+    .delete-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .delete-paper-name {
+        font-size: 0.95rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.75rem;
+    }
+
+    .delete-warning {
+        font-size: 0.85rem;
+        color: #dc2626;
+        font-weight: 500;
+        margin-bottom: 1.5rem;
+    }
+
+    .delete-actions {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: center;
+    }
+
+    .delete-btn {
+        padding: 0.6rem 1.5rem;
+        background: #dc2626;
+        color: #fff;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.92rem;
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+
+    .delete-btn:hover {
+        background: #b91c1c;
+        box-shadow: 0 4px 14px rgba(220, 38, 38, 0.3);
+    }
+
+    .cancel-btn {
+        padding: 0.6rem 1.5rem;
+        border: 1.5px solid rgba(0, 0, 0, 0.08);
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.92rem;
+        color: var(--text-secondary);
+        text-decoration: none;
+        background: #fff;
+        transition: all 0.25s ease;
+    }
+
+    .cancel-btn:hover {
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="delete-page">
+    <div class="delete-icon"><i class="fas fa-trash-alt"></i></div>
+    <div class="delete-title">Delete Paper</div>
+    <p class="delete-paper-name">Are you sure you want to delete "<strong>{{ object.title }}</strong>"?</p>
+    <p class="delete-warning"><i class="fas fa-exclamation-triangle"></i> This action cannot be undone.</p>
+    <form method="post">
+        {% csrf_token %}
+        <div class="delete-actions">
+            <button type="submit" class="delete-btn"><i class="fas fa-trash"></i> Yes, Delete</button>
+            <a href="{% url 'papers:detail' object.pk %}" class="cancel-btn">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

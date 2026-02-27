@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}Summary: {{ paper.title }} - Orravyn Research Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+  .summary-page {
+    max-width: 720px;
+  }
+
+  .summary-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .summary-header h1 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+  }
+
+  .summary-header .back-link {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--accent-color);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .summary-header .back-link:hover {
+    color: #1d4ed8;
+  }
+
+  .summary-content {
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    line-height: 1.85;
+  }
+
+  .summary-pending {
+    text-align: center;
+    padding: 2.5rem 1.5rem;
+    color: var(--text-secondary);
+  }
+
+  .summary-pending i {
+    font-size: 2rem;
+    opacity: 0.3;
+    margin-bottom: 0.75rem;
+    display: block;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="summary-page">
+  <div class="summary-header">
+    <a href="{% url 'papers:detail' paper.pk %}" class="back-link"><i class="fas fa-arrow-left"></i> Back to paper</a>
+    <h1>{{ paper.title }}</h1>
+  </div>
+
+  {% if paper.summary %}
+  <div class="summary-content">{{ paper.summary }}</div>
+  {% else %}
+  <div class="summary-pending">
+    <i class="fas fa-spinner fa-pulse"></i>
+    <p><em>Summary is being generated. Please check back later.</em></p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
