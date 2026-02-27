@@ -1,0 +1,4 @@
+# Django template files — Prettier must NOT format these.
+# Django template tags ({% %}) must stay on a single line.
+# Prettier wraps long lines and breaks Django's template parser.
+templates/
