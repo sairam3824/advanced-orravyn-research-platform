@@ -1,0 +1,17 @@
+{
+  "printWidth": 9999,
+  "tabWidth": 4,
+  "useTabs": false,
+  "semi": true,
+  "singleQuote": false,
+  "overrides": [
+    {
+      "files": ["templates/**/*.html", "*.html"],
+      "options": {
+        "parser": "html",
+        "printWidth": 9999,
+        "htmlWhitespaceSensitivity": "ignore"
+      }
+    }
+  ]
+}
