@@ -1,0 +1,14 @@
+conda activate research_platform
+
+cd research_platform
+python manage.py runserver
+
+python manage.py migrate
+
+python manage.py createsuperuser
+
+
+conda activate research_platform
+cd research_platform
+python manage.py migrate
+python manage.py runserver
