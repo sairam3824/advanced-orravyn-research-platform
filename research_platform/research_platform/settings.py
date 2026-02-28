@@ -1,14 +1,24 @@
 import os
 from pathlib import Path
 from datetime import timedelta
+from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.environ.get(
-    'DJANGO_SECRET_KEY',
-    'dev-only-insecure-key-change-before-deploying-to-production'
-)
-DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
+# DEBUG must be set before SECRET_KEY so the key check can respect dev mode
+DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
+
+_secret_key = os.environ.get('DJANGO_SECRET_KEY', '')
+if not _secret_key:
+    if DEBUG:
+        # Allow insecure fallback only in local development
+        _secret_key = 'dev-only-insecure-key-change-before-deploying-to-production'
+    else:
+        raise ImproperlyConfigured(
+            'DJANGO_SECRET_KEY environment variable must be set in production. '
+            'Generate one with: python -c "import secrets; print(secrets.token_hex(50))"'
+        )
+SECRET_KEY = _secret_key
 ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
 
 INSTALLED_APPS = [
