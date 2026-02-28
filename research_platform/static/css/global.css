@@ -119,6 +119,14 @@ body::before {
     letter-spacing: -0.02em;
 }
 
+.navbar-brand span {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 400;
+    font-size: 1.35rem;
+    letter-spacing: 0em;
+    color: var(--text-primary) !important;
+}
+
 .navbar-brand:hover {
     transform: translateX(2px);
 }

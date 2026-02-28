@@ -283,8 +283,7 @@
         <div class="stat-icon pending"><i class="fas fa-clock"></i></div>
         <div class="stat-number">{{ pending_count }}</div>
         <div class="stat-label">Pending Approval</div>
-        {% if pending_count > 0 %}<a href="{% url 'papers:pending_approval' %}" class="stat-action">Review →</a>{% endif
-        %}
+        {% if pending_count > 0 %}<a href="{% url 'papers:pending_approval' %}" class="stat-action">Review →</a>{% endif %}
     </div>
     <div class="stat-card">
         <div class="stat-icon total"><i class="fas fa-file-alt"></i></div>
