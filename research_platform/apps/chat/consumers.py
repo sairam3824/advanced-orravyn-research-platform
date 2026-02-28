@@ -6,9 +6,14 @@ from .models import ChatRoom, ChatMessage
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
+        user = self.scope['user']
+        if not user.is_authenticated:
+            await self.close()
+            return
+
         self.room_id = self.scope['url_route']['kwargs']['room_id']
         self.room_group_name = f'chat_{self.room_id}'
-        
+
         await self.channel_layer.group_add(
             self.room_group_name,
             self.channel_name
@@ -23,7 +28,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
     
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
-        message = text_data_json['message']
+        message = text_data_json.get('message', '').strip()
+        if not message:
+            return
         user = self.scope['user']
         
         # Save message to database

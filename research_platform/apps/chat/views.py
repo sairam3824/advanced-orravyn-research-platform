@@ -8,7 +8,7 @@ from django.contrib import messages
 from django.db import models
 from .models import ChatRoom, ChatMessage
 from apps.papers.models import Paper
-from apps.groups.models import Group
+from apps.groups.models import Group, GroupMember
 from apps.chat.utils import is_offensive
 import json
 
@@ -132,8 +132,11 @@ def send_message_ajax(request, room_id):
     return JsonResponse({'status': 'error', 'message': 'Invalid request'})
 
 def generate_simple_bot_response(message, paper):
+    if paper is None:
+        return "I can only answer questions about papers. No paper is associated with this chat room."
+
     message_lower = message.lower()
-    
+
     if 'abstract' in message_lower:
         return f"The abstract: {paper.abstract[:150]}..."
     elif 'author' in message_lower:
@@ -175,8 +178,9 @@ class GroupChatRoomView(ChatRoomView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         group_id = kwargs['group_id']
-        
+
         group = get_object_or_404(Group, pk=group_id)
+        get_object_or_404(GroupMember, group=group, user=self.request.user)
         chat_room, created = ChatRoom.objects.get_or_create(
             group=group,
             defaults={'created_by': self.request.user}
