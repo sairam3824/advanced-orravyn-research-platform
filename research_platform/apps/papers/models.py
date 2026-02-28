@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Avg
 from django.utils import timezone
 from apps.accounts.models import User
 
@@ -28,6 +29,8 @@ class Paper(models.Model):
     download_count = models.PositiveIntegerField(default=0)
     view_count = models.PositiveIntegerField(default=0)
     summary = models.TextField(blank=True, null=True)
+    is_archived = models.BooleanField(default=False)
+    archived_at = models.DateTimeField(blank=True, null=True)
     
     class Meta:
         db_table = 'papers'
@@ -38,10 +41,7 @@ class Paper(models.Model):
     
     @property
     def average_rating(self):
-        ratings = self.ratings.all()
-        if ratings:
-            return sum(r.rating for r in ratings) / len(ratings)
-        return 0
+        return self.ratings.aggregate(avg=Avg('rating'))['avg'] or 0
     
     @property
     def citation_count(self):
