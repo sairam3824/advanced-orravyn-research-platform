@@ -32,7 +32,7 @@ urlpatterns = [
     # Advanced Features
     path('<int:pk>/export/<str:format>/', views.export_citation, name='export_citation'),
     path('<int:pk>/progress/', views.update_reading_progress, name='update_progress'),
-    path('<int:pk>/versions/', views.PaperVersionListView.as_view(), name='versions'),
+    path('<int:paper_id>/versions/', views.PaperVersionListView.as_view(), name='versions'),
     path('<int:pk>/upload-version/', views.upload_paper_version, name='upload_version'),
     path('<int:pk>/annotations/', views.get_annotations, name='get_annotations'),
     path('<int:pk>/annotate/', views.add_annotation, name='add_annotation'),

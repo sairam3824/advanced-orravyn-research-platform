@@ -5,15 +5,11 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 from django.contrib import messages
 from django.urls import reverse_lazy, reverse
 from django.http import JsonResponse, HttpResponse, Http404
-from django.db.models import Q, Avg, Count
+from django.db.models import Q, Avg, Count, F
 from django.core.paginator import Paginator
-from .models import Paper, Category, Bookmark, Rating, Citation, CategoryRequest
+from .models import Paper, Category, Bookmark, Rating, Citation, CategoryRequest, PaperView, ReadingProgress
 from .forms import PaperUploadForm, PaperEditForm, RatingForm, CategoryRequestForm
 from apps.accounts.permissions import IsPublisherOrAbove, IsModeratorOrAdmin
-from django.views.generic import CreateView
-from django.db.models import Q, F
-from .models import Paper, Rating, Citation, Bookmark, PaperView, ReadingProgress
-from .forms import RatingForm
 
 class PaperListView(ListView):
     model = Paper
@@ -348,9 +344,9 @@ class BookmarkListCreateView(generics.ListCreateAPIView):
 
 class RatingListCreateView(generics.ListCreateAPIView):
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def get_queryset(self):
-        return Rating.objects.filter(user=self.request.user)
+        return Rating.objects.filter(user=self.request.user).select_related('paper')
     
     def list(self, request, *args, **kwargs):
         ratings = self.get_queryset()
@@ -664,10 +660,13 @@ def update_reading_progress(request, pk):
             paper=paper
         )
         
-        progress.progress_percentage = max(0.0, min(100.0, float(request.POST.get('progress', 0))))
-        progress.last_page = max(1, int(request.POST.get('page', 1)))
-        progress.completed = request.POST.get('completed', 'false') == 'true'
-        progress.reading_time_minutes += max(0, int(request.POST.get('time_spent', 0)))
+        try:
+            progress.progress_percentage = max(0.0, min(100.0, float(request.POST.get('progress', 0))))
+            progress.last_page = max(1, int(request.POST.get('page', 1)))
+            progress.completed = request.POST.get('completed', 'false') == 'true'
+            progress.reading_time_minutes += max(0, int(request.POST.get('time_spent', 0)))
+        except (ValueError, TypeError):
+            return JsonResponse({'success': False, 'error': 'Invalid input values'}, status=400)
         progress.save()
 
         return JsonResponse({'success': True, 'progress': progress.progress_percentage, 'completed': progress.completed})
@@ -726,23 +725,29 @@ def add_annotation(request, pk):
     """Add annotation to a paper"""
     if request.method == 'POST':
         paper = get_object_or_404(Paper, pk=pk)
-        
+
+        try:
+            page_number = int(request.POST.get('page', 1))
+            position_data = json.loads(request.POST.get('position', '{}'))
+        except (ValueError, TypeError, json.JSONDecodeError):
+            return JsonResponse({'success': False, 'error': 'Invalid page or position data'}, status=400)
+
         annotation = PaperAnnotation.objects.create(
             paper=paper,
             user=request.user,
-            page_number=int(request.POST.get('page', 1)),
+            page_number=page_number,
             annotation_text=request.POST.get('annotation', ''),
             highlight_text=request.POST.get('highlight', ''),
-            position_data=json.loads(request.POST.get('position', '{}')),
+            position_data=position_data,
             is_public=request.POST.get('is_public', 'false') == 'true'
         )
-        
+
         return JsonResponse({
             'success': True,
             'annotation_id': annotation.id,
             'created_at': annotation.created_at.strftime('%Y-%m-%d %H:%M')
         })
-    
+
     return JsonResponse({'success': False})
 
 
