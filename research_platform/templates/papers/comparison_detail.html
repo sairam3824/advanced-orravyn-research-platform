@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}{{ comparison.name }} - Orravyn Research{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; flex-wrap: wrap; gap: .75rem; }
+    .page-header h1 { font-size: 1.6rem; font-weight: 700; color: var(--text-primary); }
+    .back-link { font-size: .88rem; color: var(--accent-color); text-decoration: none; display: inline-flex; align-items: center; gap: .4rem; }
+    .back-link:hover { text-decoration: underline; }
+
+    .comparison-table-wrap { overflow-x: auto; margin-bottom: 2rem; }
+    .comparison-table { width: 100%; border-collapse: collapse; min-width: 600px; }
+    .comparison-table th, .comparison-table td {
+        padding: .85rem 1rem; text-align: left;
+        border-bottom: 1px solid var(--glass-border); vertical-align: top;
+    }
+    .comparison-table th { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--text-secondary); background: transparent; }
+    .comparison-table td { font-size: .88rem; color: var(--text-primary); line-height: 1.5; }
+    .comparison-table td:first-child { font-weight: 600; color: var(--text-secondary); font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; white-space: nowrap; }
+    .comparison-table tr:hover td { background: rgba(37,99,235,.02); }
+
+    .paper-col-header { font-size: .9rem !important; font-weight: 700 !important; color: var(--text-primary) !important; text-transform: none !important; letter-spacing: 0 !important; }
+    .paper-col-header a { color: var(--accent-color); text-decoration: none; font-size: .78rem; font-weight: 400; display: block; margin-top: .2rem; }
+    .paper-col-header a:hover { text-decoration: underline; }
+
+    .score-chip { display: inline-flex; align-items: center; gap: .3rem; padding: .2rem .6rem; background: rgba(37,99,235,.06); border-radius: 50px; font-size: .78rem; color: var(--accent-color); }
+
+    .notes-section { padding: 1.5rem; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 12px; }
+    .notes-section h3 { font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-secondary); margin-bottom: .75rem; }
+    .notes-text { font-size: .9rem; color: var(--text-primary); line-height: 1.7; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-columns" style="color:var(--accent-color);margin-right:.5rem"></i>{{ comparison.name }}</h1>
+    <a href="{% url 'papers:comparison_list' %}" class="back-link"><i class="fas fa-arrow-left"></i> All Comparisons</a>
+</div>
+
+<div class="comparison-table-wrap">
+    <table class="comparison-table">
+        <thead>
+            <tr>
+                <th>Field</th>
+                {% for paper in comparison.papers.all %}
+                <th class="paper-col-header">
+                    {{ paper.title|truncatechars:50 }}
+                    <a href="{% url 'papers:detail' paper.pk %}"><i class="fas fa-external-link-alt" style="font-size:.7rem;margin-right:.2rem"></i>View paper</a>
+                </th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Authors</td>
+                {% for paper in comparison.papers.all %}<td>{{ paper.authors|truncatechars:80 }}</td>{% endfor %}
+            </tr>
+            <tr>
+                <td>Published</td>
+                {% for paper in comparison.papers.all %}<td>{% if paper.publication_date %}{{ paper.publication_date|date:"M d, Y" }}{% else %}—{% endif %}</td>{% endfor %}
+            </tr>
+            <tr>
+                <td>DOI</td>
+                {% for paper in comparison.papers.all %}<td>{% if paper.doi %}{{ paper.doi }}{% else %}—{% endif %}</td>{% endfor %}
+            </tr>
+            <tr>
+                <td>Categories</td>
+                {% for paper in comparison.papers.all %}<td>{% for cat in paper.categories.all %}<span class="score-chip">{{ cat.name }}</span> {% empty %}—{% endfor %}</td>{% endfor %}
+            </tr>
+            <tr>
+                <td>Views</td>
+                {% for paper in comparison.papers.all %}<td>{{ paper.view_count }}</td>{% endfor %}
+            </tr>
+            <tr>
+                <td>Downloads</td>
+                {% for paper in comparison.papers.all %}<td>{{ paper.download_count }}</td>{% endfor %}
+            </tr>
+            <tr>
+                <td>Abstract</td>
+                {% for paper in comparison.papers.all %}<td style="max-width:280px;">{{ paper.abstract|truncatewords:40|default:"—" }}</td>{% endfor %}
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+{% if comparison.notes %}
+<div class="notes-section">
+    <h3><i class="fas fa-sticky-note" style="margin-right:.4rem"></i>Notes</h3>
+    <div class="notes-text">{{ comparison.notes|linebreaks }}</div>
+</div>
+{% endif %}
+{% endblock %}

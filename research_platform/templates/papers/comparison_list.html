@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block title %}Paper Comparisons - Orravyn Research{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+    .page-header h1 { font-size: 1.6rem; font-weight: 700; color: var(--text-primary); }
+
+    .comparisons-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%,320px),1fr)); gap: 1.25rem; }
+
+    .comparison-card {
+        background: transparent; border: 1px solid var(--glass-border); border-radius: 14px;
+        padding: 1.35rem; transition: all .3s ease; position: relative;
+    }
+    .comparison-card:hover { transform: translateY(-3px); border-color: var(--accent-color); }
+
+    .comparison-name { font-size: 1rem; font-weight: 700; color: var(--text-primary); margin-bottom: .6rem; }
+    .comparison-papers { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: .85rem; }
+    .comparison-paper-tag { font-size: .75rem; padding: .18rem .6rem; background: rgba(37,99,235,.06); color: var(--accent-color); border-radius: 50px; border: 1px solid rgba(37,99,235,.1);
+        max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .comparison-meta { font-size: .78rem; color: var(--text-secondary); margin-bottom: .85rem; }
+    .comparison-actions { display: flex; gap: .6rem; }
+    .view-btn, .delete-btn {
+        flex: 1; padding: .45rem .6rem; border-radius: 8px; font-size: .82rem;
+        font-weight: 600; text-align: center; text-decoration: none; transition: all .25s ease; border: none; cursor: pointer;
+    }
+    .view-btn { background: rgba(37,99,235,.08); color: var(--accent-color); }
+    .view-btn:hover { background: var(--accent-color); color: #fff; }
+    .delete-btn { background: rgba(239,68,68,.06); color: #ef4444; }
+    .delete-btn:hover { background: rgba(239,68,68,.15); }
+
+    /* Create form */
+    .create-section { margin-top: 2.5rem; padding-top: 2rem; border-top: 1px solid var(--glass-border); }
+    .create-section h3 { font-size: .85rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-secondary); margin-bottom: 1.25rem; }
+    .create-form { display: flex; flex-direction: column; gap: .85rem; max-width: 600px; }
+    .create-form input[type=text] {
+        padding: .6rem .85rem; background: var(--glass-bg); border: 1.5px solid var(--glass-border);
+        border-radius: 10px; font-size: .9rem; color: var(--text-primary); font-family: inherit;
+    }
+    .create-form input[type=text]:focus { outline: none; border-color: var(--accent-color); }
+    .papers-select { padding: .6rem .85rem; background: var(--glass-bg); border: 1.5px solid var(--glass-border); border-radius: 10px; font-size: .88rem; color: var(--text-primary); min-height: 120px; }
+    .papers-select:focus { outline: none; border-color: var(--accent-color); }
+    .select-hint { font-size: .78rem; color: var(--text-secondary); }
+    .create-btn { padding: .6rem 1.4rem; background: var(--primary-gradient); border: none; border-radius: 10px; color: #fff; font-weight: 600; font-size: .9rem; cursor: pointer; align-self: flex-start; }
+    .create-btn:hover { opacity: .88; }
+
+    .empty-state { text-align: center; padding: 3rem 1.5rem; color: var(--text-secondary); }
+    .empty-state i { font-size: 2.5rem; opacity: .2; display: block; margin-bottom: .75rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-columns" style="color:var(--accent-color);margin-right:.5rem"></i>Paper Comparisons</h1>
+</div>
+
+{% if comparisons %}
+<div class="comparisons-grid">
+    {% for comparison in comparisons %}
+    <div class="comparison-card">
+        <div class="comparison-name">{{ comparison.name }}</div>
+        <div class="comparison-papers">
+            {% for paper in comparison.papers.all|slice:":4" %}
+            <span class="comparison-paper-tag" title="{{ paper.title }}">{{ paper.title|truncatechars:30 }}</span>
+            {% endfor %}
+            {% if comparison.papers.count > 4 %}<span class="comparison-paper-tag">+{{ comparison.papers.count|add:"-4" }} more</span>{% endif %}
+        </div>
+        <div class="comparison-meta"><i class="fas fa-calendar" style="margin-right:.3rem"></i>{{ comparison.created_at|date:"M d, Y" }} &middot; {{ comparison.papers.count }} papers</div>
+        <div class="comparison-actions">
+            <a href="{% url 'papers:comparison_detail' comparison.pk %}" class="view-btn"><i class="fas fa-eye" style="margin-right:.3rem"></i>View</a>
+            <form method="post" action="{% url 'papers:delete_comparison' comparison.pk %}" style="flex:1;">
+                {% csrf_token %}
+                <button type="submit" class="delete-btn" style="width:100%;" onclick="return confirm('Delete this comparison?')">
+                    <i class="fas fa-trash" style="margin-right:.3rem"></i>Delete
+                </button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <i class="fas fa-columns"></i>
+    <p>No comparisons yet.</p>
+</div>
+{% endif %}
+
+<!-- Create new comparison -->
+<div class="create-section">
+    <h3><i class="fas fa-plus" style="margin-right:.4rem"></i>New Comparison</h3>
+    <form method="post" action="{% url 'papers:create_comparison' %}" class="create-form">
+        {% csrf_token %}
+        <input type="text" name="name" placeholder="Comparison name" required>
+        <select name="papers" multiple class="papers-select">
+            {% for paper in request.user.papers.filter %}{% endfor %}
+        </select>
+        <span class="select-hint">Hold Ctrl/Cmd to select multiple papers. You can also create comparisons from the papers list.</span>
+        <a href="{% url 'papers:list' %}" style="font-size:.88rem;color:var(--accent-color);text-decoration:none;">
+            <i class="fas fa-arrow-right" style="margin-right:.3rem"></i>Go to Papers to start a comparison
+        </a>
+    </form>
+</div>
+{% endblock %}

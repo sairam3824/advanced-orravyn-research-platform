@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block title %}Versions — {{ paper.title }} - Orravyn Research{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; }
+    .page-header h1 { font-size: 1.6rem; font-weight: 700; color: var(--text-primary); margin-bottom: .3rem; }
+    .page-header .sub { font-size: 0.88rem; color: var(--text-secondary); }
+    .page-header .sub a { color: var(--accent-color); text-decoration: none; }
+
+    .action-btn {
+        padding: 0.6rem 1.2rem; background: transparent;
+        color: var(--accent-color); border: 1.5px solid var(--accent-color);
+        border-radius: 8px; font-size: 0.88rem; font-weight: 600;
+        text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem;
+        transition: all 0.25s ease; white-space: nowrap;
+    }
+    .action-btn:hover { background: var(--accent-color); color: #fff; }
+
+    .version-card {
+        background: transparent; border-bottom: 1px solid var(--glass-border);
+        padding: 1.5rem 0; display: flex; align-items: flex-start; gap: 1.25rem; position: relative;
+    }
+    .version-card::before {
+        content: ''; position: absolute; left: 0; top: 0;
+        width: 3px; height: 100%; background: var(--primary-gradient);
+        opacity: 0; transition: opacity 0.3s ease;
+    }
+    .version-card:hover::before { opacity: 1; }
+
+    .version-badge {
+        flex-shrink: 0; width: 48px; height: 48px; border-radius: 12px;
+        background: rgba(37,99,235,0.08); display: flex; align-items: center;
+        justify-content: center; font-weight: 800; font-size: 0.9rem; color: var(--accent-color);
+    }
+    .version-info { flex: 1; }
+    .version-changes { font-size: 0.95rem; color: var(--text-primary); font-weight: 500; margin-bottom: .4rem; line-height: 1.5; }
+    .version-meta { font-size: 0.8rem; color: var(--text-secondary); display: flex; gap: 1rem; flex-wrap: wrap; }
+    .version-meta span { display: flex; align-items: center; gap: .3rem; }
+    .version-link { font-size: 0.85rem; font-weight: 600; color: var(--accent-color); text-decoration: none; white-space: nowrap; }
+    .version-link:hover { text-decoration: underline; }
+
+    .upload-form { background: var(--glass-bg); border: 1.5px solid var(--glass-border); border-radius: 14px; padding: 1.5rem; margin-top: 2.5rem; }
+    .upload-form h3 { font-size: 1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1rem; }
+    .form-group { margin-bottom: 1rem; }
+    .form-label { font-size: 0.85rem; font-weight: 600; color: var(--text-primary); display: block; margin-bottom: .4rem; }
+    .form-control {
+        width: 100%; padding: .6rem .85rem; background: var(--glass-bg);
+        border: 1.5px solid var(--glass-border); border-radius: 10px;
+        font-size: .9rem; color: var(--text-primary); font-family: inherit;
+    }
+    .form-control:focus { outline: none; border-color: var(--accent-color); }
+
+    .empty-state { text-align: center; padding: 3rem 1.5rem; color: var(--text-secondary); }
+    .empty-state i { font-size: 2.5rem; opacity: .2; display: block; margin-bottom: .75rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1><i class="fas fa-code-branch" style="color:var(--accent-color);margin-right:.5rem"></i>Version History</h1>
+        <p class="sub"><a href="{% url 'papers:detail' paper.pk %}">{{ paper.title }}</a></p>
+    </div>
+    {% if request.user == paper.uploaded_by %}
+    <a href="{% url 'papers:upload_version' paper.pk %}" class="action-btn">
+        <i class="fas fa-upload"></i> Upload New Version
+    </a>
+    {% endif %}
+</div>
+
+{% for version in versions %}
+<div class="version-card">
+    <div class="version-badge">v{{ version.version_number }}</div>
+    <div class="version-info">
+        <div class="version-changes">{{ version.changes_description }}</div>
+        <div class="version-meta">
+            <span><i class="fas fa-user"></i> {{ version.uploaded_by.username }}</span>
+            <span><i class="fas fa-calendar"></i> {{ version.created_at|date:"M d, Y" }}</span>
+        </div>
+    </div>
+    {% if version.pdf_path %}
+    <a href="{{ version.pdf_path.url }}" class="version-link" target="_blank">
+        <i class="fas fa-file-pdf"></i> View PDF
+    </a>
+    {% endif %}
+</div>
+{% empty %}
+<div class="empty-state">
+    <i class="fas fa-code-branch"></i>
+    <p>No versions uploaded yet.</p>
+</div>
+{% endfor %}
+{% endblock %}

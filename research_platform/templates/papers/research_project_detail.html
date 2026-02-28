@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% block title %}{{ project.name }} - Orravyn Research{% endblock %}
+
+{% block extra_css %}
+<style>
+    .project-hero { margin-bottom: 2.5rem; }
+    .project-hero h1 { font-size: 1.8rem; font-weight: 700; color: var(--text-primary); margin-bottom: .5rem; }
+    .project-meta { display: flex; gap: 1.25rem; flex-wrap: wrap; font-size: .85rem; color: var(--text-secondary); margin-bottom: 1rem; }
+    .project-meta span { display: flex; align-items: center; gap: .35rem; }
+    .status-badge {
+        display: inline-block; padding: .25rem .8rem; border-radius: 50px;
+        font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+    }
+    .status-planning { background: rgba(148,163,184,.1); color: #94a3b8; }
+    .status-active { background: rgba(16,185,129,.1); color: #10b981; }
+    .status-completed { background: rgba(37,99,235,.1); color: #2563eb; }
+    .status-on_hold { background: rgba(245,158,11,.1); color: #f59e0b; }
+
+    .content-layout { display: grid; grid-template-columns: 1fr 320px; gap: 2.5rem; }
+    @media (max-width: 900px) { .content-layout { grid-template-columns: 1fr; } }
+
+    .section { margin-bottom: 2.5rem; }
+    .section-heading { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-secondary); border-bottom: 1px solid var(--glass-border); padding-bottom: .5rem; margin-bottom: 1.25rem; }
+
+    /* Tasks */
+    .task-item { display: flex; align-items: flex-start; gap: .85rem; padding: .85rem 0; border-bottom: 1px solid var(--glass-border); }
+    .task-item:last-child { border-bottom: none; }
+    .task-status-icon { width: 22px; height: 22px; border-radius: 50%; border: 2px solid; flex-shrink: 0; margin-top: .1rem; display: flex; align-items: center; justify-content: center; font-size: .65rem; }
+    .task-status-icon.todo { border-color: #94a3b8; color: #94a3b8; }
+    .task-status-icon.in_progress { border-color: #f59e0b; color: #f59e0b; background: rgba(245,158,11,.08); }
+    .task-status-icon.completed { border-color: #10b981; color: #10b981; background: rgba(16,185,129,.08); }
+    .task-info { flex: 1; }
+    .task-title { font-size: .9rem; font-weight: 600; color: var(--text-primary); margin-bottom: .2rem; }
+    .task-title.done { text-decoration: line-through; opacity: .5; }
+    .task-desc { font-size: .8rem; color: var(--text-secondary); line-height: 1.5; }
+    .task-footer { display: flex; gap: .75rem; font-size: .75rem; color: var(--text-secondary); margin-top: .3rem; flex-wrap: wrap; }
+    .task-footer span { display: flex; align-items: center; gap: .25rem; }
+
+    /* Papers */
+    .paper-item { padding: .85rem 0; border-bottom: 1px solid var(--glass-border); }
+    .paper-item:last-child { border-bottom: none; }
+    .paper-item a { text-decoration: none; color: var(--text-primary); font-size: .9rem; font-weight: 500; }
+    .paper-item a:hover { color: var(--accent-color); }
+    .paper-item-meta { font-size: .78rem; color: var(--text-secondary); margin-top: .2rem; }
+
+    /* Members */
+    .member-item { display: flex; align-items: center; gap: .75rem; padding: .65rem 0; border-bottom: 1px solid var(--glass-border); }
+    .member-item:last-child { border-bottom: none; }
+    .member-avatar { width: 34px; height: 34px; border-radius: 50%; background: rgba(37,99,235,.1); display: flex; align-items: center; justify-content: center; font-size: .85rem; font-weight: 700; color: var(--accent-color); flex-shrink: 0; }
+    .member-name { font-size: .88rem; font-weight: 500; color: var(--text-primary); }
+    .member-role { font-size: .75rem; color: var(--text-secondary); }
+
+    .empty-sub { font-size: .85rem; color: var(--text-secondary); padding: 1rem 0; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="project-hero">
+    <h1>{{ project.name }}</h1>
+    <div class="project-meta">
+        <span class="status-badge status-{{ project.status }}">{{ project.get_status_display }}</span>
+        <span><i class="fas fa-user"></i> {{ project.created_by.username }}</span>
+        {% if project.start_date %}<span><i class="fas fa-calendar-alt"></i> {{ project.start_date|date:"M d, Y" }}</span>{% endif %}
+        {% if project.end_date %}<span><i class="fas fa-flag-checkered"></i> {{ project.end_date|date:"M d, Y" }}</span>{% endif %}
+        <span><i class="fas fa-users"></i> {{ project.members.count }} member{{ project.members.count|pluralize }}</span>
+    </div>
+    {% if project.description %}
+    <p style="font-size:.95rem;color:var(--text-secondary);line-height:1.7;max-width:700px;">{{ project.description }}</p>
+    {% endif %}
+</div>
+
+<div class="content-layout">
+    <!-- Main: Tasks + Papers -->
+    <div>
+        <!-- Tasks -->
+        <div class="section">
+            <div class="section-heading"><i class="fas fa-tasks" style="margin-right:.4rem"></i>Tasks</div>
+            {% if tasks %}
+            {% for task in tasks %}
+            <div class="task-item">
+                <div class="task-status-icon {{ task.status }}">
+                    {% if task.status == 'completed' %}<i class="fas fa-check"></i>
+                    {% elif task.status == 'in_progress' %}<i class="fas fa-circle-notch fa-spin"></i>
+                    {% else %}<i class="fas fa-circle" style="font-size:.4rem"></i>{% endif %}
+                </div>
+                <div class="task-info">
+                    <div class="task-title {% if task.status == 'completed' %}done{% endif %}">{{ task.title }}</div>
+                    {% if task.description %}<div class="task-desc">{{ task.description }}</div>{% endif %}
+                    <div class="task-footer">
+                        {% if task.assigned_to %}<span><i class="fas fa-user"></i> {{ task.assigned_to.username }}</span>{% endif %}
+                        {% if task.due_date %}<span><i class="fas fa-clock"></i> Due {{ task.due_date|date:"M d, Y" }}</span>{% endif %}
+                        <span class="status-badge status-{{ task.status }}" style="font-size:.65rem;padding:.1rem .5rem;">{{ task.get_status_display }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <p class="empty-sub">No tasks yet.</p>
+            {% endif %}
+        </div>
+
+        <!-- Papers -->
+        <div class="section">
+            <div class="section-heading"><i class="fas fa-file-alt" style="margin-right:.4rem"></i>Papers ({{ project.papers.count }})</div>
+            {% for paper in project.papers.all %}
+            <div class="paper-item">
+                <a href="{% url 'papers:detail' paper.pk %}">{{ paper.title }}</a>
+                <div class="paper-item-meta">{{ paper.authors|truncatechars:60 }} &middot; {{ paper.created_at|date:"M Y" }}</div>
+            </div>
+            {% empty %}
+            <p class="empty-sub">No papers linked to this project.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Sidebar: Members -->
+    <div>
+        <div class="section">
+            <div class="section-heading"><i class="fas fa-users" style="margin-right:.4rem"></i>Members</div>
+            <!-- Creator -->
+            <div class="member-item">
+                <div class="member-avatar">{{ project.created_by.username|first|upper }}</div>
+                <div>
+                    <div class="member-name">{{ project.created_by.username }}</div>
+                    <div class="member-role">Creator</div>
+                </div>
+            </div>
+            {% for member in project.members.all %}
+            {% if member != project.created_by %}
+            <div class="member-item">
+                <div class="member-avatar">{{ member.username|first|upper }}</div>
+                <div>
+                    <div class="member-name">{{ member.username }}</div>
+                    <div class="member-role">Member</div>
+                </div>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

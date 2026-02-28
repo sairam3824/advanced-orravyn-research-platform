@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% block title %}Archived Papers - Orravyn Research{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+    .page-header h1 { font-size: 1.6rem; font-weight: 700; color: var(--text-primary); }
+    .back-link { font-size: .88rem; color: var(--accent-color); text-decoration: none; display: inline-flex; align-items: center; gap: .4rem; }
+    .back-link:hover { text-decoration: underline; }
+
+    .paper-item {
+        background: transparent; border-bottom: 1px solid var(--glass-border);
+        padding: 1.25rem 0; display: flex; align-items: flex-start; gap: 1rem; position: relative;
+    }
+    .paper-item::before {
+        content: ''; position: absolute; left: 0; top: 0;
+        width: 3px; height: 100%; background: var(--primary-gradient);
+        opacity: 0; transition: opacity .3s ease;
+    }
+    .paper-item:hover::before { opacity: 1; }
+
+    .paper-info { flex: 1; }
+    .paper-title { font-size: .95rem; font-weight: 600; color: var(--text-primary); margin-bottom: .3rem; }
+    .paper-title a { text-decoration: none; color: inherit; }
+    .paper-title a:hover { color: var(--accent-color); }
+    .paper-meta { display: flex; gap: 1rem; font-size: .78rem; color: var(--text-secondary); flex-wrap: wrap; }
+    .paper-meta span { display: flex; align-items: center; gap: .3rem; }
+
+    .unarchive-btn {
+        padding: .4rem .9rem; background: transparent; color: var(--text-secondary);
+        border: 1px solid var(--glass-border); border-radius: 7px; font-size: .8rem;
+        font-weight: 600; cursor: pointer; white-space: nowrap; transition: all .25s ease;
+    }
+    .unarchive-btn:hover { border-color: var(--accent-color); color: var(--accent-color); }
+
+    .empty-state { text-align: center; padding: 4rem 1.5rem; color: var(--text-secondary); }
+    .empty-state i { font-size: 2.5rem; opacity: .2; display: block; margin-bottom: .75rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-archive" style="color:var(--accent-color);margin-right:.5rem"></i>Archived Papers</h1>
+    <a href="{% url 'papers:my_papers' %}" class="back-link"><i class="fas fa-arrow-left"></i> My Papers</a>
+</div>
+
+{% for paper in papers %}
+<div class="paper-item">
+    <div class="paper-info">
+        <div class="paper-title"><a href="{% url 'papers:detail' paper.pk %}">{{ paper.title }}</a></div>
+        <div class="paper-meta">
+            <span><i class="fas fa-user"></i> {{ paper.authors|truncatechars:50 }}</span>
+            {% if paper.archived_at %}<span><i class="fas fa-archive"></i> Archived {{ paper.archived_at|date:"M d, Y" }}</span>{% endif %}
+            <span><i class="fas fa-eye"></i> {{ paper.view_count }} views</span>
+            <span><i class="fas fa-download"></i> {{ paper.download_count }} downloads</span>
+        </div>
+    </div>
+    <form method="post" action="{% url 'papers:archive_paper' paper.pk %}">
+        {% csrf_token %}
+        <button type="submit" class="unarchive-btn"><i class="fas fa-undo" style="margin-right:.3rem"></i>Unarchive</button>
+    </form>
+</div>
+{% empty %}
+<div class="empty-state">
+    <i class="fas fa-archive"></i>
+    <p>No archived papers.</p>
+    <p style="font-size:.85rem;margin-top:.5rem">Papers you archive will appear here.</p>
+</div>
+{% endfor %}
+
+{% if is_paginated %}
+<nav style="margin-top:2rem;">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>{% endif %}
+        {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}<li class="page-item active"><span class="page-link">{{ num }}</span></li>
+        {% else %}<li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>{% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>{% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% block title %}Tags - Orravyn Research{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+    .page-header h1 { font-size: 1.6rem; font-weight: 700; color: var(--text-primary); }
+
+    .create-tag-form { display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; }
+    .create-tag-form input[type=text] {
+        padding: .5rem .85rem; background: var(--glass-bg); border: 1.5px solid var(--glass-border);
+        border-radius: 8px; font-size: .88rem; color: var(--text-primary); font-family: inherit; width: 180px;
+    }
+    .create-tag-form input[type=text]:focus { outline: none; border-color: var(--accent-color); }
+    .create-tag-form input[type=color] { width: 36px; height: 36px; border: 1.5px solid var(--glass-border); border-radius: 8px; padding: 2px; cursor: pointer; }
+    .create-tag-btn {
+        padding: .5rem 1rem; background: var(--primary-gradient); border: none; border-radius: 8px;
+        color: #fff; font-size: .85rem; font-weight: 600; cursor: pointer; transition: opacity .2s ease;
+    }
+    .create-tag-btn:hover { opacity: .88; }
+
+    .tags-grid { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 2rem; }
+    .tag-item {
+        display: inline-flex; align-items: center; gap: .5rem;
+        padding: .45rem .9rem; border-radius: 50px;
+        font-size: .85rem; font-weight: 600; border: 1.5px solid;
+        transition: transform .2s ease;
+    }
+    .tag-item:hover { transform: translateY(-2px); }
+    .tag-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .tag-name { color: var(--text-primary); }
+    .tag-count { font-size: .75rem; font-weight: 400; color: var(--text-secondary); }
+
+    .empty-state { text-align: center; padding: 4rem 1.5rem; color: var(--text-secondary); }
+    .empty-state i { font-size: 2.5rem; opacity: .2; display: block; margin-bottom: .75rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-tags" style="color:var(--accent-color);margin-right:.5rem"></i>Tags</h1>
+</div>
+
+<!-- Create tag -->
+<form method="post" action="{% url 'papers:create_tag' %}" class="create-tag-form" id="create-tag-form">
+    {% csrf_token %}
+    <input type="text" name="name" placeholder="Tag name" required maxlength="50">
+    <input type="color" name="color" value="#2563eb" title="Choose tag color">
+    <button type="submit" class="create-tag-btn"><i class="fas fa-plus" style="margin-right:.3rem"></i>Create Tag</button>
+</form>
+
+{% if tags %}
+<div class="tags-grid">
+    {% for tag in tags %}
+    <div class="tag-item" style="border-color: {{ tag.color }}20; background: {{ tag.color }}0d;">
+        <span class="tag-dot" style="background: {{ tag.color }};"></span>
+        <span class="tag-name">{{ tag.name }}</span>
+        <span class="tag-count">&middot; {{ tag.paper_count }}</span>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <i class="fas fa-tags"></i>
+    <p>No tags created yet.</p>
+</div>
+{% endif %}
+
+{% block extra_js %}
+<script>
+(function() {
+    const form = document.getElementById('create-tag-form');
+    if (!form) return;
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const data = new FormData(form);
+        fetch('{% url "papers:create_tag" %}', { method: 'POST', body: data, headers: {'X-CSRFToken': data.get('csrfmiddlewaretoken')} })
+            .then(r => r.json())
+            .then(d => { if (d.success) location.reload(); else alert(d.error || 'Error creating tag'); })
+            .catch(() => form.submit());
+    });
+})();
+</script>
+{% endblock %}
+{% endblock %}

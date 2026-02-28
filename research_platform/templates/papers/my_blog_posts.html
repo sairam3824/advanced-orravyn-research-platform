@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% block title %}My Blog Posts - Orravyn Research{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+    .page-header h1 { font-size: 1.6rem; font-weight: 700; color: var(--text-primary); }
+    .action-btn {
+        padding: .6rem 1.2rem; background: transparent; color: var(--accent-color);
+        border: 1.5px solid var(--accent-color); border-radius: 8px; font-size: .88rem;
+        font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: .4rem;
+        transition: all .25s ease;
+    }
+    .action-btn:hover { background: var(--accent-color); color: #fff; }
+
+    .post-item {
+        background: transparent; border-bottom: 1px solid var(--glass-border);
+        padding: 1.5rem 0; display: flex; align-items: flex-start; gap: 1rem;
+        position: relative;
+    }
+    .post-item::before {
+        content: ''; position: absolute; left: 0; top: 0;
+        width: 3px; height: 100%; background: var(--primary-gradient);
+        opacity: 0; transition: opacity .3s ease;
+    }
+    .post-item:hover::before { opacity: 1; }
+
+    .post-info { flex: 1; }
+    .post-title { font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin-bottom: .35rem; text-decoration: none; display: block; }
+    .post-title:hover { color: var(--accent-color); }
+    .post-excerpt { font-size: .88rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: .5rem;
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .post-meta { display: flex; gap: 1rem; font-size: .78rem; color: var(--text-secondary); flex-wrap: wrap; }
+    .post-meta span { display: flex; align-items: center; gap: .3rem; }
+
+    .status-badge { display: inline-block; padding: .18rem .6rem; border-radius: 50px; font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
+    .status-published { background: rgba(16,185,129,.1); color: #10b981; }
+    .status-pending { background: rgba(245,158,11,.1); color: #f59e0b; }
+    .status-draft { background: rgba(148,163,184,.1); color: #94a3b8; }
+    .status-rejected { background: rgba(239,68,68,.1); color: #ef4444; }
+
+    .empty-state { text-align: center; padding: 4rem 1.5rem; color: var(--text-secondary); }
+    .empty-state i { font-size: 2.5rem; opacity: .2; display: block; margin-bottom: .75rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-pen-nib" style="color:var(--accent-color);margin-right:.5rem"></i>My Blog Posts</h1>
+    <a href="{% url 'papers:blog_create' %}" class="action-btn"><i class="fas fa-plus"></i> Write New Post</a>
+</div>
+
+{% for post in posts %}
+<div class="post-item">
+    <div class="post-info">
+        {% if post.status == 'published' %}
+        <a href="{% url 'papers:blog_detail' post.slug %}" class="post-title">{{ post.title }}</a>
+        {% else %}
+        <span class="post-title" style="cursor:default;">{{ post.title }}</span>
+        {% endif %}
+        {% if post.excerpt %}
+        <p class="post-excerpt">{{ post.excerpt }}</p>
+        {% endif %}
+        <div class="post-meta">
+            <span class="status-badge status-{{ post.status }}">{{ post.get_status_display }}</span>
+            <span><i class="fas fa-calendar"></i> {{ post.created_at|date:"M d, Y" }}</span>
+            <span><i class="fas fa-eye"></i> {{ post.view_count }} views</span>
+            <span><i class="fas fa-comment"></i> {{ post.comments.count }} comments</span>
+        </div>
+        {% if post.rejection_reason %}
+        <div style="margin-top:.5rem;font-size:.82rem;color:#ef4444;"><i class="fas fa-info-circle" style="margin-right:.3rem"></i>{{ post.rejection_reason }}</div>
+        {% endif %}
+    </div>
+</div>
+{% empty %}
+<div class="empty-state">
+    <i class="fas fa-pen-nib"></i>
+    <p>You haven't written any blog posts yet.</p>
+    <a href="{% url 'papers:blog_create' %}" class="action-btn" style="display:inline-flex;margin-top:.75rem;"><i class="fas fa-plus"></i> Write your first post</a>
+</div>
+{% endfor %}
+
+{% if is_paginated %}
+<nav style="margin-top:2rem;">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>{% endif %}
+        {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}<li class="page-item active"><span class="page-link">{{ num }}</span></li>
+        {% else %}<li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>{% endif %}
+        {% endfor %}
+        {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>{% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

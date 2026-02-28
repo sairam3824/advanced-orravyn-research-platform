@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% block title %}Peer Reviews — {{ paper.title }} - Orravyn Research{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; }
+    .page-header h1 { font-size: 1.6rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.3rem; }
+    .page-header .sub { font-size: 0.88rem; color: var(--text-secondary); }
+    .page-header .sub a { color: var(--accent-color); text-decoration: none; }
+
+    .action-btn {
+        padding: 0.6rem 1.2rem; background: transparent;
+        color: var(--accent-color); border: 1.5px solid var(--accent-color);
+        border-radius: 8px; font-size: 0.88rem; font-weight: 600;
+        text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem;
+        transition: all 0.25s ease; white-space: nowrap;
+    }
+    .action-btn:hover { background: var(--accent-color); color: #fff; }
+
+    .review-card {
+        background: transparent; border-bottom: 1px solid var(--glass-border);
+        padding: 1.75rem 0; position: relative;
+    }
+    .review-card::before {
+        content: ''; position: absolute; left: 0; top: 0;
+        width: 3px; height: 100%; background: var(--primary-gradient);
+        opacity: 0; transition: opacity 0.3s ease;
+    }
+    .review-card:hover::before { opacity: 1; }
+
+    .review-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; flex-wrap: wrap; gap: .5rem; }
+    .reviewer-info { font-size: 0.88rem; color: var(--text-secondary); display: flex; align-items: center; gap: .5rem; }
+    .review-date { font-size: 0.8rem; color: var(--text-secondary); }
+
+    .badge-status {
+        display: inline-block; padding: 0.2rem 0.65rem; border-radius: 50px;
+        font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em;
+    }
+    .badge-completed { background: rgba(16,185,129,0.1); color: #10b981; }
+    .badge-in_review { background: rgba(245,158,11,0.1); color: #f59e0b; }
+    .badge-pending { background: rgba(148,163,184,0.1); color: #94a3b8; }
+
+    .scores-row { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+    .score-item { text-align: center; }
+    .score-num { font-size: 1.4rem; font-weight: 800; color: var(--accent-color); line-height: 1; }
+    .score-lbl { font-size: 0.7rem; text-transform: uppercase; letter-spacing: .05em; color: var(--text-secondary); margin-top: .2rem; }
+
+    .recommendation-badge {
+        display: inline-block; padding: 0.25rem 0.8rem; border-radius: 6px;
+        font-size: 0.78rem; font-weight: 700; margin-bottom: 1rem;
+    }
+    .rec-accept { background: rgba(16,185,129,0.1); color: #10b981; }
+    .rec-minor_revision { background: rgba(59,130,246,0.1); color: #3b82f6; }
+    .rec-major_revision { background: rgba(245,158,11,0.1); color: #f59e0b; }
+    .rec-reject { background: rgba(239,68,68,0.1); color: #ef4444; }
+
+    .review-section { margin-bottom: .75rem; }
+    .review-section-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--text-secondary); margin-bottom: .35rem; }
+    .review-section-text { font-size: 0.9rem; color: var(--text-primary); line-height: 1.6; }
+
+    .submit-review-form { margin-top: .75rem; }
+
+    .empty-state { text-align: center; padding: 3rem 1.5rem; color: var(--text-secondary); }
+    .empty-state i { font-size: 2.5rem; opacity: .2; display: block; margin-bottom: .75rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1><i class="fas fa-clipboard-list" style="color:var(--accent-color);margin-right:.5rem"></i>Peer Reviews</h1>
+        <p class="sub">For: <a href="{% url 'papers:detail' paper.pk %}">{{ paper.title }}</a></p>
+    </div>
+    <a href="{% url 'papers:create_review' paper.pk %}" class="action-btn">
+        <i class="fas fa-plus"></i> Submit Review
+    </a>
+</div>
+
+{% for review in reviews %}
+<div class="review-card">
+    <div class="review-header">
+        <div class="reviewer-info">
+            <i class="fas fa-user-circle"></i>
+            {% if review.is_anonymous %}Anonymous Reviewer{% else %}{{ review.reviewer.username }}{% endif %}
+            <span class="badge-status badge-{{ review.status }}">{{ review.get_status_display }}</span>
+        </div>
+        <span class="review-date">{{ review.created_at|date:"M d, Y" }}</span>
+    </div>
+
+    {% if review.recommendation %}
+    <span class="recommendation-badge rec-{{ review.recommendation }}">
+        {{ review.get_recommendation_display }}
+    </span>
+    {% endif %}
+
+    <div class="scores-row">
+        {% if review.originality_score %}<div class="score-item"><div class="score-num">{{ review.originality_score }}</div><div class="score-lbl">Originality</div></div>{% endif %}
+        {% if review.methodology_score %}<div class="score-item"><div class="score-num">{{ review.methodology_score }}</div><div class="score-lbl">Methodology</div></div>{% endif %}
+        {% if review.clarity_score %}<div class="score-item"><div class="score-num">{{ review.clarity_score }}</div><div class="score-lbl">Clarity</div></div>{% endif %}
+        {% if review.significance_score %}<div class="score-item"><div class="score-num">{{ review.significance_score }}</div><div class="score-lbl">Significance</div></div>{% endif %}
+    </div>
+
+    {% if review.strengths %}
+    <div class="review-section">
+        <div class="review-section-label">Strengths</div>
+        <div class="review-section-text">{{ review.strengths }}</div>
+    </div>
+    {% endif %}
+    {% if review.weaknesses %}
+    <div class="review-section">
+        <div class="review-section-label">Weaknesses</div>
+        <div class="review-section-text">{{ review.weaknesses }}</div>
+    </div>
+    {% endif %}
+    {% if review.detailed_comments %}
+    <div class="review-section">
+        <div class="review-section-label">Detailed Comments</div>
+        <div class="review-section-text">{{ review.detailed_comments }}</div>
+    </div>
+    {% endif %}
+
+    {% if review.reviewer == request.user and review.status == 'in_review' %}
+    <div class="submit-review-form">
+        <form method="post" action="{% url 'papers:submit_review' review.id %}">
+            {% csrf_token %}
+            <button type="submit" class="action-btn" style="font-size:.82rem;padding:.45rem 1rem;">
+                <i class="fas fa-check"></i> Mark as Complete
+            </button>
+        </form>
+    </div>
+    {% endif %}
+</div>
+{% empty %}
+<div class="empty-state">
+    <i class="fas fa-clipboard"></i>
+    <p>No reviews submitted yet.</p>
+    <a href="{% url 'papers:create_review' paper.pk %}" class="action-btn" style="display:inline-flex;margin-top:.75rem;">
+        <i class="fas fa-plus"></i> Be the first to review
+    </a>
+</div>
+{% endfor %}
+{% endblock %}

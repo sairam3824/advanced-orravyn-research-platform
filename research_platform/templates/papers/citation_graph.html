@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+{% block title %}Citation Graph — {{ paper.title }} - Orravyn Research{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header { margin-bottom: 1.5rem; }
+    .page-header h1 { font-size: 1.6rem; font-weight: 700; color: var(--text-primary); margin-bottom: .3rem; }
+    .page-header .sub { font-size: .88rem; color: var(--text-secondary); }
+    .page-header .sub a { color: var(--accent-color); text-decoration: none; }
+
+    .graph-layout { display: grid; grid-template-columns: 1fr 260px; gap: 1.5rem; }
+    @media (max-width: 900px) { .graph-layout { grid-template-columns: 1fr; } }
+
+    #graph-canvas {
+        width: 100%; height: 520px; border: 1px solid var(--glass-border); border-radius: 14px;
+        background: var(--glass-bg); overflow: hidden;
+    }
+
+    .legend { margin-bottom: 1rem; display: flex; gap: .75rem; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: .4rem; font-size: .8rem; color: var(--text-secondary); }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+    .sidebar-card { margin-bottom: 1.5rem; }
+    .sidebar-title { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-secondary); border-bottom: 1px solid var(--glass-border); padding-bottom: .5rem; margin-bottom: .85rem; }
+    .node-list-item { padding: .5rem 0; border-bottom: 1px solid var(--glass-border); font-size: .83rem; }
+    .node-list-item:last-child { border-bottom: none; }
+    .node-list-item a { text-decoration: none; color: var(--text-primary); display: block; line-height: 1.4; }
+    .node-list-item a:hover { color: var(--accent-color); }
+    .node-type { font-size: .7rem; font-weight: 600; padding: .1rem .45rem; border-radius: 50px; margin-top: .2rem; display: inline-block; }
+    .type-cited { background: rgba(16,185,129,.1); color: #10b981; }
+    .type-citing { background: rgba(59,130,246,.1); color: #3b82f6; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-project-diagram" style="color:var(--accent-color);margin-right:.5rem"></i>Citation Graph</h1>
+    <p class="sub">For: <a href="{% url 'papers:detail' paper.pk %}">{{ paper.title }}</a></p>
+</div>
+
+<div class="legend">
+    <span class="legend-item"><span class="legend-dot" style="background:#2563eb"></span> This paper</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#10b981"></span> Papers cited by this paper</span>
+    <span class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span> Papers citing this paper</span>
+</div>
+
+<div class="graph-layout">
+    <div>
+        <svg id="graph-canvas"></svg>
+    </div>
+
+    <aside>
+        {% with nodes=graph_data.nodes %}
+        {% if nodes|length > 1 %}
+        <div class="sidebar-card">
+            <div class="sidebar-title">Referenced Papers</div>
+            {% for node in nodes %}
+            {% if node.type == 'cited' %}
+            <div class="node-list-item">
+                <a href="{% url 'papers:detail' node.id %}">{{ node.title|truncatechars:60 }}</a>
+                <span class="node-type type-cited">Cited by this</span>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+        <div class="sidebar-card">
+            <div class="sidebar-title">Citing Papers</div>
+            {% for node in nodes %}
+            {% if node.type == 'citing' %}
+            <div class="node-list-item">
+                <a href="{% url 'papers:detail' node.id %}">{{ node.title|truncatechars:60 }}</a>
+                <span class="node-type type-citing">Cites this</span>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="sidebar-card">
+            <p style="font-size:.85rem;color:var(--text-secondary);">No citation connections found for this paper.</p>
+        </div>
+        {% endif %}
+        {% endwith %}
+    </aside>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const graphData = {{ graph_data|safe }};
+    const svg = document.getElementById('graph-canvas');
+    const W = svg.clientWidth || svg.parentElement.clientWidth;
+    const H = 520;
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+    if (!graphData.nodes.length) return;
+
+    const colorMap = { main: '#2563eb', cited: '#10b981', citing: '#f59e0b' };
+    const radiusMap = { main: 18, cited: 12, citing: 12 };
+
+    // Simple force-layout approximation (no d3 dependency)
+    const nodes = graphData.nodes.map((n, i) => {
+        const angle = (i / graphData.nodes.length) * 2 * Math.PI;
+        const r = n.type === 'main' ? 0 : W * 0.32;
+        return { ...n, x: W / 2 + r * Math.cos(angle), y: H / 2 + r * Math.sin(angle) };
+    });
+    const nodeMap = {};
+    nodes.forEach(n => nodeMap[n.id] = n);
+
+    // Draw edges
+    const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+    const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+    marker.setAttribute('id', 'arrow'); marker.setAttribute('markerWidth', '8'); marker.setAttribute('markerHeight', '8');
+    marker.setAttribute('refX', '6'); marker.setAttribute('refY', '3'); marker.setAttribute('orient', 'auto');
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', 'M0,0 L0,6 L8,3 z'); path.setAttribute('fill', '#94a3b8');
+    marker.appendChild(path); defs.appendChild(marker); svg.appendChild(defs);
+
+    graphData.edges.forEach(edge => {
+        const src = nodeMap[edge.source];
+        const tgt = nodeMap[edge.target];
+        if (!src || !tgt) return;
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', src.x); line.setAttribute('y1', src.y);
+        line.setAttribute('x2', tgt.x); line.setAttribute('y2', tgt.y);
+        line.setAttribute('stroke', '#94a3b820'); line.setAttribute('stroke-width', '1.5');
+        line.setAttribute('marker-end', 'url(#arrow)');
+        svg.appendChild(line);
+    });
+
+    // Draw nodes
+    nodes.forEach(node => {
+        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+        g.style.cursor = 'pointer';
+        g.addEventListener('click', () => { window.location.href = '/papers/' + node.id + '/'; });
+
+        const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        const r = radiusMap[node.type] || 12;
+        circle.setAttribute('cx', node.x); circle.setAttribute('cy', node.y); circle.setAttribute('r', r);
+        circle.setAttribute('fill', colorMap[node.type] || '#2563eb');
+        circle.setAttribute('fill-opacity', node.type === 'main' ? '1' : '0.85');
+
+        const title = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+        title.textContent = node.title;
+
+        const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        label.setAttribute('x', node.x); label.setAttribute('y', node.y + r + 14);
+        label.setAttribute('text-anchor', 'middle'); label.setAttribute('font-size', '10');
+        label.setAttribute('fill', '#64748b');
+        label.textContent = node.title.length > 28 ? node.title.slice(0, 28) + '…' : node.title;
+
+        g.appendChild(circle); g.appendChild(title); g.appendChild(label);
+        svg.appendChild(g);
+    });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% block title %}Submit Peer Review — {{ paper.title }} - Orravyn Research{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header { margin-bottom: 2rem; }
+    .page-header h1 { font-size: 1.6rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.35rem; }
+    .page-header .sub { font-size: 0.9rem; color: var(--text-secondary); }
+    .page-header .sub a { color: var(--accent-color); text-decoration: none; }
+
+    .review-form { max-width: 760px; }
+    .form-section { margin-bottom: 2.5rem; }
+    .form-section-title {
+        font-size: 0.78rem; font-weight: 700; text-transform: uppercase;
+        letter-spacing: 0.08em; color: var(--text-secondary);
+        border-bottom: 1px solid var(--glass-border); padding-bottom: 0.5rem; margin-bottom: 1.25rem;
+    }
+
+    .score-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
+    .score-field label { font-size: 0.85rem; font-weight: 600; color: var(--text-primary); display: block; margin-bottom: 0.4rem; }
+    .score-field select, .review-form textarea, .review-form select {
+        width: 100%; padding: 0.6rem 0.85rem;
+        background: var(--glass-bg); border: 1.5px solid var(--glass-border);
+        border-radius: 10px; font-size: 0.9rem; color: var(--text-primary);
+        transition: border-color 0.25s ease; font-family: inherit;
+    }
+    .score-field select:focus, .review-form textarea:focus, .review-form select:focus {
+        outline: none; border-color: var(--accent-color);
+    }
+    .review-form textarea { resize: vertical; min-height: 120px; line-height: 1.6; }
+    .form-label { font-size: 0.85rem; font-weight: 600; color: var(--text-primary); display: block; margin-bottom: 0.4rem; }
+    .form-group { margin-bottom: 1.25rem; }
+    .form-check-label { font-size: 0.9rem; color: var(--text-secondary); margin-left: 0.4rem; }
+
+    .submit-btn {
+        padding: 0.7rem 1.8rem; background: var(--primary-gradient);
+        border: none; border-radius: 10px; color: #fff;
+        font-weight: 600; font-size: 0.92rem; cursor: pointer; transition: opacity 0.2s ease;
+    }
+    .submit-btn:hover { opacity: 0.88; }
+    .cancel-link {
+        display: inline-block; margin-left: 1rem; font-size: 0.9rem;
+        color: var(--text-secondary); text-decoration: none;
+    }
+    .cancel-link:hover { color: var(--text-primary); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1><i class="fas fa-clipboard-check" style="color:var(--accent-color);margin-right:.5rem"></i>Submit Peer Review</h1>
+    <p class="sub">For: <a href="{% url 'papers:detail' paper.pk %}">{{ paper.title }}</a></p>
+</div>
+
+<form method="post" class="review-form">
+    {% csrf_token %}
+
+    <!-- Scores -->
+    <div class="form-section">
+        <div class="form-section-title">Evaluation Scores (1–10)</div>
+        <div class="score-grid">
+            <div class="score-field">
+                <label for="{{ form.originality_score.id_for_label }}">Originality</label>
+                {{ form.originality_score }}
+            </div>
+            <div class="score-field">
+                <label for="{{ form.methodology_score.id_for_label }}">Methodology</label>
+                {{ form.methodology_score }}
+            </div>
+            <div class="score-field">
+                <label for="{{ form.clarity_score.id_for_label }}">Clarity</label>
+                {{ form.clarity_score }}
+            </div>
+            <div class="score-field">
+                <label for="{{ form.significance_score.id_for_label }}">Significance</label>
+                {{ form.significance_score }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Written feedback -->
+    <div class="form-section">
+        <div class="form-section-title">Written Feedback</div>
+        <div class="form-group">
+            <label class="form-label" for="{{ form.strengths.id_for_label }}">Strengths</label>
+            {{ form.strengths }}
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="{{ form.weaknesses.id_for_label }}">Weaknesses</label>
+            {{ form.weaknesses }}
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="{{ form.detailed_comments.id_for_label }}">Detailed Comments</label>
+            {{ form.detailed_comments }}
+        </div>
+        <div class="form-group">
+            <label class="form-label" for="{{ form.confidential_comments.id_for_label }}">Confidential Comments <small style="font-weight:400;color:var(--text-secondary)">(visible to editors only)</small></label>
+            {{ form.confidential_comments }}
+        </div>
+    </div>
+
+    <!-- Recommendation & options -->
+    <div class="form-section">
+        <div class="form-section-title">Recommendation</div>
+        <div class="form-group">
+            <label class="form-label" for="{{ form.recommendation.id_for_label }}">Decision</label>
+            {{ form.recommendation }}
+        </div>
+        <div style="display:flex;align-items:center;gap:.5rem;margin-top:.75rem;">
+            {{ form.is_anonymous }}
+            <label class="form-check-label" for="{{ form.is_anonymous.id_for_label }}">Submit as anonymous reviewer</label>
+        </div>
+    </div>
+
+    <div>
+        <button type="submit" class="submit-btn"><i class="fas fa-paper-plane" style="margin-right:.4rem"></i>Submit Review</button>
+        <a href="{% url 'papers:detail' paper.pk %}" class="cancel-link">Cancel</a>
+    </div>
+</form>
+{% endblock %}

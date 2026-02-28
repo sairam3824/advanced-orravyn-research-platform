@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% block title %}{{ post.title }} - Orravyn Research{% endblock %}
+
+{% block extra_css %}
+<style>
+    .article-layout { display: grid; grid-template-columns: 1fr 280px; gap: 3rem; max-width: 1100px; }
+    @media (max-width: 900px) { .article-layout { grid-template-columns: 1fr; } }
+
+    .article-header { margin-bottom: 2rem; }
+    .article-title { font-size: 2rem; font-weight: 800; color: var(--text-primary); line-height: 1.3; margin-bottom: .75rem; }
+    .article-meta { display: flex; gap: 1.25rem; flex-wrap: wrap; font-size: .85rem; color: var(--text-secondary); margin-bottom: 1rem; }
+    .article-meta span { display: flex; align-items: center; gap: .35rem; }
+    .article-tags { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .article-tag { padding: .2rem .65rem; border-radius: 50px; font-size: .75rem; font-weight: 500; background: rgba(37,99,235,.06); color: var(--accent-color); border: 1px solid rgba(37,99,235,.1); }
+
+    .article-body { font-size: 1rem; color: var(--text-primary); line-height: 1.8; }
+    .article-body p { margin-bottom: 1.25rem; }
+    .article-body h2, .article-body h3 { font-weight: 700; color: var(--text-primary); margin: 2rem 0 .75rem; }
+    .article-body img { max-width: 100%; border-radius: 12px; margin: 1.5rem 0; }
+
+    /* Comments */
+    .comments-section { margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--glass-border); }
+    .comments-title { font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 1.5rem; }
+    .comment-item { padding: 1rem 0; border-bottom: 1px solid var(--glass-border); }
+    .comment-item:last-child { border-bottom: none; }
+    .comment-user { font-size: .85rem; font-weight: 600; color: var(--text-primary); margin-bottom: .25rem; }
+    .comment-date { font-size: .75rem; color: var(--text-secondary); margin-left: .5rem; }
+    .comment-content { font-size: .9rem; color: var(--text-primary); line-height: 1.6; }
+
+    .comment-form { margin-top: 1.5rem; }
+    .comment-form textarea {
+        width: 100%; padding: .7rem .9rem; background: var(--glass-bg);
+        border: 1.5px solid var(--glass-border); border-radius: 10px;
+        font-size: .9rem; color: var(--text-primary); font-family: inherit;
+        resize: vertical; min-height: 90px; line-height: 1.6;
+    }
+    .comment-form textarea:focus { outline: none; border-color: var(--accent-color); }
+    .comment-submit {
+        margin-top: .6rem; padding: .55rem 1.25rem;
+        background: var(--primary-gradient); border: none; border-radius: 8px;
+        color: #fff; font-size: .88rem; font-weight: 600; cursor: pointer;
+    }
+    .comment-submit:hover { opacity: .88; }
+
+    /* Sidebar */
+    .sidebar-card { margin-bottom: 2rem; }
+    .sidebar-card-title { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-secondary); border-bottom: 1px solid var(--glass-border); padding-bottom: .5rem; margin-bottom: 1rem; }
+    .related-paper-link { display: block; text-decoration: none; color: var(--text-primary); font-size: .87rem; padding: .5rem 0; border-bottom: 1px solid var(--glass-border); line-height: 1.4; }
+    .related-paper-link:last-child { border-bottom: none; }
+    .related-paper-link:hover { color: var(--accent-color); }
+    .author-card { display: flex; align-items: center; gap: .85rem; }
+    .author-avatar { width: 44px; height: 44px; border-radius: 50%; background: rgba(37,99,235,.1); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: 700; color: var(--accent-color); flex-shrink: 0; }
+    .author-name { font-size: .9rem; font-weight: 600; color: var(--text-primary); }
+    .author-joined { font-size: .78rem; color: var(--text-secondary); margin-top: .1rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="article-layout">
+    <!-- Main content -->
+    <main>
+        <div class="article-header">
+            <h1 class="article-title">{{ post.title }}</h1>
+            <div class="article-meta">
+                <span><i class="fas fa-user"></i> {{ post.author.username }}</span>
+                {% if post.published_at %}<span><i class="fas fa-calendar"></i> {{ post.published_at|date:"M d, Y" }}</span>{% endif %}
+                <span><i class="fas fa-eye"></i> {{ post.view_count }} views</span>
+                <span><i class="fas fa-comment"></i> {{ post.comments.count }} comments</span>
+            </div>
+            {% if post.tags %}
+            <div class="article-tags">
+                {% for tag in post.tags %}
+                <span class="article-tag">{{ tag }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="article-body">{{ post.content|linebreaks }}</div>
+
+        <!-- Comments -->
+        <div class="comments-section">
+            <div class="comments-title"><i class="fas fa-comments" style="margin-right:.4rem;color:var(--accent-color)"></i>Comments ({{ post.comments.count }})</div>
+
+            {% for comment in post.comments.all %}
+            {% if not comment.parent %}
+            <div class="comment-item">
+                <div class="comment-user">
+                    {{ comment.user.username }}
+                    <span class="comment-date">{{ comment.created_at|date:"M d, Y" }}</span>
+                </div>
+                <div class="comment-content">{{ comment.content }}</div>
+                {% for reply in comment.replies.all %}
+                <div class="comment-item" style="margin-left:1.5rem;border-left:2px solid var(--glass-border);padding-left:1rem;margin-top:.5rem;">
+                    <div class="comment-user">{{ reply.user.username }}<span class="comment-date">{{ reply.created_at|date:"M d, Y" }}</span></div>
+                    <div class="comment-content">{{ reply.content }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% empty %}
+            <p style="color:var(--text-secondary);font-size:.9rem;">No comments yet. Be the first!</p>
+            {% endfor %}
+
+            {% if user.is_authenticated %}
+            <div class="comment-form">
+                <form method="post" action="{% url 'papers:add_blog_comment' post.slug %}">
+                    {% csrf_token %}
+                    <textarea name="content" placeholder="Leave a comment…" required></textarea>
+                    <button type="submit" class="comment-submit">Post Comment</button>
+                </form>
+            </div>
+            {% else %}
+            <p style="margin-top:1rem;font-size:.88rem;color:var(--text-secondary);">
+                <a href="{% url 'accounts:login' %}" style="color:var(--accent-color)">Sign in</a> to leave a comment.
+            </p>
+            {% endif %}
+        </div>
+    </main>
+
+    <!-- Sidebar -->
+    <aside>
+        <div class="sidebar-card">
+            <div class="sidebar-card-title">Author</div>
+            <div class="author-card">
+                <div class="author-avatar">{{ post.author.username|first|upper }}</div>
+                <div>
+                    <div class="author-name">{{ post.author.username }}</div>
+                </div>
+            </div>
+        </div>
+
+        {% if post.related_papers.exists %}
+        <div class="sidebar-card">
+            <div class="sidebar-card-title">Related Papers</div>
+            {% for paper in post.related_papers.all %}
+            <a href="{% url 'papers:detail' paper.pk %}" class="related-paper-link">{{ paper.title|truncatechars:70 }}</a>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="sidebar-card">
+            <div class="sidebar-card-title">Actions</div>
+            <a href="{% url 'papers:blog_list' %}" style="font-size:.88rem;color:var(--accent-color);text-decoration:none;display:flex;align-items:center;gap:.4rem;">
+                <i class="fas fa-arrow-left"></i> Back to Blog
+            </a>
+        </div>
+    </aside>
+</div>
+{% endblock %}
