@@ -291,80 +291,36 @@ def get_recommendations(request):
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from django.http import JsonResponse
+from .serializers import PaperSerializer, BookmarkSerializer, RatingSerializer
 
 class PaperListCreateView(generics.ListCreateAPIView):
-    serializer_class = None
+    serializer_class = PaperSerializer
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def get_queryset(self):
-        return Paper.objects.filter(is_approved=True)
-    
-    def list(self, request, *args, **kwargs):
-        papers = self.get_queryset()
-        data = []
-        for paper in papers:
-            data.append({
-                'id': paper.id,
-                'title': paper.title,
-                'abstract': paper.abstract,
-                'authors': paper.authors,
-                'publication_date': paper.publication_date,
-                'uploaded_by': paper.uploaded_by.username,
-                'view_count': paper.view_count,
-                'download_count': paper.download_count,
-            })
-        return Response(data)
-    
+        return Paper.objects.filter(is_approved=True).select_related('uploaded_by').prefetch_related('categories')
+
     def create(self, request, *args, **kwargs):
-        return Response({'message': 'Paper creation via API not implemented yet'}, 
+        return Response({'message': 'Paper creation via API not implemented yet'},
                        status=status.HTTP_501_NOT_IMPLEMENTED)
 
 class BookmarkListCreateView(generics.ListCreateAPIView):
+    serializer_class = BookmarkSerializer
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def get_queryset(self):
-        return Bookmark.objects.filter(user=self.request.user)
-    
-    def list(self, request, *args, **kwargs):
-        bookmarks = self.get_queryset()
-        data = []
-        for bookmark in bookmarks:
-            data.append({
-                'id': bookmark.id,
-                'paper_title': bookmark.paper.title,
-                'paper_id': bookmark.paper.id,
-                'created_at': bookmark.created_at,
-                'folder': bookmark.folder,
-            })
-        return Response(data)
-    
+        return Bookmark.objects.filter(user=self.request.user).select_related('paper')
+
     def create(self, request, *args, **kwargs):
-        return Response({'message': 'Bookmark creation via API not implemented yet'}, 
+        return Response({'message': 'Bookmark creation via API not implemented yet'},
                        status=status.HTTP_501_NOT_IMPLEMENTED)
 
 class RatingListCreateView(generics.ListCreateAPIView):
+    serializer_class = RatingSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         return Rating.objects.filter(user=self.request.user).select_related('paper')
-    
-    def list(self, request, *args, **kwargs):
-        ratings = self.get_queryset()
-        data = []
-        for rating in ratings:
-            data.append({
-                'id': rating.id,
-                'paper_title': rating.paper.title,
-                'paper_id': rating.paper.id,
-                'rating': rating.rating,
-                'review_text': rating.review_text,
-                'created_at': rating.created_at,
-            })
-        return Response(data)
-    
-    def create(self, request, *args, **kwargs):
-        return Response({'message': 'Rating creation via API not implemented yet'}, 
-                       status=status.HTTP_501_NOT_IMPLEMENTED)
 
 @login_required
 def view_paper_pdf(request, pk):
@@ -912,11 +868,17 @@ class ResearchProjectDetailView(LoginRequiredMixin, DetailView):
     model = ResearchProject
     template_name = 'papers/research_project_detail.html'
     context_object_name = 'project'
-    
+
     def get_queryset(self):
         return ResearchProject.objects.filter(
             Q(created_by=self.request.user) | Q(members=self.request.user)
-        )
+        ).prefetch_related('papers', 'members')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['tasks'] = self.object.tasks.select_related('assigned_to').order_by('status', 'due_date')
+        context['is_creator'] = self.object.created_by == self.request.user
+        return context
 
 
 
@@ -1031,7 +993,7 @@ def add_comment(request, pk):
 def get_comments(request, pk):
     """Get all comments for a paper"""
     paper = get_object_or_404(Paper, pk=pk)
-    comments = PaperComment.objects.filter(paper=paper, parent=None).select_related('user')
+    comments = PaperComment.objects.filter(paper=paper, parent=None).select_related('user').prefetch_related('replies__user')
     
     def serialize_comment(comment):
         return {
@@ -1067,6 +1029,11 @@ class PeerReviewCreateView(LoginRequiredMixin, CreateView):
         form.instance.status = 'in_review'
         return super().form_valid(form)
     
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['paper'] = self.paper
+        return context
+
     def get_success_url(self):
         return reverse_lazy('papers:detail', kwargs={'pk': self.paper.pk})
 
@@ -1075,16 +1042,20 @@ class PeerReviewListView(LoginRequiredMixin, ListView):
     model = PeerReview
     template_name = 'papers/peer_reviews.html'
     context_object_name = 'reviews'
-    
+
     def get_queryset(self):
         paper_id = self.kwargs.get('paper_id')
-        paper = get_object_or_404(Paper, pk=paper_id)
-        
-        # Only show reviews to paper author and reviewers
-        if self.request.user == paper.uploaded_by or self.request.user.user_type in ['moderator', 'admin']:
-            return PeerReview.objects.filter(paper=paper)
+        self.paper = get_object_or_404(Paper, pk=paper_id)
+
+        if self.request.user == self.paper.uploaded_by or self.request.user.user_type in ['moderator', 'admin']:
+            return PeerReview.objects.filter(paper=self.paper)
         else:
-            return PeerReview.objects.filter(paper=paper, reviewer=self.request.user)
+            return PeerReview.objects.filter(paper=self.paper, reviewer=self.request.user)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['paper'] = self.paper
+        return context
 
 
 @login_required

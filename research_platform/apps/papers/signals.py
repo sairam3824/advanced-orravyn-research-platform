@@ -1,18 +1,21 @@
 # apps/papers/signals.py
+import logging
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .models import Paper, ReadingProgress, PaperView
 from .background import executor
-from ml_models.bart_summarizer_lambda import summarize_text_from_pdf
+
+logger = logging.getLogger(__name__)
 
 
 def process_summary(paper_id, pdf_file):
+    from ml_models.bart_summarizer_lambda import summarize_text_from_pdf
     from .models import Paper
     try:
         summary = summarize_text_from_pdf(pdf_file)
         Paper.objects.filter(id=paper_id).update(summary=summary)
     except Exception as e:
-        print(f"[ERROR] Failing to generate summary for Paper {paper_id}: {e}")
+        logger.error("Failed to generate summary for Paper %s: %s", paper_id, e)
 
 
 @receiver(post_save, sender=Paper)
