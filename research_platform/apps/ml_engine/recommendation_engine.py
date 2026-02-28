@@ -66,9 +66,12 @@ class ImprovedRecommendationEngine:
         recs = Rating.objects.filter(
             user_id__in=similar_users, rating__gte=4
         ).exclude(paper_id__in=my_rated).values('paper_id').annotate(score=Count('id'))
+        rec_rows = list(recs.order_by('-score')[:top_k])
+        papers_map = Paper.objects.in_bulk([row['paper_id'] for row in rec_rows])
         result = [
-            (Paper.objects.get(id=row['paper_id']), row['score'])
-            for row in recs.order_by('-score')[:top_k]
+            (papers_map[row['paper_id']], row['score'])
+            for row in rec_rows
+            if row['paper_id'] in papers_map
         ]
         return result
 
