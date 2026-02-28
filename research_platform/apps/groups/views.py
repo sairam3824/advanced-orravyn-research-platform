@@ -55,7 +55,18 @@ class GroupDetailView(DetailView):
     model = Group
     template_name = 'groups/detail.html'
     context_object_name = 'group'
-    
+
+    def dispatch(self, request, *args, **kwargs):
+        group = get_object_or_404(Group, pk=kwargs['pk'])
+        if group.is_private:
+            if not request.user.is_authenticated:
+                from django.contrib.auth.views import redirect_to_login
+                return redirect_to_login(request.get_full_path())
+            if not GroupMember.objects.filter(group=group, user=request.user).exists():
+                messages.error(request, 'This is a private group. You must be a member to view it.')
+                return redirect('groups:list')
+        return super().dispatch(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         group = self.object
