@@ -29,9 +29,14 @@ class PersonalDashboardView(LoginRequiredMixin, TemplateView):
         uploaded_papers = Paper.objects.filter(uploaded_by=user)
         
         # Impact metrics for user's papers
-        total_views = sum(p.view_count for p in uploaded_papers)
-        total_downloads = sum(p.download_count for p in uploaded_papers)
-        total_citations = sum(p.citation_count for p in uploaded_papers)
+        impact_totals = uploaded_papers.aggregate(
+            total_views=Sum('view_count'),
+            total_downloads=Sum('download_count'),
+            total_citations=Sum('citation_count'),
+        )
+        total_views = impact_totals['total_views'] or 0
+        total_downloads = impact_totals['total_downloads'] or 0
+        total_citations = impact_totals['total_citations'] or 0
         
         # Recent activity
         from apps.papers.models import ReadingProgress, Bookmark
@@ -87,9 +92,9 @@ class PaperImpactView(LoginRequiredMixin, DetailView):
             metrics.total_shares = PaperShare.objects.filter(paper=paper).count()
             metrics.total_likes = PaperLike.objects.filter(paper=paper).count()
             
-            ratings = paper.ratings.all()
-            if ratings:
-                metrics.average_rating = sum(r.rating for r in ratings) / len(ratings)
+            avg_rating = paper.ratings.aggregate(avg=Avg('rating'))['avg']
+            if avg_rating is not None:
+                metrics.average_rating = avg_rating
             
             metrics.calculate_impact_score()
         
@@ -148,7 +153,7 @@ class CollaborationNetworkView(LoginRequiredMixin, TemplateView):
         # Calculate stats
         total_collaborators = collaborations.count()
         total_collaborations = sum(c.collaboration_count for c in collaborations)
-        shared_papers_count = sum(c.shared_papers.count() for c in collaborations)
+        shared_papers_count = sum(len(c.shared_papers.all()) for c in collaborations)
         
         # Get social sharing stats (different from collaboration sharing)
         from apps.papers.models import PaperShare
