@@ -7,7 +7,9 @@ from django.urls import reverse_lazy, reverse
 from django.http import JsonResponse, HttpResponse, Http404
 from django.db.models import Q, Avg, Count, F
 from django.core.paginator import Paginator
-from .models import Paper, Category, Bookmark, Rating, Citation, CategoryRequest, PaperView, ReadingProgress
+from .models import (Paper, Category, Bookmark, Rating, Citation, CategoryRequest,
+                     PaperView, ReadingProgress, PaperLike, PaperShare, PaperComment,
+                     PeerReview, ResearchBlogPost, BlogComment, PaperTag, PaperTagging, PaperComparison)
 from .forms import PaperUploadForm, PaperEditForm, RatingForm, CategoryRequestForm
 from apps.accounts.permissions import IsPublisherOrAbove, IsModeratorOrAdmin
 
@@ -38,7 +40,7 @@ class PaperListView(ListView):
         elif sort_by == 'rating':
             queryset = queryset.annotate(avg_rating=Avg('ratings__rating')).order_by('-avg_rating')
         elif sort_by == 'citations':
-            queryset = queryset.annotate(citation_count=Count('cited_by')).order_by('-citation_count')
+            queryset = queryset.annotate(citation_count_db=Count('cited_by')).order_by('-citation_count_db')
         else:
             queryset = queryset.order_by(sort_by)
         
@@ -267,26 +269,53 @@ def reject_paper(request, pk):
 def get_recommendations(request):
     try:
         from apps.ml_engine.models import UserRecommendation
-        recommendations = UserRecommendation.objects.filter(
+        from apps.ml_engine.tasks import generate_recommendations
+        from .background import executor
+
+        recs_qs = UserRecommendation.objects.filter(
             user=request.user
-        ).select_related('paper')[:10]
+        ).select_related('paper__uploaded_by').prefetch_related('paper__categories')
+
+        # First-visit: kick off background generation and show empty state
+        generating = False
+        if not recs_qs.exists():
+            executor.submit(generate_recommendations, request.user.id)
+            generating = True
+
+        recommendations = list(recs_qs.order_by('-score')[:10])
+        last_updated = recommendations[0].created_at if recommendations else None
+
     except ImportError:
         recommendations = []
-    
+        last_updated = None
+        generating = False
+
     if request.META.get('HTTP_ACCEPT') == 'application/json':
-        data = []
-        for rec in recommendations:
-            data.append({
-                'paper_id': rec.paper.id,
-                'title': rec.paper.title,
-                'score': rec.score,
-                'reason': rec.reason
-            })
+        data = [
+            {'paper_id': r.paper.id, 'title': r.paper.title,
+             'score': r.score, 'reason': r.reason}
+            for r in recommendations
+        ]
         return JsonResponse({'recommendations': data})
-    
+
     return render(request, 'papers/recommendations.html', {
-        'recommendations': recommendations
+        'recommendations': recommendations,
+        'last_updated': last_updated,
+        'generating': generating,
     })
+
+
+@login_required
+def refresh_recommendations(request):
+    """Trigger an on-demand recommendation refresh, then redirect back."""
+    try:
+        from apps.ml_engine.tasks import generate_recommendations
+        from .background import executor
+        executor.submit(generate_recommendations, request.user.id)
+        messages.success(request, 'Refreshing your recommendations in the background. Check back in a moment.')
+    except Exception:
+        messages.error(request, 'Could not refresh recommendations. Please try again later.')
+    return redirect('papers:recommendations')
 
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
@@ -884,7 +913,6 @@ class ResearchProjectDetailView(LoginRequiredMixin, DetailView):
 
 # ── Social Features ──────────────────────────────────────────────────
 
-from .models import PaperLike, PaperShare, PaperComment, PeerReview, ResearchBlogPost, BlogComment, PaperTag, PaperTagging, PaperComparison
 from django.utils.text import slugify
 
 
