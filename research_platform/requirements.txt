@@ -41,3 +41,12 @@ seaborn>=0.13
 
 # Utilities
 networkx>=3.2
+
+# RAG / LangGraph
+langchain>=0.3
+langchain-core>=0.3
+langchain-openai>=0.2
+langchain-community>=0.3
+langgraph>=0.2
+chromadb>=0.5
+python-dotenv>=1.0

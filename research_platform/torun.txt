@@ -1,12 +1,11 @@
-python manage.py createsuperuser
+superuser -> python manage.py createsuperuser
 
+recommandation system -> 
+conda activate research_platform
+cd research_platform
+python manage.py build_embeddings --for-all-users
 
 conda activate research_platform
 cd research_platform
 python manage.py migrate
 python manage.py runserver
-
-conda activate research_platform
-cd research_platform
-DJANGO_DEBUG=True python manage.py migrate
-DJANGO_DEBUG=True python manage.py runserver

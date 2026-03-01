@@ -2,8 +2,12 @@ import os
 from pathlib import Path
 from datetime import timedelta
 from django.core.exceptions import ImproperlyConfigured
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load .env from project root (next to manage.py)
+load_dotenv(BASE_DIR / '.env')
 
 # DEBUG must be set before SECRET_KEY so the key check can respect dev mode
 DEBUG = os.environ.get('DJANGO_DEBUG', 'False') == 'True'
@@ -19,7 +23,7 @@ if not _secret_key:
             'Generate one with: python -c "import secrets; print(secrets.token_hex(50))"'
         )
 SECRET_KEY = _secret_key
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,testserver').split(',')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
