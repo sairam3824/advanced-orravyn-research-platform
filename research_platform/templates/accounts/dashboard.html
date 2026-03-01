@@ -409,24 +409,24 @@
 
 <div class="stats-grid">
     <div class="stat-card">
-        <div class="stat-card-number">{{ recent_papers|length }}</div>
+        <div class="stat-card-number">{{ papers_count }}</div>
         <div class="stat-card-label">My Papers</div>
         <a href="{% url 'papers:my_papers' %}" class="stat-card-link">View All <i class="fas fa-arrow-right"></i></a>
     </div>
     <div class="stat-card">
-        <div class="stat-card-number">{{ recent_bookmarks|length }}</div>
+        <div class="stat-card-number">{{ bookmarks_count }}</div>
         <div class="stat-card-label">Bookmarks</div>
         <a href="{% url 'papers:bookmarks' %}" class="stat-card-link">View All <i class="fas fa-arrow-right"></i></a>
     </div>
     <div class="stat-card">
-        <div class="stat-card-number">{{ recent_ratings|length }}</div>
+        <div class="stat-card-number">{{ ratings_count }}</div>
         <div class="stat-card-label">Ratings</div>
         <a href="{% url 'papers:list' %}" class="stat-card-link">Browse <i class="fas fa-arrow-right"></i></a>
     </div>
     <div class="stat-card">
         <div class="stat-card-number">{{ recommendations|length }}</div>
         <div class="stat-card-label">For You</div>
-        <a href="#recommendations" class="stat-card-link">View <i class="fas fa-arrow-right"></i></a>
+        <a href="{% url 'papers:recommendations' %}" class="stat-card-link">View All <i class="fas fa-arrow-right"></i></a>
     </div>
 </div>
 
@@ -466,21 +466,39 @@
     </div>
 
     <div class="dashboard-section">
-        <div class="section-label" id="recommendations"><i class="fas fa-magic"></i> Recommendations</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;margin-bottom:1.25rem;padding-bottom:0.75rem;border-bottom:2px solid rgba(37,99,235,0.1);">
+            <div class="section-label" id="recommendations" style="margin:0;padding:0;border:none;">
+                <i class="fas fa-lightbulb"></i> Recommendations
+            </div>
+            <div style="display:flex;gap:0.6rem;align-items:center;flex-shrink:0;">
+                <a href="{% url 'papers:refresh_recommendations' %}" style="font-size:0.78rem;color:var(--text-secondary);text-decoration:none;display:inline-flex;align-items:center;gap:0.25rem;transition:color 0.2s ease;" title="Refresh recommendations">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </a>
+                <a href="{% url 'papers:recommendations' %}" class="stat-card-link" style="font-size:0.8rem;">
+                    View All <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
         <div class="rec-list">
             {% for rec in recommendations %}
             <div class="rec-item">
                 <h6><a href="{% url 'papers:detail' rec.paper.pk %}">{{ rec.paper.title|truncatechars:70 }}</a></h6>
                 <p>{{ rec.paper.abstract|truncatechars:120 }}</p>
                 <div class="rec-meta">
-                    <span class="rec-score"><i class="fas fa-chart-line"></i> {{ rec.score|floatformat:2 }}</span>
+                    <span class="rec-score"><i class="fas fa-check-circle"></i> {{ rec.score|floatformat:2 }}</span>
                     <span class="rec-reason">{{ rec.reason }}</span>
                 </div>
             </div>
             {% empty %}
             <div class="activity-empty">
-                <i class="fas fa-magic"></i>
-                Start bookmarking and rating papers to get personalized recommendations!
+                <i class="fas fa-lightbulb"></i>
+                <strong style="display:block;margin-bottom:0.35rem;color:var(--text-primary);">No recommendations yet</strong>
+                Rate papers 4–5 stars or bookmark them — your personalised feed will appear here.
+                <div style="margin-top:1rem;">
+                    <a href="{% url 'papers:list' %}" style="font-size:0.82rem;font-weight:600;color:var(--accent-color);text-decoration:none;">
+                        <i class="fas fa-file-alt"></i> Browse Papers
+                    </a>
+                </div>
             </div>
             {% endfor %}
         </div>
@@ -491,16 +509,19 @@
 <div class="quick-actions-section">
     <div class="section-label"><i class="fas fa-bolt"></i> Quick Actions</div>
     <div class="quick-actions">
-        <a href="{% url 'papers:upload' %}" class="quick-action"><i class="fas fa-cloud-upload-alt"></i> Upload Paper</a>
+        <a href="{% url 'papers:upload' %}" class="quick-action"><i class="fas fa-cloud-upload-alt"></i> Upload
+            Paper</a>
         <a href="{% url 'chat:my_chats' %}" class="quick-action"><i class="fas fa-comments"></i> Chats</a>
         <a href="{% url 'groups:my_groups' %}" class="quick-action"><i class="fas fa-users"></i> My Groups</a>
         <a href="{% url 'chat:yggdrasil_chatbot' %}" class="quick-action"><i class="fas fa-robot"></i> Yggdrasil AI</a>
         <a href="{% url 'papers:categories' %}" class="quick-action"><i class="fas fa-tags"></i> Categories</a>
         {% if user.user_type == 'moderator' or user.user_type == 'admin' %}
-        <a href="{% url 'papers:pending_approval' %}" class="quick-action"><i class="fas fa-clipboard-check"></i> Review Pending</a>
+        <a href="{% url 'papers:pending_approval' %}" class="quick-action"><i class="fas fa-clipboard-check"></i> Review
+            Pending</a>
         {% endif %}
         {% if user.user_type == 'admin' %}
-        <a href="{% url 'accounts:admin_dashboard' %}" class="quick-action"><i class="fas fa-tachometer-alt"></i> Admin Dashboard</a>
+        <a href="{% url 'accounts:admin_dashboard' %}" class="quick-action"><i class="fas fa-tachometer-alt"></i> Admin
+            Dashboard</a>
         {% endif %}
     </div>
 </div>
@@ -508,7 +529,8 @@
 <div class="quick-actions-section">
     <div class="section-label"><i class="fas fa-bolt"></i> Quick Actions</div>
     <div class="quick-actions">
-        <a href="{% url 'papers:upload' %}" class="quick-action"><i class="fas fa-cloud-upload-alt"></i> Upload Paper</a>
+        <a href="{% url 'papers:upload' %}" class="quick-action"><i class="fas fa-cloud-upload-alt"></i> Upload
+            Paper</a>
         <a href="{% url 'chat:my_chats' %}" class="quick-action"><i class="fas fa-comments"></i> Chats</a>
         <a href="{% url 'groups:my_groups' %}" class="quick-action"><i class="fas fa-users"></i> My Groups</a>
         <a href="{% url 'chat:yggdrasil_chatbot' %}" class="quick-action"><i class="fas fa-robot"></i> Yggdrasil AI</a>

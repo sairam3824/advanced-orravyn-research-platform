@@ -19,6 +19,22 @@
         color: var(--text-primary);
     }
 
+    .page-header .feature-btn {
+        background: transparent !important;
+        color: var(--text-secondary) !important;
+        border: 2px solid rgba(0, 0, 0, 0.1) !important;
+        box-shadow: none !important;
+        transition: all 0.3s ease;
+    }
+
+    .page-header .feature-btn:hover {
+        border-color: var(--accent-color) !important;
+        color: var(--accent-color) !important;
+        background: transparent !important;
+        transform: none !important;
+        box-shadow: none !important;
+    }
+
     /* ── Filter & Sort panel ──────────────────────── */
     .filter-panel {
         background: transparent;
@@ -384,6 +400,22 @@
         margin-bottom: 1rem;
     }
 
+    .empty-state .feature-btn {
+        background: transparent !important;
+        color: var(--text-secondary) !important;
+        border: 2px solid rgba(0, 0, 0, 0.1) !important;
+        box-shadow: none !important;
+        transition: all 0.3s ease;
+    }
+
+    .empty-state .feature-btn:hover {
+        border-color: var(--accent-color) !important;
+        color: var(--accent-color) !important;
+        background: transparent !important;
+        transform: none !important;
+        box-shadow: none !important;
+    }
+
     /* ── Pagination ───────────────────────────────── */
     .pagination-wrap {
         display: flex;
@@ -438,26 +470,30 @@
     <div class="filter-panel-header">
         <div class="filter-label"><i class="fas fa-sort"></i> Sort and Filter</div>
         <div style="display: flex; align-items: center; gap: 1rem;">
-            <div style="font-size: 0.82rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.5rem;">
+            <div
+                style="font-size: 0.82rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.5rem;">
                 <span>Sort by:</span>
                 <form method="get" style="display: inline;">
                     <input type="hidden" name="category" value="{{ selected_category }}">
                     <select name="sort" class="filter-select" style="min-width: 140px; flex: 0; display: inline-block;"
                         onchange="this.form.submit()">
-                        <option value="-created_at" {% if sort_by == '-created_at' %}selected{% endif %}>Most Recent</option>
-                        <option value="created_at" {% if sort_by == 'created_at' %}selected{% endif %}>Oldest First</option>
+                        <option value="-created_at" {% if sort_by == '-created_at' %}selected{% endif %}>Most Recent
+                        </option>
+                        <option value="created_at" {% if sort_by == 'created_at' %}selected{% endif %}>Oldest First
+                        </option>
                         <option value="popular" {% if sort_by == 'popular' %}selected{% endif %}>Most Popular</option>
                         <option value="rating" {% if sort_by == 'rating' %}selected{% endif %}>Highest Rated</option>
                         <option value="citations" {% if sort_by == 'citations' %}selected{% endif %}>Most Cited</option>
                     </select>
                 </form>
             </div>
-            <div style="font-size: 0.82rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.5rem;">
+            <div
+                style="font-size: 0.82rem; color: var(--text-secondary); display: flex; align-items: center; gap: 0.5rem;">
                 <span>Category:</span>
                 <form method="get" style="display: inline;">
                     <input type="hidden" name="sort" value="{{ sort_by }}">
-                    <select name="category" class="filter-select" style="min-width: 160px; flex: 0; display: inline-block;"
-                        onchange="this.form.submit()">
+                    <select name="category" class="filter-select"
+                        style="min-width: 160px; flex: 0; display: inline-block;" onchange="this.form.submit()">
                         <option value="">All Categories</option>
                         {% for category in categories %}
                         <option value="{{ category.id }}" {% if category.id|stringformat:"s" == selected_category %}selected{% endif %}>{{ category.name }}</option>
@@ -472,10 +508,12 @@
     <div class="filter-categories">
         <span class="filter-categories-label">Quick Filter:</span>
         {% for category in categories|slice:":10" %}
-        <a href="?category={{ category.id }}&sort={{ sort_by }}" class="paper-tag" style="cursor: pointer; text-decoration: none;">{{ category.name }}</a>
+        <a href="?category={{ category.id }}&sort={{ sort_by }}" class="paper-tag"
+            style="cursor: pointer; text-decoration: none;">{{ category.name }}</a>
         {% endfor %}
         {% if selected_category %}
-        <a href="?sort={{ sort_by }}" class="paper-tag" style="cursor: pointer; text-decoration: none; background: #ef4444; color: #fff; border-color: #ef4444;">
+        <a href="?sort={{ sort_by }}" class="paper-tag"
+            style="cursor: pointer; text-decoration: none; background: #ef4444; color: #fff; border-color: #ef4444;">
             <i class="fas fa-times" style="margin-right: 0.25rem;"></i> Clear Filter
         </a>
         {% endif %}
@@ -496,9 +534,9 @@
             </div>
             <div class="paper-item-actions">
                 {% if user.is_authenticated %}
-                <a href="{% url 'papers:bookmark' paper.pk %}" 
-                   class="paper-action-btn {% if paper.pk in bookmarked_paper_ids %}bookmarked{% else %}bookmark{% endif %}" 
-                   title="{% if paper.pk in bookmarked_paper_ids %}Remove Bookmark{% else %}Bookmark{% endif %}">
+                <a href="{% url 'papers:bookmark' paper.pk %}"
+                    class="paper-action-btn {% if paper.pk in bookmarked_paper_ids %}bookmarked{% else %}bookmark{% endif %}"
+                    title="{% if paper.pk in bookmarked_paper_ids %}Remove Bookmark{% else %}Bookmark{% endif %}">
                     <i class="{% if paper.pk in bookmarked_paper_ids %}fas{% else %}far{% endif %} fa-bookmark"></i>
                 </a>
                 {% endif %}

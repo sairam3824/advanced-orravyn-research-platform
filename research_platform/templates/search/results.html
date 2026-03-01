@@ -43,9 +43,9 @@
 
     .filter-btn {
         padding: .55rem 1.25rem;
-        background: var(--accent-color);
-        color: #fff;
-        border: none;
+        background: transparent;
+        color: var(--text-secondary);
+        border: 2px solid rgba(0, 0, 0, 0.1);
         border-radius: 10px;
         font-weight: 600;
         font-size: .85rem;
@@ -55,7 +55,9 @@
     }
 
     .filter-btn:hover {
-        background: #1d4ed8;
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+        background: transparent;
     }
 
     .search-bar-wrap {
@@ -84,9 +86,9 @@
 
     .search-bar-btn {
         padding: .6rem 1.25rem;
-        background: var(--accent-color);
-        color: #fff;
-        border: none;
+        background: transparent;
+        color: var(--text-secondary);
+        border: 2px solid rgba(0, 0, 0, 0.1);
         border-radius: 12px;
         font-weight: 600;
         font-size: .88rem;
@@ -96,7 +98,9 @@
     }
 
     .search-bar-btn:hover {
-        background: #1d4ed8;
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+        background: transparent;
     }
 
     .search-spinner {
@@ -288,7 +292,7 @@
 
             {% if user.is_authenticated %}
             <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(0,0,0,0.06);">
-                <button onclick="saveCurrentSearch()" class="filter-btn" style="background: #10b981;">
+                <button onclick="saveCurrentSearch()" class="filter-btn">
                     <i class="fas fa-save"></i> Save Search
                 </button>
                 
@@ -348,7 +352,7 @@
             <div class="empty-state">
                 <i class="fas fa-search"></i>
                 <p>No papers found matching your search criteria.</p>
-                <a href="{% url 'papers:list' %}" class="feature-btn">Browse All Papers</a>
+                <a href="{% url 'papers:list' %}" class="feature-btn" style="background: transparent !important; color: var(--text-secondary) !important; border: 2px solid rgba(0, 0, 0, 0.1) !important; box-shadow: none !important;">Browse All Papers</a>
             </div>
             {% endfor %}
         </div>

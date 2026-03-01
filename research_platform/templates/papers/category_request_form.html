@@ -26,7 +26,7 @@
                         </label>
                         {{ form.name }}
                         {% if form.name.errors %}
-                            <div class="text-danger small mt-1">{{ form.name.errors|join:", " }}</div>
+                        <div class="text-danger small mt-1">{{ form.name.errors|join:", " }}</div>
                         {% endif %}
                     </div>
 
@@ -39,7 +39,7 @@
                             Briefly describe what kinds of papers would belong to this category.
                         </div>
                         {% if form.description.errors %}
-                            <div class="text-danger small mt-1">{{ form.description.errors|join:", " }}</div>
+                        <div class="text-danger small mt-1">{{ form.description.errors|join:", " }}</div>
                         {% endif %}
                     </div>
 
@@ -52,15 +52,15 @@
                             Explain why this category is needed and how it benefits the research community.
                         </div>
                         {% if form.reason.errors %}
-                            <div class="text-danger small mt-1">{{ form.reason.errors|join:", " }}</div>
+                        <div class="text-danger small mt-1">{{ form.reason.errors|join:", " }}</div>
                         {% endif %}
                     </div>
 
                     <div class="d-flex gap-3">
-                        <button type="submit" class="feature-btn">
+                        <button type="submit" class="feature-btn" style="background: transparent !important; color: var(--text-secondary) !important; border: 2px solid rgba(0, 0, 0, 0.1) !important; box-shadow: none !important;">
                             <i class="fas fa-paper-plane"></i>Submit Request
                         </button>
-                        <a href="{% url 'papers:categories' %}" class="feature-btn feature-btn-danger">
+                        <a href="{% url 'papers:categories' %}" class="feature-btn" style="background: transparent !important; color: var(--text-secondary) !important; border: 2px solid rgba(0, 0, 0, 0.1) !important; box-shadow: none !important;">
                             Cancel
                         </a>
                     </div>

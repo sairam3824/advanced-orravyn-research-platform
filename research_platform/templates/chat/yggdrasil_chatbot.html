@@ -1,417 +1,849 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Yggdrasil Chatbot - Orravyn Research{% endblock %}
+{% block title %}Yggdrasil AI — Orravyn Research{% endblock %}
 
 {% block extra_css %}
 <style>
-    .chat-welcome {
+    /* ── Shell ── */
+    .ygg-shell {
         display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        padding: 2rem 1rem;
-        opacity: 1;
-        transition: opacity 0.3s ease;
-    }
-
-    #chat-container.expanded .chat-welcome {
-        opacity: 0;
-        height: 0;
+        height: calc(100vh - 120px);
+        margin-top: 10px;
+        background: transparent;
         overflow: hidden;
-        padding: 0;
     }
 
-    .chat-welcome h2 {
-        font-size: 1.8rem;
-        font-weight: 800;
-        color: var(--text-primary);
-        margin-bottom: 0.5rem;
-        letter-spacing: -0.5px;
-    }
-
-    .chat-welcome p {
-        font-size: 0.95rem;
-        color: var(--text-secondary);
-        margin: 0;
-    }
-
-    #chat-container {
+    /* ════════════════════════════════
+       SIDEBAR — flat, no card
+       ════════════════════════════════ */
+    .ygg-sidebar {
+        width: 260px;
+        flex-shrink: 0;
         display: flex;
         flex-direction: column;
-        height: auto;
-        min-height: 80px;
-        width: 100%;
-        max-width: 900px;
-        margin: 0 auto;
+        border-right: 1px solid rgba(0, 0, 0, 0.07);
+    }
+
+    .ygg-sidebar-top {
+        padding: 1.25rem 1rem;
+        flex-shrink: 0;
+    }
+
+    .ygg-new-chat {
+        background: none;
+        border: none;
+        padding: 0;
+        color: var(--text-primary, #0f172a);
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: color 0.15s;
+    }
+
+    .ygg-new-chat:hover {
+        text-decoration: underline;
+        color: #2563eb;
+    }
+
+    .ygg-conv-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0 0.75rem 1rem;
+    }
+
+    .ygg-conv-list::-webkit-scrollbar { width: 3px; }
+    .ygg-conv-list::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.08);
+        border-radius: 3px;
+    }
+
+    .ygg-group-label {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #94a3b8;
+        padding: 1rem 0.5rem 0.4rem;
+    }
+
+    .ygg-conv-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.55rem 0.65rem;
+        margin-bottom: 0.1rem;
+        border-radius: 4px;
+        cursor: pointer;
+        color: var(--text-primary, #0f172a);
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.88rem;
+        font-weight: 400;
+        line-height: 1.4;
+        transition: background 0.15s;
+        border: none;
+        background: transparent;
+    }
+
+    .ygg-conv-item:hover {
+        background: rgba(0, 0, 0, 0.04);
+    }
+
+    .ygg-conv-item.active {
+        background: rgba(0, 0, 0, 0.06);
+        color: #2563eb;
+        font-weight: 500;
+    }
+
+    .ygg-conv-title {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .ygg-conv-delete {
+        opacity: 0;
         background: transparent;
         border: none;
-        border-radius: 0;
-        box-shadow: none;
-        overflow: hidden;
-        transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        color: #94a3b8;
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        flex-shrink: 0;
+        transition: all 0.15s;
     }
 
-    #chat-container.expanded {
-        height: calc(100vh - 200px);
-        min-height: 500px;
+    .ygg-conv-item:hover .ygg-conv-delete { opacity: 1; }
+
+    .ygg-conv-delete:hover {
+        color: #ef4444;
+        background: rgba(239, 68, 68, 0.08);
     }
 
-    .chat-header {
-        padding: 1.25rem 0;
-        border-bottom: 2px solid rgba(37, 99, 235, 0.1);
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        background: transparent;
-        margin-bottom: 1.5rem;
-        opacity: 0;
-        height: 0;
-        overflow: hidden;
-        transition: all 0.3s ease;
+    .ygg-sidebar-footer {
+        padding: 1rem;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.7rem;
+        color: #94a3b8;
+        text-align: center;
+        flex-shrink: 0;
     }
 
-    #chat-container.expanded .chat-header {
-        opacity: 1;
-        height: auto;
+    /* Mobile sidebar toggle */
+    .ygg-sidebar-toggle {
+        display: none;
+        background: none;
+        border: none;
+        color: var(--text-primary, #0f172a);
+        font-size: 1rem;
+        cursor: pointer;
+        padding: 0.3rem 0.5rem;
+        transition: opacity 0.15s;
     }
 
-    .bot-avatar {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #2563eb, #10b981);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 1.2rem;
-        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-        position: relative;
-    }
+    .ygg-sidebar-toggle:hover { opacity: 0.6; }
 
-    .bot-avatar i {
-        position: relative;
-        z-index: 2;
-    }
-
-    .chat-header-info h2 {
-        margin: 0;
-        font-size: 1.15rem;
-        font-weight: 700;
-        color: var(--text-primary);
-    }
-
-    .chat-header-info p {
-        margin: 0;
-        font-size: 0.8rem;
-        color: var(--text-secondary);
-    }
-
-    #chat-window {
-        flex-grow: 1;
-        overflow-y: auto;
-        padding: 0;
+    /* ════════════════════════════════
+       MAIN CHAT AREA
+       ════════════════════════════════ */
+    .ygg-main {
+        flex: 1;
         display: flex;
         flex-direction: column;
-        gap: 1.5rem;
-        opacity: 0;
-        transition: opacity 0.3s ease 0.2s;
-    }
-
-    #chat-container.expanded #chat-window {
-        opacity: 1;
-    }
-
-    #chat-window::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    #chat-window::-webkit-scrollbar-track {
+        min-width: 0;
         background: transparent;
     }
 
-    #chat-window::-webkit-scrollbar-thumb {
-        background-color: rgba(37, 99, 235, 0.2);
-        border-radius: 10px;
-    }
-
-    .message {
-        padding: 1rem 1.5rem;
-        border-radius: 16px;
-        max-width: 75%;
-        line-height: 1.7;
-        word-wrap: break-word;
-        font-size: 0.95rem;
-        position: relative;
-        animation: messageSlide 0.3s ease;
-    }
-
-    @keyframes messageSlide {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .user-message {
-        background: rgba(37, 99, 235, 0.08);
-        color: var(--text-primary);
-        align-self: flex-end;
-        border-bottom-right-radius: 4px;
-        border-left: 3px solid var(--accent-color);
-    }
-
-    .bot-message {
-        background: rgba(16, 185, 129, 0.05);
-        color: var(--text-primary);
-        align-self: flex-start;
-        border-bottom-left-radius: 4px;
-        border-left: 3px solid #10b981;
-    }
-
-    .typing-indicator {
+    /* Header */
+    .ygg-header {
         display: flex;
         align-items: center;
-        gap: 6px;
+        gap: 0.85rem;
         padding: 1rem 1.5rem;
+        flex-shrink: 0;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.07);
     }
 
-    .typing-indicator span {
-        height: 8px;
-        width: 8px;
-        background-color: #10b981;
-        border-radius: 50%;
-        opacity: 0.6;
-        animation: typing 1.4s infinite ease-in-out both;
+    .ygg-header-text {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+        overflow: hidden;
     }
 
-    .typing-indicator span:nth-child(1) {
-        animation-delay: -0.32s;
+    .ygg-header-title {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 1.05rem;
+        font-weight: 500;
+        color: var(--text-primary, #0f172a);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
-    .typing-indicator span:nth-child(2) {
-        animation-delay: -0.16s;
+    .ygg-header-sub {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.72rem;
+        color: #94a3b8;
+        white-space: nowrap;
+        flex-shrink: 0;
     }
 
-    @keyframes typing {
-        0%, 80%, 100% {
-            transform: scale(0);
-        }
-        40% {
-            transform: scale(1);
-        }
+    /* Messages window */
+    .ygg-window {
+        flex: 1;
+        overflow-y: auto;
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+        scroll-behavior: smooth;
     }
 
-    #chat-form-container {
-        padding: 0;
+    .ygg-window::-webkit-scrollbar { width: 4px; }
+    .ygg-window::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 4px;
+    }
+
+    /* Empty state */
+    .ygg-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        flex: 1;
+        gap: 0.75rem;
+        padding: 3rem 1rem;
+        max-width: 520px;
+        margin: 0 auto;
+        width: 100%;
+    }
+
+    .ygg-empty h3 {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 1.6rem;
+        font-weight: 400;
+        color: var(--text-primary, #0f172a);
+        margin: 0;
+        line-height: 1.3;
+    }
+
+    .ygg-empty p {
+        font-size: 0.9rem;
+        color: #64748b;
+        margin: 0;
+        line-height: 1.6;
+    }
+
+    .ygg-suggestions {
+        width: 100%;
+        margin-top: 1rem;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .ygg-suggestion-item {
+        background: none;
+        border: none;
+        border-top: 1px solid rgba(0, 0, 0, 0.07);
+        padding: 0.75rem 0;
+        text-align: left;
+        cursor: pointer;
+        color: var(--text-primary, #0f172a);
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.9rem;
+        line-height: 1.4;
+        transition: color 0.15s;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+
+    .ygg-suggestion-item:last-child {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+    }
+
+    .ygg-suggestion-item::before {
+        content: '→';
+        font-family: 'JetBrains Mono', monospace;
+        color: #94a3b8;
+        font-size: 0.8rem;
+        flex-shrink: 0;
+        transition: color 0.15s;
+    }
+
+    .ygg-suggestion-item:hover { color: #2563eb; }
+    .ygg-suggestion-item:hover::before { color: #2563eb; }
+
+    /* Message rows */
+    .msg-row {
+        display: flex;
+        flex-direction: column;
+        gap: 0.3rem;
+        animation: msgIn 0.25s ease;
+    }
+
+    @keyframes msgIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .msg-row.user { align-items: flex-end; }
+    .msg-row.bot { align-items: flex-start; }
+
+    .msg-bubble {
+        font-size: 0.93rem;
+        line-height: 1.65;
+        word-wrap: break-word;
+        white-space: pre-wrap;
+    }
+
+    /* User: solid blue bubble */
+    .msg-row.user .msg-bubble {
+        max-width: 72%;
+        padding: 0.7rem 1rem;
+        border-radius: 6px;
+        background: #1d4ed8;
+        color: #fff;
+    }
+
+    /* Bot: no bubble, plain text with left accent line */
+    .msg-row.bot .msg-bubble {
+        max-width: 100%;
+        padding: 0.5rem 1rem;
         background: transparent;
-        border-top: none;
-        margin-top: 0;
-        transition: all 0.3s ease;
+        color: var(--text-primary, #0f172a);
+        border-left: 2px solid #2563eb;
     }
 
-    #chat-container.expanded #chat-form-container {
-        padding: 1.5rem 0 0;
-        border-top: 1px solid rgba(0, 0, 0, 0.06);
-        margin-top: 1.5rem;
+    .msg-time {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.68rem;
+        color: #94a3b8;
+        padding: 0 0.25rem;
     }
 
-    #chat-form {
+    /* Sources */
+    .msg-sources {
+        max-width: 75%;
+        margin-top: 0.2rem;
+        padding-left: 1rem;
+        font-size: 0.82rem;
+    }
+
+    .msg-sources-label {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.7rem;
+        color: #64748b;
+        margin-bottom: 0.3rem;
+    }
+
+    .msg-sources a {
+        display: block;
+        color: var(--text-primary, #0f172a);
+        text-decoration: none;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        line-height: 1.9;
+        transition: color 0.15s;
+    }
+
+    .msg-sources a:hover { color: #2563eb; }
+
+    /* Typing indicator */
+    .typing-bubble {
+        border-left: 2px solid #2563eb;
+        padding: 0.5rem 1rem;
+        display: inline-flex;
+        gap: 6px;
+        align-items: center;
+    }
+
+    .typing-bubble span {
+        width: 5px;
+        height: 5px;
+        background: #64748b;
+        border-radius: 50%;
+        animation: bounce 1.4s infinite ease-in-out both;
+    }
+
+    .typing-bubble span:nth-child(1) { animation-delay: -0.32s; }
+    .typing-bubble span:nth-child(2) { animation-delay: -0.16s; }
+
+    @keyframes bounce {
+        0%, 80%, 100% { transform: scale(0); opacity: 0.4; }
+        40% { transform: scale(1); opacity: 1; }
+    }
+
+    /* Input bar */
+    .ygg-input-bar {
+        padding: 1rem 1.5rem 1.25rem;
+        flex-shrink: 0;
+    }
+
+    .ygg-form {
         display: flex;
         align-items: center;
         gap: 0.75rem;
-        background: var(--bg-color);
-        border-radius: 50px;
-        padding: 0.5rem;
-        border: 1.5px solid rgba(0, 0, 0, 0.08);
-        transition: all 0.3s ease;
+        border-bottom: 2px solid rgba(0, 0, 0, 0.12);
+        padding: 0.5rem 0;
+        background: transparent;
+        transition: border-color 0.2s;
     }
 
-    #chat-form:focus-within {
-        border-color: var(--accent-color);
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+    .ygg-form:focus-within {
+        border-bottom-color: #2563eb;
     }
 
-    #chat-input {
-        flex-grow: 1;
+    .ygg-input {
+        flex: 1;
         border: none;
-        padding: 0.6rem 1.25rem;
-        font-size: 0.95rem;
-        color: var(--text-primary);
-        background-color: transparent;
         outline: none;
+        background: transparent;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.95rem;
+        color: var(--text-primary, #0f172a);
+        padding: 0.25rem 0;
+        min-width: 0;
     }
 
-    #chat-input::placeholder {
-        color: var(--text-secondary);
-    }
+    .ygg-input::placeholder { color: #94a3b8; }
 
-    #send-button {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 42px;
-        height: 42px;
+    .ygg-send {
+        background: none;
         border: none;
-        background: var(--primary-gradient);
-        color: white;
-        border-radius: 50%;
+        color: #2563eb;
         cursor: pointer;
-        transition: all 0.3s ease;
+        padding: 0.25rem;
         flex-shrink: 0;
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        transition: opacity 0.15s;
+        font-size: 1.1rem;
     }
 
-    #send-button:hover {
-        transform: translateY(-2px) scale(1.05);
-        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
-    }
+    .ygg-send:hover:not(:disabled) { opacity: 0.65; }
 
-    #send-button:disabled {
-        background: var(--text-secondary);
+    .ygg-send:disabled {
+        color: #94a3b8;
         cursor: not-allowed;
-        transform: none;
-        box-shadow: none;
-        opacity: 0.5;
     }
 
-    .chat-disclaimer {
+    .ygg-disclaimer {
         text-align: center;
-        font-size: 0.75rem;
-        color: var(--text-secondary);
-        margin-top: 1rem;
-        font-style: italic;
-        opacity: 0;
-        height: 0;
-        overflow: hidden;
-        transition: all 0.3s ease;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.68rem;
+        color: #94a3b8;
+        margin-top: 0.6rem;
     }
 
-    #chat-container.expanded .chat-disclaimer {
-        opacity: 1;
-        height: auto;
+    /* Loading skeleton */
+    .ygg-skel {
+        height: 12px;
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 3px;
+        margin: 0.5rem 0.5rem;
+        animation: skel 1.5s ease-in-out infinite;
     }
 
+    @keyframes skel {
+        0%, 100% { opacity: 0.4; }
+        50% { opacity: 0.8; }
+    }
+
+    /* ════════════════════════════════
+       RESPONSIVE
+       ════════════════════════════════ */
     @media (max-width: 768px) {
-        .message {
-            max-width: 85%;
+        .ygg-shell {
+            margin-top: 0;
+            height: calc(100vh - 72px);
         }
 
-        #chat-container.expanded {
-            height: calc(100vh - 180px);
+        .ygg-sidebar {
+            position: absolute;
+            z-index: 100;
+            height: 100%;
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #fff;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .ygg-sidebar.open { transform: translateX(0); }
+
+        .ygg-sidebar-toggle { display: block; }
+
+        .msg-row.user .msg-bubble,
+        .msg-sources {
+            max-width: 90%;
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div id="chat-container">
-    <div class="chat-welcome">
-        <h2>Yggdrasil AI</h2>
-        <p>Your research companion</p>
-    </div>
+<div class="ygg-shell">
 
-    <div id="chat-window">
-    </div>
+    <!-- ── Sidebar ── -->
+    <aside class="ygg-sidebar" id="ygg-sidebar">
+        <div class="ygg-sidebar-top">
+            <button class="ygg-new-chat" id="ygg-new-chat">＋ New conversation</button>
+        </div>
 
-    <div id="chat-form-container">
-        <form id="chat-form">
-            <input type="text" id="chat-input" placeholder="Message Yggdrasil..." autocomplete="off" required>
-            <button type="submit" id="send-button">
-                <i class="fas fa-paper-plane"></i>
+        <div class="ygg-conv-list" id="ygg-conv-list">
+            <div class="ygg-skel" style="width:80%"></div>
+            <div class="ygg-skel" style="width:65%"></div>
+            <div class="ygg-skel" style="width:72%"></div>
+        </div>
+
+        <div class="ygg-sidebar-footer">
+            Powered by RAG · GPT-4o mini
+        </div>
+    </aside>
+
+    <!-- ── Main area ── -->
+    <div class="ygg-main">
+
+        <!-- Header -->
+        <div class="ygg-header">
+            <button class="ygg-sidebar-toggle" id="sidebar-toggle" title="Toggle history">
+                <i class="fas fa-bars"></i>
             </button>
-        </form>
-        <p class="chat-disclaimer">
-            Chat is saved for this session only. If you refresh the page, your conversation will be lost.
-        </p>
-    </div>
-</div>
+            <div class="ygg-header-text">
+                <div class="ygg-header-title" id="ygg-conv-title">Yggdrasil</div>
+                <span class="ygg-header-sub">· RAG · grounded in papers</span>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div class="ygg-window" id="ygg-window">
+            <div class="ygg-empty" id="ygg-empty">
+                <h3>Ask anything about research</h3>
+                <p>Yggdrasil searches approved papers on Orravyn to answer your questions.</p>
+                <div class="ygg-suggestions">
+                    <button class="ygg-suggestion-item" data-q="What are the key findings in the uploaded papers?">What are the key findings in the uploaded papers?</button>
+                    <button class="ygg-suggestion-item" data-q="Summarize the research topics on this platform">Summarize the research topics on this platform</button>
+                    <button class="ygg-suggestion-item" data-q="What methodologies are used in these papers?">What methodologies are used in these papers?</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input -->
+        <div class="ygg-input-bar">
+            <form class="ygg-form" id="ygg-form">
+                {% csrf_token %}
+                <input type="text" class="ygg-input" id="ygg-input" placeholder="Ask about research papers…"
+                    autocomplete="off">
+                <button type="submit" class="ygg-send" id="ygg-send" title="Send">
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </form>
+            <p class="ygg-disclaimer">AI answers are grounded in approved papers · verify critical claims</p>
+        </div>
+
+    </div><!-- /ygg-main -->
+</div><!-- /ygg-shell -->
 
 <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const chatForm = document.getElementById('chat-form');
-        const chatInput = document.getElementById('chat-input');
-        const sendButton = document.getElementById('send-button');
-        const chatWindow = document.getElementById('chat-window');
-        const chatContainer = document.getElementById('chat-container');
-        const Url = "https://n8n.orravyn.cloud/webhook/844779dc-4f69-4879-a7dc-99ed4e4527d7";
+        const form = document.getElementById('ygg-form');
+        const input_ = document.getElementById('ygg-input');
+        const sendBtn = document.getElementById('ygg-send');
+        const window_ = document.getElementById('ygg-window');
+        const empty = document.getElementById('ygg-empty');
+        const convList = document.getElementById('ygg-conv-list');
+        const convTitle = document.getElementById('ygg-conv-title');
+        const newChatBtn = document.getElementById('ygg-new-chat');
+        const sidebar = document.getElementById('ygg-sidebar');
+        const sidebarToggle = document.getElementById('sidebar-toggle');
 
-        const urls_chat = typeof langchain_chatbots !== "undefined" ? langchain_chatbots : null;
+        const apiUrl = "{% url 'chat:yggdrasil_api' %}";
+        const convsUrl = "{% url 'chat:yggdrasil_conversations' %}";
+        const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-        chatForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const userMessage = chatInput.value.trim();
+        let activeConvId = null;
 
-            if (!userMessage) return;
+        // ── Sidebar toggle (mobile) ──────────────────────────────────
+        sidebarToggle.addEventListener('click', () => sidebar.classList.toggle('open'));
 
-            // Expand the chat container
-            chatContainer.classList.add('expanded');
+        // ── Suggestions ──────────────────────────────────────────────
+        document.querySelectorAll('.ygg-suggestion-item').forEach(item => {
+            item.addEventListener('click', () => {
+                input_.value = item.dataset.q;
+                input_.focus();
+            });
+        });
 
-            addMessage(userMessage, 'user');
-            chatInput.value = '';
-            toggleForm(false);
-            const typingIndicator = showTypingIndicator();
+        // ── New chat ─────────────────────────────────────────────────
+        newChatBtn.addEventListener('click', startNewChat);
+
+        function startNewChat() {
+            activeConvId = null;
+            convTitle.textContent = 'Yggdrasil';
+            window_.innerHTML = '';
+            window_.appendChild(buildEmpty());
+            document.querySelectorAll('.ygg-conv-item').forEach(el => el.classList.remove('active'));
+            input_.focus();
+            if (window.innerWidth <= 768) sidebar.classList.remove('open');
+        }
+
+        function buildEmpty() {
+            const div = document.createElement('div');
+            div.className = 'ygg-empty';
+            div.id = 'ygg-empty';
+            div.innerHTML = `
+            <h3>Ask anything about research</h3>
+            <p>Yggdrasil searches approved papers on Orravyn to answer your questions.</p>
+            <div class="ygg-suggestions">
+                <button class="ygg-suggestion-item" data-q="What are the key findings in the uploaded papers?">What are the key findings in the uploaded papers?</button>
+                <button class="ygg-suggestion-item" data-q="Summarize the research topics on this platform">Summarize the research topics on this platform</button>
+                <button class="ygg-suggestion-item" data-q="What methodologies are used in these papers?">What methodologies are used in these papers?</button>
+            </div>`;
+            div.querySelectorAll('.ygg-suggestion-item').forEach(item => {
+                item.addEventListener('click', () => { input_.value = item.dataset.q; input_.focus(); });
+            });
+            return div;
+        }
+
+        // ── Load conversation list ───────────────────────────────────
+        async function loadConversations() {
+            try {
+                const res = await fetch(convsUrl);
+                const data = await res.json();
+                renderConversations(data.conversations || []);
+            } catch (_) {
+                convList.innerHTML = '<div class="ygg-group-label" style="color:#ef4444">Failed to load</div>';
+            }
+        }
+
+        function renderConversations(convs) {
+            convList.innerHTML = '';
+            if (!convs.length) {
+                convList.innerHTML = '<div class="ygg-group-label">No conversations yet</div>';
+                return;
+            }
+
+            const groups = groupByDate(convs);
+            for (const [label, items] of Object.entries(groups)) {
+                const header = document.createElement('div');
+                header.className = 'ygg-group-label';
+                header.textContent = label;
+                convList.appendChild(header);
+
+                items.forEach(conv => {
+                    const item = buildConvItem(conv);
+                    convList.appendChild(item);
+                });
+            }
+        }
+
+        function buildConvItem(conv) {
+            const item = document.createElement('div');
+            item.className = 'ygg-conv-item' + (conv.id === activeConvId ? ' active' : '');
+            item.dataset.id = conv.id;
+            item.innerHTML = `
+            <span class="ygg-conv-title">${escHtml(conv.title)}</span>
+            <button class="ygg-conv-delete" title="Delete" data-id="${conv.id}">
+                <i class="fas fa-trash-alt"></i>
+            </button>`;
+
+            item.addEventListener('click', (e) => {
+                if (e.target.closest('.ygg-conv-delete')) return;
+                loadConversation(conv.id, conv.title);
+                if (window.innerWidth <= 768) sidebar.classList.remove('open');
+            });
+
+            item.querySelector('.ygg-conv-delete').addEventListener('click', async (e) => {
+                e.stopPropagation();
+                await deleteConversation(conv.id, item);
+            });
+
+            return item;
+        }
+
+        function groupByDate(convs) {
+            const now = new Date();
+            const today = dateStr(now);
+            const yest = dateStr(new Date(now - 86400000));
+            const week = new Date(now - 7 * 86400000);
+
+            const groups = { Today: [], Yesterday: [], 'Last 7 days': [], Older: [] };
+            convs.forEach(c => {
+                const d = new Date(c.updated_at);
+                const ds = dateStr(d);
+                if (ds === today) groups['Today'].push(c);
+                else if (ds === yest) groups['Yesterday'].push(c);
+                else if (d >= week) groups['Last 7 days'].push(c);
+                else groups['Older'].push(c);
+            });
+
+            // Remove empty groups
+            return Object.fromEntries(Object.entries(groups).filter(([, v]) => v.length));
+        }
+
+        function dateStr(d) {
+            return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+        }
+
+        // ── Load a conversation's messages ──────────────────────────
+        async function loadConversation(convId, title) {
+            activeConvId = convId;
+            convTitle.textContent = title;
+            window_.innerHTML = '<div class="msg-row bot"><div class="typing-bubble"><span></span><span></span><span></span></div></div>';
+
+            document.querySelectorAll('.ygg-conv-item').forEach(el => {
+                el.classList.toggle('active', parseInt(el.dataset.id) === convId);
+            });
 
             try {
-                const response = await fetch(Url, {
+                const url = `{% url 'chat:yggdrasil_conversation_messages' conversation_id=0 %}`.replace('/0/', `/${convId}/`);
+                const res = await fetch(url);
+                const data = await res.json();
+                window_.innerHTML = '';
+                data.messages.forEach(msg => {
+                    appendMessage(msg.content, msg.role, new Date(msg.timestamp));
+                    if (msg.role === 'bot' && msg.sources && msg.sources.length) {
+                        appendSources(msg.sources);
+                    }
+                });
+                scrollDown();
+            } catch (_) {
+                window_.innerHTML = '<div style="color:#ef4444;padding:1rem">Failed to load messages.</div>';
+            }
+        }
+
+        // ── Delete conversation ───────────────────────────────────
+        async function deleteConversation(convId, itemEl) {
+            try {
+                await fetch(convsUrl, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+                    body: JSON.stringify({ id: convId }),
+                });
+                itemEl.remove();
+                if (activeConvId === convId) startNewChat();
+            } catch (_) { }
+        }
+
+        // ── Send message ─────────────────────────────────────────────
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const text = input_.value.trim();
+            if (!text) return;
+
+            // Hide empty state
+            const emptyEl = document.getElementById('ygg-empty');
+            if (emptyEl) emptyEl.remove();
+
+            appendMessage(text, 'user');
+            input_.value = '';
+            setEnabled(false);
+            const typing = appendTyping();
+
+            try {
+                const res = await fetch(apiUrl, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        message: userMessage
-                    }),
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+                    body: JSON.stringify({ message: text, conversation_id: activeConvId }),
                 });
 
-                if (!response.ok) {
-                    throw new Error(`Server responded with status: ${response.status}`);
+                typing.remove();
+                if (!res.ok) throw new Error(res.status);
+
+                const data = await res.json();
+                appendMessage(data.response || 'No response.', 'bot');
+                if (data.sources && data.sources.length) appendSources(data.sources);
+
+                // Update state & sidebar
+                if (!activeConvId) {
+                    activeConvId = data.conversation_id;
+                    convTitle.textContent = data.conversation_title || 'New conversation';
                 }
+                loadConversations();
 
-                const data = await response.json();
-                const botResponse = data.reply || 'Sorry, I encountered an issue and could not get a response.';
-
-                typingIndicator.remove();
-                addMessage(botResponse, 'bot');
-
-            } catch (error) {
-                console.error('Error contacting n8n webhook:', error);
-                typingIndicator.remove();
-                addMessage('I seem to be having trouble connecting. Please try again later.', 'bot');
+            } catch (_) {
+                typing.remove();
+                appendMessage('Something went wrong. Please try again.', 'bot');
             } finally {
-                toggleForm(true);
+                setEnabled(true);
             }
         });
 
-        function addMessage(text, type) {
-            const messageElement = document.createElement('div');
-            messageElement.classList.add('message', `${type}-message`);
-            messageElement.textContent = text;
-            chatWindow.appendChild(messageElement);
-            chatWindow.scrollTop = chatWindow.scrollHeight;
+        // ── DOM helpers ───────────────────────────────────────────────
+        function appendMessage(text, role, ts) {
+            const row = document.createElement('div');
+            row.className = `msg-row ${role}`;
+
+            const bubble = document.createElement('div');
+            bubble.className = 'msg-bubble';
+            bubble.textContent = text;
+
+            const time = document.createElement('div');
+            time.className = 'msg-time';
+            const d = ts || new Date();
+            time.textContent = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            row.appendChild(bubble);
+            row.appendChild(time);
+            window_.appendChild(row);
+            scrollDown();
+            return row;
         }
 
-        function showTypingIndicator() {
-            const indicator = document.createElement('div');
-            indicator.classList.add('message', 'bot-message', 'typing-indicator');
-            indicator.innerHTML = '<span></span><span></span><span></span>';
-            chatWindow.appendChild(indicator);
-            chatWindow.scrollTop = chatWindow.scrollHeight;
-            return indicator;
+        function appendSources(sources) {
+            const row = document.createElement('div');
+            row.className = 'msg-row bot';
+            const panel = document.createElement('div');
+            panel.className = 'msg-sources';
+            const label = document.createElement('div');
+            label.className = 'msg-sources-label';
+            label.textContent = 'Sources';
+            panel.appendChild(label);
+            sources.forEach(src => {
+                const a = document.createElement('a');
+                a.href = `/papers/${src.paper_id}/`;
+                a.target = '_blank';
+                a.rel = 'noopener noreferrer';
+                a.textContent = src.title + (src.authors ? ` — ${src.authors}` : '');
+                panel.appendChild(a);
+            });
+            row.appendChild(panel);
+            window_.appendChild(row);
+            scrollDown();
         }
 
-        function toggleForm(isEnabled) {
-            chatInput.disabled = !isEnabled;
-            sendButton.disabled = !isEnabled;
-            if (isEnabled) {
-                chatInput.focus();
-            }
+        function appendTyping() {
+            const row = document.createElement('div');
+            row.className = 'msg-row bot';
+            const b = document.createElement('div');
+            b.className = 'typing-bubble';
+            b.innerHTML = '<span></span><span></span><span></span>';
+            row.appendChild(b);
+            window_.appendChild(row);
+            scrollDown();
+            return row;
         }
+
+        function setEnabled(on) {
+            input_.disabled = !on;
+            sendBtn.disabled = !on;
+            if (on) input_.focus();
+        }
+
+        function scrollDown() { window_.scrollTop = window_.scrollHeight; }
+
+        function escHtml(str) {
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        // ── Init ────────────────────────────────────────────────────
+        loadConversations();
+        input_.focus();
     });
 </script>
 {% endblock %}

@@ -16,6 +16,22 @@
         color: var(--text-primary);
     }
 
+    .page-header .feature-btn {
+        background: transparent !important;
+        color: var(--text-secondary) !important;
+        border: 2px solid rgba(0, 0, 0, 0.1) !important;
+        box-shadow: none !important;
+        transition: all 0.3s ease;
+    }
+
+    .page-header .feature-btn:hover {
+        border-color: var(--accent-color) !important;
+        color: var(--accent-color) !important;
+        background: transparent !important;
+        transform: none !important;
+        box-shadow: none !important;
+    }
+
     .paper-item {
         background: var(--glass-bg);
         border: 1px solid var(--glass-border);
@@ -131,23 +147,26 @@
         font-weight: 600;
         text-decoration: none;
         transition: all 0.2s ease;
-        border: 1px solid rgba(0, 0, 0, 0.06);
-        background: #fff;
+        border: 2px solid rgba(0, 0, 0, 0.1);
+        background: transparent;
         color: var(--text-secondary);
     }
 
     .paper-act-btn:hover {
         border-color: var(--accent-color);
         color: var(--accent-color);
+        background: transparent;
     }
 
     .paper-act-btn.danger {
-        border-color: rgba(220, 38, 38, 0.15);
-        color: #dc2626;
+        border-color: rgba(0, 0, 0, 0.1);
+        color: var(--text-secondary);
     }
 
     .paper-act-btn.danger:hover {
-        background: rgba(220, 38, 38, 0.04);
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+        background: transparent;
     }
 
     .empty-state {
@@ -161,6 +180,22 @@
         opacity: 0.2;
         margin-bottom: 1rem;
         display: block;
+    }
+
+    .empty-state .feature-btn {
+        background: transparent !important;
+        color: var(--text-secondary) !important;
+        border: 2px solid rgba(0, 0, 0, 0.1) !important;
+        box-shadow: none !important;
+        transition: all 0.3s ease;
+    }
+
+    .empty-state .feature-btn:hover {
+        border-color: var(--accent-color) !important;
+        color: var(--accent-color) !important;
+        background: transparent !important;
+        transform: none !important;
+        box-shadow: none !important;
     }
 </style>
 {% endblock %}

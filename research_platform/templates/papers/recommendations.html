@@ -1,68 +1,190 @@
 {% extends 'base.html' %}
-{% block title %}Recommendations - Orravyn Research Platform{% endblock %}
+{% block title %}Recommended Papers — Orravyn Research{% endblock %}
 
 {% block extra_css %}
 <style>
-    .page-header {
-        margin-bottom: 1.5rem;
+    .rec-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 2rem;
     }
 
-    .page-header h1 {
+    .rec-header-text h1 {
         font-size: 1.6rem;
         font-weight: 700;
         color: var(--text-primary);
-        margin-bottom: 0.25rem;
+        margin-bottom: 0.2rem;
     }
 
-    .page-header p {
-        font-size: 0.92rem;
+    .rec-header-text p {
+        font-size: 0.9rem;
         color: var(--text-secondary);
         margin: 0;
     }
 
-    .rec-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
-        gap: clamp(1rem, 2vw, 1.5rem);
+    .rec-header-text .last-updated {
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+        margin-top: 0.3rem;
+        opacity: 0.7;
     }
 
-    .rec-card {
-        background: var(--glass-bg);
-        border: 1px solid var(--glass-border);
-        border-radius: 16px;
-        padding: 1.5rem;
-        transition: all 0.3s ease;
-        display: flex;
-        flex-direction: column;
-    }
-
-    .rec-card:hover {
-        border-color: rgba(37, 99, 235, 0.2);
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
-        transform: translateY(-3px);
-    }
-
-    .rec-title {
-        font-size: 1rem;
-        font-weight: 700;
-        margin-bottom: 0.5rem;
-    }
-
-    .rec-title a {
+    .refresh-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.55rem 1.2rem;
+        background: transparent;
+        border: 1.5px solid rgba(37, 99, 235, 0.25);
+        border-radius: 10px;
         color: var(--accent-color);
+        font-size: 0.85rem;
+        font-weight: 600;
         text-decoration: none;
+        transition: all 0.25s ease;
+        white-space: nowrap;
     }
 
-    .rec-title a:hover {
-        color: #1d4ed8;
+    .refresh-btn:hover {
+        background: rgba(37, 99, 235, 0.06);
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+        transform: translateY(-1px);
     }
 
-    .rec-abstract {
+    /* Tips banner */
+    .tips-banner {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.85rem;
+        background: rgba(37, 99, 235, 0.04);
+        border: 1px solid rgba(37, 99, 235, 0.12);
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 2rem;
         font-size: 0.85rem;
         color: var(--text-secondary);
         line-height: 1.6;
-        margin-bottom: 0.75rem;
-        flex: 1;
+    }
+
+    .tips-banner i {
+        color: var(--accent-color);
+        font-size: 1rem;
+        margin-top: 2px;
+        flex-shrink: 0;
+    }
+
+    .tips-banner strong {
+        color: var(--text-primary);
+    }
+
+    /* Generating state */
+    .generating-banner {
+        display: flex;
+        align-items: center;
+        gap: 0.85rem;
+        background: rgba(245, 158, 11, 0.06);
+        border: 1px solid rgba(245, 158, 11, 0.2);
+        border-radius: 12px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 2rem;
+        font-size: 0.88rem;
+        color: #92400e;
+    }
+
+    .generating-banner i {
+        color: #f59e0b;
+        font-size: 1rem;
+    }
+
+    /* Grid */
+    .rec-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+        gap: clamp(1rem, 2.5vw, 1.75rem);
+    }
+
+    .rec-card {
+        background: transparent;
+        border: none;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+        border-radius: 0;
+        padding: 1.4rem 0;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        transition: transform 0.25s ease;
+        position: relative;
+    }
+
+    .rec-card::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 3px;
+        height: 100%;
+        background: var(--primary-gradient);
+        border-radius: 3px 0 0 3px;
+        opacity: 0;
+        transition: opacity 0.25s ease;
+    }
+
+    .rec-card:hover {
+        transform: translateX(6px);
+    }
+
+    .rec-card:hover::before {
+        opacity: 1;
+    }
+
+    .rec-rank {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--text-secondary);
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        opacity: 0.55;
+    }
+
+    .rec-title {
+        font-size: 0.97rem;
+        font-weight: 700;
+        line-height: 1.45;
+    }
+
+    .rec-title a {
+        color: var(--text-primary);
+        text-decoration: none;
+        transition: color 0.2s ease;
+    }
+
+    .rec-title a:hover {
+        color: var(--accent-color);
+    }
+
+    .rec-meta {
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        align-items: center;
+    }
+
+    .rec-meta span {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+    }
+
+    .rec-abstract {
+        font-size: 0.84rem;
+        color: var(--text-secondary);
+        line-height: 1.65;
         display: -webkit-box;
         -webkit-line-clamp: 3;
         line-clamp: 3;
@@ -70,82 +192,199 @@
         overflow: hidden;
     }
 
-    .rec-score {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.25rem;
-        padding: 0.15rem 0.6rem;
+    .rec-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem;
+    }
+
+    .rec-tag {
+        display: inline-block;
+        padding: 0.12rem 0.55rem;
         border-radius: 50px;
-        font-size: 0.72rem;
+        font-size: 0.68rem;
         font-weight: 600;
-        background: rgba(16, 185, 129, 0.1);
-        color: #10b981;
-        margin-bottom: 0.5rem;
+        background: rgba(37, 99, 235, 0.07);
+        color: var(--accent-color);
+        border: 1px solid rgba(37, 99, 235, 0.12);
+    }
+
+    .rec-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        margin-top: 0.25rem;
     }
 
     .rec-reason {
-        font-size: 0.78rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        font-size: 0.75rem;
         color: var(--text-secondary);
-        margin-bottom: 0.75rem;
+        opacity: 0.8;
+    }
+
+    .rec-reason i {
+        color: #10b981;
+        font-size: 0.72rem;
     }
 
     .rec-link {
-        font-size: 0.85rem;
+        font-size: 0.82rem;
         font-weight: 600;
         color: var(--accent-color);
         text-decoration: none;
         display: inline-flex;
         align-items: center;
-        gap: 0.3rem;
-        transition: gap 0.25s ease;
+        gap: 0.25rem;
+        transition: gap 0.2s ease;
+        white-space: nowrap;
     }
 
     .rec-link:hover {
-        gap: 0.5rem;
+        gap: 0.45rem;
         color: #1d4ed8;
     }
 
+    /* Empty state */
     .empty-state {
         text-align: center;
-        padding: 3rem 1.5rem;
+        padding: 3.5rem 1.5rem;
         color: var(--text-secondary);
     }
 
     .empty-state i {
-        font-size: 2.5rem;
-        opacity: 0.2;
+        font-size: 2.8rem;
+        opacity: 0.18;
         margin-bottom: 1rem;
         display: block;
+    }
+
+    .empty-state h3 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+        font-size: 0.88rem;
+        max-width: 400px;
+        margin: 0 auto 1.5rem;
+        line-height: 1.65;
+    }
+
+    .browse-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.65rem 1.4rem;
+        background: var(--accent-color);
+        color: #fff;
+        border-radius: 10px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.25s ease;
+    }
+
+    .browse-btn:hover {
+        background: #1d4ed8;
+        color: #fff;
+        transform: translateY(-2px);
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="page-header">
-    <h1>Recommended Papers</h1>
-    <p>Based on your reading history and preferences</p>
+
+<div class="rec-header">
+    <div class="rec-header-text">
+        <h1><i class="fas fa-lightbulb" style="color:var(--accent-color);margin-right:0.4rem;font-size:1.3rem;"></i>Recommended for You</h1>
+        <p>Personalised based on your ratings, bookmarks, and research interests</p>
+        {% if last_updated %}
+        <div class="last-updated">
+            <i class="fas fa-clock"></i> Last updated {{ last_updated|timesince }} ago
+        </div>
+        {% endif %}
+    </div>
+    <a href="{% url 'papers:refresh_recommendations' %}" class="refresh-btn">
+        <i class="fas fa-sync-alt"></i> Refresh
+    </a>
 </div>
 
+{% if generating %}
+<div class="generating-banner">
+    <i class="fas fa-spinner fa-spin"></i>
+    <span><strong>Generating your recommendations</strong> — this is your first visit. Please refresh the page in a few seconds to see your personalised results.</span>
+</div>
+{% endif %}
+
 {% if recommendations %}
+
+<div class="tips-banner">
+    <i class="fas fa-info-circle"></i>
+    <span><strong>Tip:</strong> Rate papers 4–5 stars or bookmark them to improve your recommendations. The more you interact, the more accurate they become.</span>
+</div>
+
 <div class="rec-grid">
     {% for rec in recommendations %}
     <div class="rec-card">
-        <div class="rec-title"><a href="{% url 'papers:detail' rec.paper.pk %}">{{ rec.paper.title|truncatechars:60
-                }}</a></div>
-        <p class="rec-abstract">{{ rec.paper.abstract|truncatechars:120 }}</p>
-        <span class="rec-score"><i class="fas fa-star"></i> {{ rec.score|floatformat:2 }}</span>
-        <p class="rec-reason">{{ rec.reason }}</p>
-        <a href="{% url 'papers:detail' rec.paper.pk %}" class="rec-link">Read Paper <i
-                class="fas fa-arrow-right"></i></a>
+        <div class="rec-rank">#{{ forloop.counter }}</div>
+        <div class="rec-title">
+            <a href="{% url 'papers:detail' rec.paper.pk %}">{{ rec.paper.title }}</a>
+        </div>
+        <div class="rec-meta">
+            {% if rec.paper.authors %}
+            <span><i class="fas fa-user"></i> {{ rec.paper.authors|truncatechars:45 }}</span>
+            {% endif %}
+            {% if rec.paper.created_at %}
+            <span><i class="fas fa-calendar-alt"></i> {{ rec.paper.created_at|date:"Y" }}</span>
+            {% endif %}
+        </div>
+        {% if rec.paper.abstract %}
+        <p class="rec-abstract">{{ rec.paper.abstract }}</p>
+        {% endif %}
+        {% with cats=rec.paper.categories.all %}
+        {% if cats %}
+        <div class="rec-tags">
+            {% for cat in cats|slice:":3" %}
+            <span class="rec-tag">{{ cat.name }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+        <div class="rec-footer">
+            <span class="rec-reason">
+                <i class="fas fa-check-circle"></i> {{ rec.reason }}
+            </span>
+            <a href="{% url 'papers:detail' rec.paper.pk %}" class="rec-link">
+                Read <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
     </div>
     {% endfor %}
 </div>
+
 {% else %}
+
+{% if not generating %}
 <div class="empty-state">
     <i class="fas fa-lightbulb"></i>
-    <p>No recommendations available yet.</p>
-    <p>Start bookmarking and rating papers to get personalized recommendations!</p>
-    <a href="{% url 'papers:list' %}" class="feature-btn">Browse Papers</a>
+    <h3>No recommendations yet</h3>
+    <p>
+        Start exploring papers and interact with them — rate papers 4 or 5 stars,
+        or bookmark ones that interest you. The system will learn your preferences and
+        surface the most relevant research for you.
+    </p>
+    <a href="{% url 'papers:list' %}" class="browse-btn">
+        <i class="fas fa-file-alt"></i> Browse Papers
+    </a>
 </div>
 {% endif %}
+
+{% endif %}
+
 {% endblock %}

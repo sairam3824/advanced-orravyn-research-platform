@@ -78,9 +78,9 @@
 
     .form-submit {
         padding: 0.65rem 1.5rem;
-        background: var(--accent-color);
-        color: #fff;
-        border: none;
+        background: transparent;
+        color: var(--text-secondary);
+        border: 2px solid rgba(0, 0, 0, 0.1);
         border-radius: 12px;
         font-weight: 600;
         font-size: 0.92rem;
@@ -92,14 +92,16 @@
     }
 
     .form-submit:hover {
-        background: #1d4ed8;
-        box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
-        transform: translateY(-1px);
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+        background: transparent;
+        box-shadow: none;
+        transform: none;
     }
 
     .form-cancel {
         padding: 0.65rem 1.5rem;
-        border: 1.5px solid rgba(0, 0, 0, 0.08);
+        border: 2px solid rgba(0, 0, 0, 0.1);
         border-radius: 12px;
         font-weight: 600;
         font-size: 0.92rem;
@@ -109,12 +111,13 @@
         display: inline-flex;
         align-items: center;
         gap: 0.4rem;
-        background: #fff;
+        background: transparent;
     }
 
     .form-cancel:hover {
         border-color: var(--accent-color);
         color: var(--accent-color);
+        background: transparent;
     }
 
     .upload-overlay {

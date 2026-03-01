@@ -33,12 +33,15 @@
 
     <!-- Beta notice (shown once per session) -->
     <div id="beta-notice" style="display:none;" role="status" aria-live="polite">
-        <div class="badge">
-            <span class="label">BETA</span>
-            This is a beta version of Orravyn Research. We are still testing features and improving performance.
+        <div class="beta-card">
+            <span class="beta-label">EARLY ACCESS BETA</span>
+            <strong style="font-size:1.05rem;color:#0f172a;">Orravyn Research is in active beta.</strong>
+            Some features are still being refined. Your research, uploaded content,
+            and personal data are fully protected throughout this period.
             <br>
-            If your content is plagiarised or misused, report it immediately to
-            <a href="mailto:support@orravyn.cloud">support@orravyn.cloud</a> so we can remove it.
+            For bugs, feature feedback, or content removal requests, contact us at
+            <a href="mailto:support@orravyn.cloud">support@orravyn.cloud</a> — we respond promptly.
+            <span style="font-size:0.78rem;color:#94a3b8;margin-top:4px;">Click outside to dismiss</span>
         </div>
     </div>
 
@@ -58,41 +61,27 @@
                 </button>
 
                 <div class="collapse navbar-collapse" id="navbarNav">
-                    <ul class="navbar-nav mx-auto" role="list">
+                    <ul class="navbar-nav ms-auto" role="list">
                         <li class="nav-item" role="listitem">
-                            <a class="nav-link" href="{% url 'papers:list' %}">
-                                <i class="fas fa-file-alt" aria-hidden="true"></i>Papers
-                            </a>
+                            <a class="nav-link" href="{% url 'papers:list' %}">Papers</a>
                         </li>
                         <li class="nav-item" role="listitem">
-                            <a class="nav-link" href="{% url 'papers:categories' %}">
-                                <i class="fas fa-tags" aria-hidden="true"></i>Categories
-                            </a>
+                            <a class="nav-link" href="{% url 'papers:categories' %}">Categories</a>
                         </li>
                         <li class="nav-item" role="listitem">
-                            <a class="nav-link" href="{% url 'accounts:publishers_list' %}">
-                                <i class="fas fa-user-graduate" aria-hidden="true"></i>Publishers
-                            </a>
+                            <a class="nav-link" href="{% url 'accounts:publishers_list' %}">Publishers</a>
                         </li>
                         <li class="nav-item" role="listitem">
-                            <a class="nav-link" href="{% url 'groups:list' %}">
-                                <i class="fas fa-users" aria-hidden="true"></i>Groups
-                            </a>
+                            <a class="nav-link" href="{% url 'groups:list' %}">Groups</a>
                         </li>
                         <li class="nav-item" role="listitem">
-                            <a class="nav-link" href="{% url 'search:search' %}">
-                                <i class="fas fa-search" aria-hidden="true"></i>Search
-                            </a>
+                            <a class="nav-link" href="{% url 'search:search' %}">Search</a>
                         </li>
                         <li class="nav-item" role="listitem">
-                            <a class="nav-link" href="{% url 'papers:blog_list' %}">
-                                <i class="fas fa-blog" aria-hidden="true"></i>Blog
-                            </a>
+                            <a class="nav-link" href="{% url 'papers:blog_list' %}">Blog</a>
                         </li>
                         <li class="nav-item" role="listitem">
-                            <a class="nav-link" href="{% url 'chat:yggdrasil_chatbot' %}">
-                                <i class="fas fa-robot" aria-hidden="true"></i>AI
-                            </a>
+                            <a class="nav-link" href="{% url 'chat:yggdrasil_chatbot' %}">AI</a>
                         </li>
                     </ul>
 
@@ -101,7 +90,6 @@
                         <li class="nav-item dropdown" role="listitem">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
                                 data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">
-                                <i class="fas fa-user-circle" aria-hidden="true"></i>
                                 {{ user.username }}
                                 <span class="badge" aria-label="User role">{{ user.user_type|title }}</span>
                             </a>
@@ -144,11 +132,6 @@
                                 <li role="menuitem">
                                     <a class="dropdown-item" href="{% url 'papers:reading_lists' %}">
                                         <i class="fas fa-list" aria-hidden="true"></i>Reading Lists
-                                    </a>
-                                </li>
-                                <li role="menuitem">
-                                    <a class="dropdown-item" href="{% url 'groups:my_groups' %}">
-                                        <i class="fas fa-user-friends" aria-hidden="true"></i>My Groups
                                     </a>
                                 </li>
                                 {% if user.user_type == 'publisher' or user.user_type == 'moderator' or user.user_type == 'admin' %}
@@ -195,14 +178,10 @@
                         </li>
                         {% else %}
                         <li class="nav-item" role="listitem">
-                            <a class="nav-link" href="{% url 'accounts:login' %}">
-                                <i class="fas fa-sign-in-alt" aria-hidden="true"></i>Login
-                            </a>
+                            <a class="nav-link" href="{% url 'accounts:login' %}">Login</a>
                         </li>
                         <li class="nav-item" role="listitem">
-                            <a class="nav-link" href="{% url 'accounts:register' %}">
-                                <i class="fas fa-user-plus" aria-hidden="true"></i>Register
-                            </a>
+                            <a class="nav-pill-btn" href="{% url 'accounts:register' %}">Register</a>
                         </li>
                         {% endif %}
                     </ul>

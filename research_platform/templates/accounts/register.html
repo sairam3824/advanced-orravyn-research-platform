@@ -142,6 +142,32 @@
     .input-icon-wrap input[type="password"] {
         padding-left: 2.8rem !important;
     }
+
+    /* Real-time field feedback */
+    .field-feedback {
+        font-size: 0.78rem;
+        font-weight: 600;
+        margin-top: 0.35rem;
+        min-height: 1.1em;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        transition: opacity 0.2s;
+    }
+
+    .field-feedback.available { color: #22c55e; }
+    .field-feedback.unavailable { color: #f87171; }
+    .field-feedback.checking { color: var(--text-secondary); }
+    .field-feedback.match { color: #22c55e; }
+    .field-feedback.mismatch { color: #f87171; }
+    .field-feedback.empty { opacity: 0; }
+
+    /* Tinted border states */
+    .field-feedback.available  ~ input,
+    input.username-ok   { border-color: rgba(34,197,94,0.5)  !important; }
+    input.username-bad  { border-color: rgba(248,113,113,0.5) !important; }
+    input.pw-match      { border-color: rgba(34,197,94,0.5)  !important; }
+    input.pw-mismatch   { border-color: rgba(248,113,113,0.5) !important; }
 </style>
 {% endblock %}
 
@@ -208,6 +234,7 @@
                         {% if form.username.errors %}
                             <div class="text-danger small mt-1">{{ form.username.errors|join:", " }}</div>
                         {% endif %}
+                        <div id="username-feedback" class="field-feedback empty" aria-live="polite"></div>
                     </div>
                     <div class="col-md-6">
                         <label for="{{ form.email.id_for_label }}" class="form-label">Email Address</label>
@@ -281,6 +308,7 @@
                         {% if form.password2.errors %}
                             <div class="text-danger small mt-1">{{ form.password2.errors|join:", " }}</div>
                         {% endif %}
+                        <div id="password-feedback" class="field-feedback empty" aria-live="polite"></div>
                     </div>
                 </div>
 
@@ -298,4 +326,105 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const CHECK_URL = "{% url 'accounts:check_username' %}";
+
+    /* ── Username availability ── */
+    const usernameInput = document.getElementById('{{ form.username.id_for_label }}');
+    const usernameFB    = document.getElementById('username-feedback');
+    let   usernameTimer = null;
+
+    const RE_ALPHANUM   = /^[A-Za-z0-9]+$/;
+    const RE_HAS_DIGIT  = /\d/;
+
+    function setFeedback(el, stateClass, iconHtml, text) {
+        el.className = 'field-feedback ' + stateClass;
+        el.innerHTML = iconHtml + ' ' + text;
+    }
+
+    function badUsername(msg) {
+        setFeedback(usernameFB, 'unavailable', '<i class="fas fa-times-circle"></i>', msg);
+        usernameInput.classList.add('username-bad');
+        usernameInput.classList.remove('username-ok');
+    }
+
+    function checkUsername(value) {
+        if (!value) {
+            usernameFB.className = 'field-feedback empty';
+            usernameFB.innerHTML = '';
+            usernameInput.classList.remove('username-ok', 'username-bad');
+            return;
+        }
+
+        /* Format checks — instant, no network needed */
+        if (!RE_ALPHANUM.test(value)) {
+            badUsername('Only letters and numbers — no special characters.');
+            return;
+        }
+        if (!RE_HAS_DIGIT.test(value)) {
+            badUsername('Must include at least one number (e.g. alex7).');
+            return;
+        }
+
+        /* Availability check */
+        setFeedback(usernameFB, 'checking', '<i class="fas fa-spinner fa-spin"></i>', 'Checking…');
+        fetch(CHECK_URL + '?username=' + encodeURIComponent(value))
+            .then(r => r.json())
+            .then(data => {
+                if (data.available) {
+                    setFeedback(usernameFB, 'available',
+                        '<i class="fas fa-check-circle"></i>', 'Username available');
+                    usernameInput.classList.add('username-ok');
+                    usernameInput.classList.remove('username-bad');
+                } else {
+                    badUsername(data.message || 'Username already taken');
+                }
+            })
+            .catch(() => {
+                usernameFB.className = 'field-feedback empty';
+                usernameFB.innerHTML = '';
+            });
+    }
+
+    if (usernameInput) {
+        usernameInput.addEventListener('input', function () {
+            clearTimeout(usernameTimer);
+            usernameTimer = setTimeout(() => checkUsername(this.value.trim()), 350);
+        });
+    }
+
+    /* ── Password match ── */
+    const pw1Input = document.getElementById('{{ form.password1.id_for_label }}');
+    const pw2Input = document.getElementById('{{ form.password2.id_for_label }}');
+    const pwFB     = document.getElementById('password-feedback');
+
+    function checkPasswordMatch() {
+        const v1 = pw1Input ? pw1Input.value : '';
+        const v2 = pw2Input ? pw2Input.value : '';
+
+        if (!v2) {
+            pwFB.className = 'field-feedback empty';
+            pwFB.innerHTML = '';
+            if (pw2Input) pw2Input.classList.remove('pw-match', 'pw-mismatch');
+            return;
+        }
+        if (v1 === v2) {
+            setFeedback(pwFB, 'match', '<i class="fas fa-check-circle"></i>', 'Passwords match');
+            pw2Input.classList.add('pw-match');
+            pw2Input.classList.remove('pw-mismatch');
+        } else {
+            setFeedback(pwFB, 'mismatch', '<i class="fas fa-times-circle"></i>', 'Passwords do not match');
+            pw2Input.classList.add('pw-mismatch');
+            pw2Input.classList.remove('pw-match');
+        }
+    }
+
+    if (pw1Input) pw1Input.addEventListener('input', checkPasswordMatch);
+    if (pw2Input) pw2Input.addEventListener('input', checkPasswordMatch);
+})();
+</script>
 {% endblock %}

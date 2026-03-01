@@ -116,46 +116,66 @@
         font-weight: 600;
         text-decoration: none;
         transition: all 0.25s ease;
-        border: none;
+        border: 2px solid rgba(0, 0, 0, 0.1);
         cursor: pointer;
+        background: transparent;
+        color: var(--text-secondary);
+    }
+
+    .review-act:hover {
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+        background: transparent;
     }
 
     .review-act.view {
-        background: rgba(37, 99, 235, 0.08);
-        color: var(--accent-color);
+        background: transparent;
+        color: var(--text-secondary);
+        border: 2px solid rgba(0, 0, 0, 0.1);
     }
 
     .review-act.view:hover {
-        background: rgba(37, 99, 235, 0.15);
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+        background: transparent;
     }
 
     .review-act.pdf {
-        background: rgba(8, 145, 178, 0.08);
-        color: #0891b2;
+        background: transparent;
+        color: var(--text-secondary);
+        border: 2px solid rgba(0, 0, 0, 0.1);
     }
 
     .review-act.pdf:hover {
-        background: rgba(8, 145, 178, 0.15);
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+        background: transparent;
     }
 
     .review-act.approve {
-        background: #10b981;
-        color: #fff;
+        background: transparent;
+        color: var(--text-secondary);
+        border: 2px solid rgba(0, 0, 0, 0.1);
     }
 
     .review-act.approve:hover {
-        background: #059669;
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+        background: transparent;
+        box-shadow: none;
     }
 
     .review-act.reject {
-        background: #dc2626;
-        color: #fff;
+        background: transparent;
+        color: var(--text-secondary);
+        border: 2px solid rgba(0, 0, 0, 0.1);
     }
 
     .review-act.reject:hover {
-        background: #b91c1c;
-        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+        background: transparent;
+        box-shadow: none;
     }
 
     .empty-state {
@@ -170,6 +190,29 @@
         margin-bottom: 1rem;
         display: block;
         color: #10b981;
+    }
+
+    .empty-action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.7rem 1.4rem;
+        border-radius: 10px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border: 2px solid rgba(0, 0, 0, 0.1);
+        background: transparent;
+        color: var(--text-secondary);
+    }
+
+    .empty-action-btn:hover {
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+        background: transparent;
+        transform: none;
+        box-shadow: none;
     }
 </style>
 {% endblock %}
@@ -241,10 +284,8 @@
     <i class="fas fa-clipboard-check"></i>
     <p>All submitted papers have been reviewed. Great job!</p>
     <div style="display: flex; gap: 0.75rem; justify-content: center; margin-top: 1rem;">
-        <a href="{% url 'papers:list' %}" class="feature-btn">View Papers</a>
-        <a href="{% url 'accounts:admin_dashboard' %}" class="feature-btn"
-            style="background: transparent; color: var(--accent-color); border: 1.5px solid rgba(37,99,235,0.2);">Admin
-            Dashboard</a>
+        <a href="{% url 'papers:list' %}" class="empty-action-btn">View Papers</a>
+        <a href="{% url 'accounts:admin_dashboard' %}" class="empty-action-btn">Admin Dashboard</a>
     </div>
 </div>
 {% endif %}

@@ -18,9 +18,9 @@
 
     .create-btn {
         padding: 0.6rem 1.2rem;
-        background: var(--accent-color);
-        color: #fff;
-        border: none;
+        background: transparent;
+        color: var(--text-secondary);
+        border: 2px solid rgba(0, 0, 0, 0.1);
         border-radius: 8px;
         font-size: 0.88rem;
         font-weight: 600;
@@ -29,7 +29,9 @@
     }
 
     .create-btn:hover {
-        background: #1d4ed8;
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+        background: transparent;
     }
 
     .list-card {
@@ -183,8 +185,8 @@
                 </label>
             </div>
             <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-                <button type="button" onclick="hideCreateModal()" style="padding: 0.6rem 1.2rem; border: 1px solid #ddd; background: #fff; border-radius: 8px; cursor: pointer;">Cancel</button>
-                <button type="submit" style="padding: 0.6rem 1.2rem; background: var(--accent-color); color: #fff; border: none; border-radius: 8px; cursor: pointer;">Create</button>
+                <button type="button" onclick="hideCreateModal()" style="padding: 0.6rem 1.2rem; border: 2px solid rgba(0, 0, 0, 0.1); background: transparent; color: var(--text-secondary); border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.25s ease;" onmouseover="this.style.borderColor='var(--accent-color)'; this.style.color='var(--accent-color)';" onmouseout="this.style.borderColor='rgba(0, 0, 0, 0.1)'; this.style.color='var(--text-secondary)';">Cancel</button>
+                <button type="submit" style="padding: 0.6rem 1.2rem; background: transparent; color: var(--text-secondary); border: 2px solid rgba(0, 0, 0, 0.1); border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.25s ease;" onmouseover="this.style.borderColor='var(--accent-color)'; this.style.color='var(--accent-color)';" onmouseout="this.style.borderColor='rgba(0, 0, 0, 0.1)'; this.style.color='var(--text-secondary)';">Create</button>
             </div>
         </form>
     </div>

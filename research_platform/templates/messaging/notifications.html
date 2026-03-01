@@ -18,9 +18,9 @@
 
     .mark-all-btn {
         padding: 0.5rem 1rem;
-        background: var(--accent-color);
-        color: #fff;
-        border: none;
+        background: transparent;
+        color: var(--text-secondary);
+        border: 2px solid rgba(0, 0, 0, 0.1);
         border-radius: 8px;
         font-size: 0.85rem;
         font-weight: 600;
@@ -29,7 +29,9 @@
     }
 
     .mark-all-btn:hover {
-        background: #1d4ed8;
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+        background: transparent;
     }
 
     .notification-item {

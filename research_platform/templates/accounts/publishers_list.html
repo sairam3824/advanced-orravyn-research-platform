@@ -157,9 +157,9 @@
 
     .follow-btn {
         padding: 0.4rem 1rem;
-        border: 1.5px solid var(--accent-color);
+        border: 2px solid rgba(0, 0, 0, 0.1);
         background: transparent;
-        color: var(--accent-color);
+        color: var(--text-secondary);
         border-radius: 8px;
         font-size: 0.82rem;
         font-weight: 600;
@@ -168,18 +168,21 @@
     }
 
     .follow-btn:hover {
-        background: var(--accent-color);
-        color: #fff;
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+        background: transparent;
     }
 
     .follow-btn.following {
-        background: var(--accent-color);
-        color: #fff;
+        background: transparent;
+        color: var(--text-secondary);
+        border: 2px solid rgba(0, 0, 0, 0.1);
     }
 
     .follow-btn.following:hover {
-        background: #dc2626;
-        border-color: #dc2626;
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+        background: transparent;
     }
 
     .empty-state {
