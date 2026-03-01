@@ -31,15 +31,41 @@
     box-sizing: border-box;
 }
 
+/* Apply DM Sans globally to all elements */
+* {
+    font-family: 'DM Sans', sans-serif;
+}
+
 /* ── Base ───────────────────────────────────────────────────── */
 body {
-    font-family: 'Inter', sans-serif;
+    font-family: 'DM Sans', sans-serif;
     background: #f0f4f8;
     color: var(--text-primary);
     min-height: 100vh;
     overflow-x: hidden;
     position: relative;
     line-height: 1.6;
+}
+
+/* Ensure all headings use DM Sans */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+}
+
+/* Ensure all buttons use DM Sans */
+button, .btn, input[type="button"], input[type="submit"] {
+    font-family: 'DM Sans', sans-serif;
+}
+
+/* Ensure all links use DM Sans */
+a {
+    font-family: 'DM Sans', sans-serif;
+}
+
+/* Ensure all paragraphs and text use DM Sans */
+p, span, div, li, td, th {
+    font-family: 'DM Sans', sans-serif;
 }
 
 body::before {
@@ -90,9 +116,7 @@ body::before {
 
 /* ── Navbar ─────────────────────────────────────────────────── */
 .navbar {
-    background: rgba(255, 255, 255, 0.75) !important;
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    background: #f0f4f8 !important;
     border-bottom: 1px solid rgba(0, 0, 0, 0.06);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
     padding: 0.85rem 0;
@@ -103,7 +127,7 @@ body::before {
 }
 
 .navbar:hover {
-    background: rgba(255, 255, 255, 0.85) !important;
+    background: #f0f4f8 !important;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
@@ -121,7 +145,7 @@ body::before {
 
 .navbar-brand span {
     font-family: 'DM Sans', sans-serif;
-    font-weight: 400;
+    font-weight: 500;
     font-size: 1.35rem;
     letter-spacing: 0em;
     color: var(--text-primary) !important;
@@ -166,16 +190,20 @@ body::before {
     0% {
         transform: rotate(0deg);
     }
+
     100% {
         transform: rotate(360deg);
     }
 }
 
 @keyframes glow {
-    0%, 100% {
+
+    0%,
+    100% {
         box-shadow: 0 0 10px rgba(37, 99, 235, 0.5);
         transform: translate(-50%, -50%) scale(1);
     }
+
     50% {
         box-shadow: 0 0 20px rgba(37, 99, 235, 0.8);
         transform: translate(-50%, -50%) scale(1.2);
@@ -184,75 +212,90 @@ body::before {
 
 .navbar-nav {
     align-items: center;
-    gap: 0.25rem;
+    gap: 0.1rem;
 }
 
 .nav-link {
     color: var(--text-secondary) !important;
+    font-family: 'DM Sans', sans-serif;
     font-weight: 500;
-    font-size: 1rem;
-    padding: 0.5rem 0.9rem !important;
-    border-radius: 10px;
-    transition: all 0.25s ease;
+    font-size: 0.97rem;
+    padding: 0.45rem 0.85rem !important;
+    border-radius: 6px;
+    transition: color 0.2s ease;
     position: relative;
     display: flex;
     align-items: center;
     margin: 0;
     white-space: nowrap;
-}
-
-.nav-link::after {
-    content: '';
-    position: absolute;
-    bottom: 0.3rem;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 0;
-    height: 2px;
-    background: var(--primary-gradient);
-    transition: width 0.3s ease;
-    border-radius: 2px;
+    background: transparent !important;
 }
 
 .nav-link:hover {
     color: var(--text-primary) !important;
-    background: rgba(37, 99, 235, 0.04);
+    background: transparent !important;
 }
 
-.nav-link:hover::after {
-    width: 60%;
+/* ── User pill (authenticated) ──────────────────────────────── */
+.nav-user-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--text-primary) !important;
+    color: #fff !important;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    font-size: 0.92rem;
+    padding: 0.45rem 1rem;
+    border-radius: 999px;
+    text-decoration: none !important;
+    border: none;
+    white-space: nowrap;
+    transition: opacity 0.2s ease;
+    cursor: pointer;
 }
 
-.nav-link i {
-    margin-right: 0.4rem;
-    font-size: 0.95rem;
-    transition: transform 0.25s ease;
+.nav-user-pill:hover {
+    opacity: 0.85;
+    color: #fff !important;
+    background: var(--text-primary) !important;
 }
 
-.nav-link:hover i {
-    transform: scale(1.1);
+.nav-user-pill::after {
+    display: none !important;
 }
 
-.nav-link.loading::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 2px;
-    background: var(--accent-color);
-    animation: loading-bar 1s ease-in-out infinite;
+.nav-user-badge {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    letter-spacing: 0.02em;
 }
 
-@keyframes loading-bar {
-    0% {
-        transform: translateX(-100%);
-    }
-
-    100% {
-        transform: translateX(100%);
-    }
+/* ── Register pill (unauthenticated) ────────────────────────── */
+.nav-pill-btn {
+    display: inline-flex;
+    align-items: center;
+    background: var(--text-primary) !important;
+    color: #fff !important;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    font-size: 0.92rem;
+    padding: 0.45rem 1.1rem;
+    border-radius: 999px;
+    text-decoration: none !important;
+    white-space: nowrap;
+    transition: opacity 0.2s ease;
 }
+
+.nav-pill-btn:hover {
+    opacity: 0.85;
+    color: #fff !important;
+}
+
 
 /* ── Dropdowns ──────────────────────────────────────────────── */
 .dropdown-menu {
@@ -270,6 +313,7 @@ body::before {
 .dropdown-item {
     color: var(--text-secondary) !important;
     background: transparent !important;
+    font-family: 'DM Sans', sans-serif;
     padding: 0.7rem 1rem;
     transition: all 0.2s ease;
     border-radius: 8px;
@@ -288,19 +332,6 @@ body::before {
     font-size: 0.95rem;
 }
 
-.dropdown-item::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 3px;
-    height: 0;
-    background: var(--primary-gradient);
-    border-radius: 0 3px 3px 0;
-    transition: height 0.2s ease;
-}
-
 .dropdown-item:hover,
 .dropdown-item:focus,
 .dropdown-item:active {
@@ -311,10 +342,6 @@ body::before {
     box-shadow: none !important;
 }
 
-.dropdown-item:hover::before {
-    height: 70%;
-}
-
 .dropdown-divider {
     margin: 0.5rem 0;
     border-color: rgba(0, 0, 0, 0.06);
@@ -322,6 +349,7 @@ body::before {
 
 /* ── Badge ──────────────────────────────────────────────────── */
 .badge {
+    font-family: 'DM Sans', sans-serif;
     background: rgba(37, 99, 235, 0.1) !important;
     color: var(--accent-color) !important;
     border-radius: 6px;
@@ -723,15 +751,13 @@ footer.site-footer::before {
 
 /* Middle line - using a pseudo element on the icon itself */
 .navbar-toggler-icon {
-    background: linear-gradient(
-        to bottom,
-        transparent 0%,
-        transparent calc(50% - 1px),
-        var(--accent-color) calc(50% - 1px),
-        var(--accent-color) calc(50% + 1px),
-        transparent calc(50% + 1px),
-        transparent 100%
-    );
+    background: linear-gradient(to bottom,
+            transparent 0%,
+            transparent calc(50% - 1px),
+            var(--accent-color) calc(50% - 1px),
+            var(--accent-color) calc(50% + 1px),
+            transparent calc(50% + 1px),
+            transparent 100%);
 }
 
 /* ── Accessibility focus rings ──────────────────────────────── */
@@ -764,64 +790,80 @@ footer.site-footer::before {
 /* ── Beta notice overlay ────────────────────────────────────── */
 #beta-notice {
     position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    inset: 0;
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 9999;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
     opacity: 1;
-    transition: opacity 1s ease, visibility 1s ease;
-    pointer-events: none;
+    transition: opacity 0.5s ease;
+    pointer-events: auto;
 }
 
-#beta-notice .badge {
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    padding: 20px 30px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
-    display: inline-flex;
+#beta-notice .beta-card {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 16px;
+    padding: 32px 40px;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.28);
+    display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: 14px;
     text-align: center;
     font-size: 1rem;
-    font-weight: 600;
-    max-width: 90vw;
-    max-height: 90vh;
-    overflow: auto;
+    font-weight: 500;
+    color: #1e293b;
+    width: min(560px, 92vw);
     pointer-events: auto;
-    word-wrap: break-word;
+    white-space: normal;
+    word-break: break-word;
     box-sizing: border-box;
+    line-height: 1.7;
 }
 
-#beta-notice .label {
-    padding: 2px 10px;
+#beta-notice .beta-card a {
+    color: #2563eb;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+#beta-notice .beta-label {
+    display: inline-block;
+    padding: 4px 14px;
     border-radius: 999px;
-    background: #fde68a;
-    color: #8a5a00;
-    font-size: 0.85rem;
-    font-weight: 700;
+    background: #b45309;
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
     line-height: 1.6;
 }
 
 #beta-notice.fade-out {
     opacity: 0;
-    visibility: hidden;
+    pointer-events: none;
 }
 
 @media (prefers-color-scheme: dark) {
-    #beta-notice .badge {
-        background: #111826;
-        border-color: #273244;
-        box-shadow: none;
+    #beta-notice .beta-card {
+        background: #0f172a;
+        border-color: #1e3a5f;
+        color: #e2e8f0;
+        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
     }
 
-    #beta-notice .label {
-        background: #8a5a00;
-        color: #fff7cc;
+    #beta-notice .beta-card a {
+        color: #60a5fa;
+    }
+
+    #beta-notice .beta-label {
+        background: #92400e;
+        color: #fde68a;
     }
 }
 
@@ -833,6 +875,7 @@ footer.site-footer::before {
 /* ── .feature-btn ───────────────────────────────────────────── */
 /* Primary action button used across 12+ templates.             */
 .feature-btn {
+    font-family: 'DM Sans', sans-serif;
     background: var(--primary-gradient) !important;
     border: none;
     color: var(--text-primary) !important;
@@ -940,6 +983,7 @@ input[type="search"].form-control,
 textarea.form-control,
 select.form-control,
 select.form-select {
+    font-family: 'DM Sans', sans-serif;
     background: var(--glass-bg) !important;
     border: 1.5px solid var(--glass-border) !important;
     color: var(--text-primary) !important;
@@ -971,6 +1015,7 @@ select.form-select:focus {
 .form-label,
 label.form-label,
 .form-check-label {
+    font-family: 'DM Sans', sans-serif;
     color: var(--text-primary);
     font-weight: 600;
 }
@@ -984,6 +1029,7 @@ label.form-label,
 /* ── Badge variants ─────────────────────────────────────────── */
 /* Override Bootstrap badges to match dark-glass design.        */
 .badge.bg-secondary {
+    font-family: 'DM Sans', sans-serif;
     background-color: rgba(37, 99, 235, 0.08) !important;
     color: var(--text-primary) !important;
     padding: 0.25rem 0.75rem;
@@ -994,6 +1040,7 @@ label.form-label,
 }
 
 .badge.bg-primary {
+    font-family: 'DM Sans', sans-serif;
     background: var(--primary-gradient) !important;
     color: var(--text-primary) !important;
     border-radius: 50px;
@@ -1728,10 +1775,12 @@ body::before {
     .navbar-collapse {
         margin-top: 0.75rem;
         padding: 1rem;
-        background: rgba(255, 255, 255, 0.98);
+        background: #f0f4f8;
         border-radius: 12px;
         border: 1px solid rgba(0, 0, 0, 0.06);
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        max-height: calc(100dvh - 80px);
+        overflow-y: auto;
     }
 
     .nav-link {
@@ -1776,7 +1825,8 @@ body::before {
         font-size: 15px;
     }
 
-    h1, .page-header h1 {
+    h1,
+    .page-header h1 {
         font-size: 1.4rem !important;
     }
 
@@ -1827,6 +1877,7 @@ body::before {
 
 /* ── Mobile Cards & Lists ───────────────────────────────── */
 @media (max-width: 768px) {
+
     .paper-item,
     .group-card {
         padding: 1rem 0;
@@ -1855,9 +1906,11 @@ body::before {
 
 /* ── Mobile Forms ───────────────────────────────────────── */
 @media (max-width: 768px) {
+
     .form-control,
     .form-select {
-        font-size: 16px; /* Prevents zoom on iOS */
+        font-size: 16px;
+        /* Prevents zoom on iOS */
         padding: 0.65rem 0.75rem;
     }
 
@@ -1878,6 +1931,7 @@ body::before {
 
 /* ── Mobile Buttons ─────────────────────────────────────── */
 @media (max-width: 768px) {
+
     .feature-btn,
     .form-submit {
         width: 100%;
@@ -1908,7 +1962,8 @@ body::before {
         font-size: 0.85rem;
     }
 
-    th, td {
+    th,
+    td {
         padding: 0.5rem !important;
     }
 
@@ -2017,7 +2072,7 @@ body::before {
         padding: 0 0.75rem;
     }
 
-    .stat-item + .stat-item {
+    .stat-item+.stat-item {
         border-left: 1px solid var(--glass-border);
     }
 
@@ -2050,6 +2105,7 @@ body::before {
 
 /* ── Touch Improvements ─────────────────────────────────── */
 @media (hover: none) and (pointer: coarse) {
+
     /* Larger touch targets */
     .nav-link,
     .dropdown-item,
@@ -2097,6 +2153,7 @@ img[loading="lazy"].loaded {
     0% {
         background-position: -200% 0;
     }
+
     100% {
         background-position: 200% 0;
     }
@@ -2153,6 +2210,7 @@ img[loading="lazy"].loaded {
         opacity: 0;
         transform: translateY(10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -2174,6 +2232,7 @@ img[loading="lazy"].loaded {
 /* ── Performance Optimizations ──────────────────────────── */
 /* Reduce motion for users who prefer it */
 @media (prefers-reduced-motion: reduce) {
+
     *,
     *::before,
     *::after {
@@ -2202,6 +2261,7 @@ img {
 
 /* ── Print Styles ───────────────────────────────────────── */
 @media print {
+
     .navbar,
     .footer,
     .feature-btn,
@@ -2282,6 +2342,7 @@ img {
         opacity: 0;
         transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -2328,6 +2389,7 @@ img {
         opacity: 0;
         transform: translateY(10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -2477,10 +2539,14 @@ img {
 }
 
 @keyframes typing {
-    0%, 60%, 100% {
+
+    0%,
+    60%,
+    100% {
         transform: translateY(0);
         opacity: 0.5;
     }
+
     30% {
         transform: translateY(-10px);
         opacity: 1;
@@ -2495,12 +2561,12 @@ img {
         right: 20px;
         bottom: 90px;
     }
-    
+
     .help-chatbot {
         right: 15px;
         bottom: 15px;
     }
-    
+
     .chatbot-toggle {
         width: 55px;
         height: 55px;

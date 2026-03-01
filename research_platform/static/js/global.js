@@ -53,17 +53,6 @@ function createParticles() {
 document.addEventListener('DOMContentLoaded', function () {
     createParticles();
 
-    /* Nav-link loading indicator */
-    document.querySelectorAll('.nav-link:not(.dropdown-toggle)').forEach(function (link) {
-        link.addEventListener('click', function () {
-            const href = this.getAttribute('href');
-            if (href && !href.includes('#')) {
-                this.classList.add('loading');
-                setTimeout(() => this.classList.remove('loading'), 1000);
-            }
-        });
-    });
-
     /* Dropdown hover micro-animation */
     document.querySelectorAll('.dropdown-item').forEach(function (item) {
         item.addEventListener('mouseenter', function () {
@@ -113,13 +102,23 @@ document.addEventListener('DOMContentLoaded', function () {
     const notice = document.getElementById('beta-notice');
     if (!notice) return;
 
+    function dismissNotice() {
+        notice.style.opacity = '0';
+        notice.style.pointerEvents = 'none';
+        setTimeout(() => notice.remove(), 500);
+    }
+
     if (!sessionStorage.getItem('betaNoticeShown')) {
         notice.style.display = 'flex';
-        setTimeout(function () {
-            notice.style.opacity = '0';
-            setTimeout(() => notice.remove(), 1000);
-        }, 3600);
         sessionStorage.setItem('betaNoticeShown', 'true');
+
+        // Auto-dismiss after 4 s
+        setTimeout(dismissNotice, 4000);
+
+        // Click the dark backdrop (not the card) to dismiss immediately
+        notice.addEventListener('click', function (e) {
+            if (e.target === notice) dismissNotice();
+        });
     } else {
         notice.remove();
     }
