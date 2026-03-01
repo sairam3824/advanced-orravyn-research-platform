@@ -28,11 +28,11 @@ class PersonalDashboardView(LoginRequiredMixin, TemplateView):
         # Papers uploaded
         uploaded_papers = Paper.objects.filter(uploaded_by=user)
         
-        # Impact metrics for user's papers
+        # Impact metrics for user's papers — single query
         impact_totals = uploaded_papers.aggregate(
             total_views=Sum('view_count'),
             total_downloads=Sum('download_count'),
-            total_citations=Sum('citation_count'),
+            total_citations=Count('cited_by'),
         )
         total_views = impact_totals['total_views'] or 0
         total_downloads = impact_totals['total_downloads'] or 0
