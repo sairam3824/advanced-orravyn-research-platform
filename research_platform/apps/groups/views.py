@@ -18,7 +18,20 @@ class GroupListView(ListView):
     paginate_by = 12
     
     def get_queryset(self):
-        return Group.objects.filter(is_private=False).order_by('-created_at')
+        view_type = self.request.GET.get('view', 'my' if self.request.user.is_authenticated else 'all')
+        
+        if view_type == 'my' and self.request.user.is_authenticated:
+            # Show user's groups
+            user_group_ids = GroupMember.objects.filter(user=self.request.user).values_list('group_id', flat=True)
+            return Group.objects.filter(id__in=user_group_ids).order_by('-created_at')
+        else:
+            # Show all public groups
+            return Group.objects.filter(is_private=False).order_by('-created_at')
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['view_type'] = self.request.GET.get('view', 'my' if self.request.user.is_authenticated else 'all')
+        return context
 
 def group_search(request):
     """JSON endpoint for live group search"""
@@ -76,7 +89,14 @@ class GroupDetailView(DetailView):
         
         if self.request.user.is_authenticated:
             context['is_member'] = GroupMember.objects.filter(group=group, user=self.request.user).exists()
-            context['user_papers'] = Paper.objects.filter(uploaded_by=self.request.user, is_approved=True)
+            # Show all approved papers, not just user's papers
+            context['user_papers'] = Paper.objects.filter(is_approved=True).order_by('-created_at')
+            
+            # Get user's membership for role checking
+            try:
+                context['user_membership'] = GroupMember.objects.get(group=group, user=self.request.user)
+            except GroupMember.DoesNotExist:
+                context['user_membership'] = None
         
         return context
 
