@@ -4,6 +4,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic import TemplateView, FormView
 from django.views.generic.edit import UpdateView
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import never_cache
 from django.contrib import messages
 from django.urls import reverse_lazy
 from .models import User, UserProfile
@@ -11,6 +13,7 @@ from .forms import UserRegistrationForm, UserProfileForm, LoginForm
 from apps.papers.models import Paper, Bookmark, Rating
 from apps.groups.models import Group, GroupMember
 
+@method_decorator(never_cache, name='dispatch')
 class LoginView(FormView):
     template_name = 'accounts/login.html'
     form_class = LoginForm
