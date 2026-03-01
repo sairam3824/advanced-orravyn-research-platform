@@ -84,8 +84,12 @@ class ImprovedRecommendationEngine:
         return {k: (v - min_s) / denom for k, v in scores.items()}
 
     def hybrid_recommend(self, user, top_k=10, alpha=0.6, beta=0.3, gamma=0.1):
+        has_profile = self.get_user_profile_vector(user) is not None
         content = self.content_based_recommend(user, top_k * 2)
         collaborative = self.collaborative_filter(user, top_k * 2)
+
+        content_ids = {paper.id for paper, _ in content}
+        collab_ids = {paper.id for paper, _ in collaborative}
 
         popularity = {}
         for paper, _ in content:
@@ -94,7 +98,6 @@ class ImprovedRecommendationEngine:
             popularity[paper.id] = score
 
         scores = {}
-
         for paper, score in content:
             scores[paper.id] = scores.get(paper.id, 0) + alpha * score
         for paper, score in collaborative:
@@ -104,21 +107,40 @@ class ImprovedRecommendationEngine:
 
         scores = self.normalize_scores(scores)
         papers = Paper.objects.in_bulk(scores.keys())
-        ranked = sorted(
+        ranked_raw = sorted(
             ((papers[pid], score) for pid, score in scores.items()),
             key=lambda x: x[1],
             reverse=True
-        )
-        return ranked[:top_k]
+        )[:top_k]
+
+        # Attach a human-readable reason per paper
+        result = []
+        for paper, score in ranked_raw:
+            in_content = paper.id in content_ids
+            in_collab = paper.id in collab_ids
+            if not has_profile:
+                reason = "Trending paper in the research community"
+            elif in_content and in_collab:
+                reason = "Matches your interests and is popular among researchers like you"
+            elif in_content:
+                reason = "Similar to papers you have rated or bookmarked"
+            elif in_collab:
+                reason = "Highly rated by researchers with similar interests"
+            else:
+                reason = "Trending in your research area"
+            result.append((paper, score, reason))
+        return result
 
     def save_recommendations(self, user, ranked_papers):
         UserRecommendation.objects.filter(user=user).delete()
-        for paper, score in ranked_papers:
+        for item in ranked_papers:
+            paper, score = item[0], item[1]
+            reason = item[2] if len(item) == 3 else "Recommended based on your research activity"
             UserRecommendation.objects.create(
                 user=user,
                 paper=paper,
                 score=score,
-                reason="Recommended by improved hybrid model"
+                reason=reason,
             )
 
     def generate_for_user(self, user, top_k=10, rebuild_embeddings=False):
