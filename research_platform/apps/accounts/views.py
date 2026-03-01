@@ -75,26 +75,43 @@ class ProfileView(LoginRequiredMixin, TemplateView):
 
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'accounts/dashboard.html'
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
-        
+
         recent_papers = Paper.objects.filter(uploaded_by=user).order_by('-created_at')[:2]
         recent_bookmarks = Bookmark.objects.filter(user=user).select_related('paper').order_by('-created_at')[:2]
         recent_ratings = Rating.objects.filter(user=user).select_related('paper').order_by('-created_at')[:5]
-        
+
+        # Actual totals for stat cards (not slice lengths)
+        papers_count = Paper.objects.filter(uploaded_by=user).count()
+        bookmarks_count = Bookmark.objects.filter(user=user).count()
+        ratings_count = Rating.objects.filter(user=user).count()
+
         try:
             from apps.ml_engine.models import UserRecommendation
-            recommendations = UserRecommendation.objects.filter(user=user).select_related('paper')[:10]
+            from apps.ml_engine.tasks import generate_recommendations
+            from apps.papers.background import executor
+
+            recs_qs = UserRecommendation.objects.filter(user=user).select_related('paper').order_by('-score')
+
+            # Auto-generate in background if user has no recommendations yet
+            if not recs_qs.exists():
+                executor.submit(generate_recommendations, user.id)
+
+            recommendations = list(recs_qs[:10])
         except ImportError:
             recommendations = []
-        
+
         context.update({
             'recent_papers': recent_papers,
             'recent_bookmarks': recent_bookmarks,
             'recent_ratings': recent_ratings,
             'recommendations': recommendations,
+            'papers_count': papers_count,
+            'bookmarks_count': bookmarks_count,
+            'ratings_count': ratings_count,
             'user_type': user.user_type,
         })
         return context
@@ -279,6 +296,28 @@ def follow_user(request, user_id):
             return JsonResponse({'success': False, 'error': 'User not found'})
     
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
+
+
+def check_username(request):
+    """AJAX endpoint — validates format rules then checks availability."""
+    import re
+    username = request.GET.get('username', '').strip()
+    if not username:
+        return JsonResponse({'available': False, 'error': 'empty'})
+    if not re.fullmatch(r'[A-Za-z0-9]+', username):
+        return JsonResponse({
+            'available': False,
+            'error': 'no_special',
+            'message': 'Only letters and numbers allowed — no special characters.',
+        })
+    if not re.search(r'\d', username):
+        return JsonResponse({
+            'available': False,
+            'error': 'no_digit',
+            'message': 'Username must include at least one number.',
+        })
+    taken = User.objects.filter(username__iexact=username).exists()
+    return JsonResponse({'available': not taken})
 
 
 def publishers_search(request):

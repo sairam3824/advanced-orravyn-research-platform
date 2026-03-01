@@ -1,3 +1,5 @@
+import re
+
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from .models import User, UserProfile
@@ -28,6 +30,16 @@ class UserRegistrationForm(UserCreationForm):
         # Add form-control class to password fields
         self.fields['password1'].widget.attrs.update({'class': 'form-control'})
         self.fields['password2'].widget.attrs.update({'class': 'form-control'})
+
+    def clean_username(self):
+        username = self.cleaned_data.get('username', '')
+        if not re.fullmatch(r'[A-Za-z0-9]+', username):
+            raise forms.ValidationError(
+                'Username may only contain letters and numbers — no spaces or special characters.'
+            )
+        if not re.search(r'\d', username):
+            raise forms.ValidationError('Username must include at least one number.')
+        return username
 
 
 class UserProfileForm(forms.ModelForm):

@@ -22,4 +22,7 @@ urlpatterns = [
     
     # Follow/Unfollow
     path('follow/<int:user_id>/', views.follow_user, name='follow_user'),
+
+    # AJAX helpers
+    path('check-username/', views.check_username, name='check_username'),
 ]
