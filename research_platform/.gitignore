@@ -16,3 +16,5 @@ langchain_chatbot/
 legal/
 
 research_platform/ieee_paper.tex
+.vscode/
+chroma_db/
