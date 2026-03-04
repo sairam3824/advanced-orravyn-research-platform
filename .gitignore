@@ -1,2 +1,4 @@
 .DS_Store
 research_platform/staticfiles/
+*.docx
+~$*.docx
