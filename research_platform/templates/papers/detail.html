@@ -393,13 +393,38 @@
         </div>
 
         <div class="sidebar-section">
-            <div class="sidebar-title">References ({{ cited_papers.count }})</div>
-            {% for citation in cited_papers %}
-            <div class="sidebar-item"><a href="{% url 'papers:detail' citation.cited_paper.pk %}">{{
-                    citation.cited_paper.title|truncatechars:60 }}</a></div>
-            {% empty %}
-            <p class="sidebar-empty">No references listed.</p>
-            {% endfor %}
+            <div class="sidebar-title">
+                References
+                {% if paper.references_list %}({{ paper.references_list|length }}){% elif cited_papers %}({{ cited_papers.count }}){% endif %}
+            </div>
+            {% if paper.references_list %}
+                {% for ref in paper.references_list %}
+                <div class="sidebar-item" style="font-size:0.8rem; line-height:1.4; margin-bottom:0.5rem;">
+                    {% if ref.internal_paper_id %}
+                        <a href="{% url 'papers:detail' ref.internal_paper_id %}" style="color:var(--accent-color);">
+                            {{ ref.title|default:ref.raw|truncatechars:80 }}
+                        </a>
+                    {% elif ref.doi %}
+                        <a href="https://doi.org/{{ ref.doi }}" target="_blank" rel="noopener" style="color:var(--text-secondary);">
+                            {{ ref.title|default:ref.raw|truncatechars:80 }}
+                            <i class="fas fa-external-link-alt" style="font-size:0.65rem; opacity:0.6;"></i>
+                        </a>
+                    {% else %}
+                        <span style="color:var(--text-secondary);">{{ ref.raw|truncatechars:80 }}</span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% elif cited_papers %}
+                {% for citation in cited_papers %}
+                <div class="sidebar-item">
+                    <a href="{% url 'papers:detail' citation.cited_paper.pk %}">
+                        {{ citation.cited_paper.title|truncatechars:60 }}
+                    </a>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="sidebar-empty">No references found.</p>
+            {% endif %}
         </div>
     </div>
 </div>
@@ -515,7 +540,7 @@ function toggleLike() {
                 text.textContent = 'Like';
                 btn.classList.remove('liked');
             }
-            count.textContent = `(${data.like_count})`;
+            count.textContent = `(${data.total_likes})`;
         }
     });
 }
