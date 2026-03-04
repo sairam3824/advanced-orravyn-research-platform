@@ -1,22 +1,47 @@
 from django.contrib import admin
 from .models import (
-    Paper, Category, Bookmark, Rating, Citation, ReadingProgress,
+    Paper, Category, PaperCategory, Bookmark, Rating, Citation, ReadingProgress,
     PaperVersion, RelatedPaper, PaperAnnotation, ReadingList, ReadingListPaper,
     PaperCollection, ResearchProject, ProjectTask,
     PaperLike, PaperShare, PaperComment, PeerReview, ResearchBlogPost, BlogComment
 )
+
+
+class PaperCategoryInline(admin.TabularInline):
+    """Inline for managing a paper's categories directly from the Paper change page."""
+    model = PaperCategory
+    extra = 1
+    verbose_name = "Category"
+    verbose_name_plural = "Categories"
+
 
 @admin.register(Paper)
 class PaperAdmin(admin.ModelAdmin):
     list_display = ['title', 'uploaded_by', 'is_approved', 'view_count', 'download_count', 'created_at']
     list_filter = ['is_approved', 'created_at', 'categories']
     search_fields = ['title', 'authors', 'abstract']
+    readonly_fields = ['view_count', 'download_count', 'created_at']
+    inlines = [PaperCategoryInline]   # categories managed via the through-model inline
     actions = ['approve_papers', 'reject_papers']
-    
+
+    fieldsets = (
+        ('Paper Details', {
+            'fields': ('title', 'abstract', 'authors', 'publication_date', 'doi', 'pdf_path')
+        }),
+        ('Status & Metrics', {
+            'fields': ('uploaded_by', 'is_approved', 'is_archived', 'archived_at',
+                       'view_count', 'download_count', 'created_at'),
+        }),
+        ('AI-Generated Content', {
+            'fields': ('summary', 'section_summaries'),
+            'classes': ('collapse',),
+        }),
+    )
+
     def approve_papers(self, request, queryset):
         queryset.update(is_approved=True)
     approve_papers.short_description = "Approve selected papers"
-    
+
     def reject_papers(self, request, queryset):
         queryset.update(is_approved=False)
     reject_papers.short_description = "Reject selected papers"
