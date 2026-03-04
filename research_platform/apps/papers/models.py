@@ -29,6 +29,9 @@ class Paper(models.Model):
     download_count = models.PositiveIntegerField(default=0)
     view_count = models.PositiveIntegerField(default=0)
     summary = models.TextField(blank=True, null=True)
+    section_summaries = models.JSONField(null=True, blank=True)
+    # Parsed references from the PDF — list of {raw, doi, title, internal_paper_id}
+    references_list = models.JSONField(null=True, blank=True)
     is_archived = models.BooleanField(default=False)
     archived_at = models.DateTimeField(blank=True, null=True)
     
@@ -46,6 +49,13 @@ class Paper(models.Model):
     @property
     def citation_count(self):
         return self.cited_by.count()
+
+    def get_embedding(self):
+        """Safe accessor for PaperEmbedding — returns None if no embedding exists."""
+        try:
+            return self.embedding
+        except Exception:
+            return None
 
 class PaperCategory(models.Model):
     paper = models.ForeignKey(Paper, on_delete=models.CASCADE)
