@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+{% block title %}Paper Impact — {{ paper.title|truncatewords:8 }} · Orravyn{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        margin-bottom: 2rem;
+    }
+
+    .page-header h1 {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .page-header .back-link {
+        font-size: 0.85rem;
+        color: var(--accent-color);
+        text-decoration: none;
+    }
+
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+    }
+
+    .metric-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: 12px;
+        padding: 1.25rem 1.5rem;
+        text-align: center;
+    }
+
+    .metric-icon {
+        font-size: 1.6rem;
+        margin-bottom: 0.5rem;
+        color: var(--accent-color);
+    }
+
+    .metric-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        line-height: 1;
+        margin-bottom: 0.25rem;
+    }
+
+    .metric-label {
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .impact-score-card {
+        background: linear-gradient(135deg, rgba(79,156,249,0.12), rgba(79,156,249,0.04));
+        border: 1px solid rgba(79,156,249,0.3);
+        border-radius: 14px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+    }
+
+    .impact-score-value {
+        font-size: 3rem;
+        font-weight: 800;
+        color: var(--accent-color);
+        line-height: 1;
+        min-width: 80px;
+    }
+
+    .impact-score-desc h3 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.25rem;
+    }
+
+    .impact-score-desc p {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin: 0;
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .rating-bar {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .rating-bar .bar-fill {
+        flex: 1;
+        height: 8px;
+        border-radius: 4px;
+        background: rgba(79,156,249,0.15);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .rating-bar .bar-fill-inner {
+        position: absolute;
+        left: 0; top: 0; bottom: 0;
+        background: var(--accent-color);
+        border-radius: 4px;
+    }
+
+    .rating-label {
+        font-size: 0.82rem;
+        color: var(--text-secondary);
+        min-width: 80px;
+    }
+
+    .rating-val {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        min-width: 36px;
+        text-align: right;
+    }
+
+    .views-chart {
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-bottom: 2rem;
+        min-height: 180px;
+    }
+
+    .chart-placeholder {
+        text-align: center;
+        padding: 2.5rem;
+        color: var(--text-secondary);
+    }
+
+    .chart-placeholder i { font-size: 1.5rem; opacity: 0.3; display: block; margin-bottom: 0.5rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <a class="back-link" href="{% url 'papers:paper_detail' paper.pk %}">
+        <i class="fas fa-arrow-left"></i> Back to paper
+    </a>
+    <h1>{{ paper.title }}</h1>
+    <p style="color:var(--text-secondary); font-size:0.88rem;">Impact Analytics · {{ paper.publication_date|default:"Date unknown" }}</p>
+</div>
+
+<div class="impact-score-card">
+    <div class="impact-score-value">{{ metrics.impact_score|floatformat:1|default:"—" }}</div>
+    <div class="impact-score-desc">
+        <h3>Impact Score</h3>
+        <p>Composite score combining views, downloads, citations, bookmarks, likes, shares and average rating.</p>
+    </div>
+</div>
+
+<div class="metrics-grid">
+    <div class="metric-card">
+        <div class="metric-icon"><i class="fas fa-eye"></i></div>
+        <div class="metric-value">{{ metrics.total_views|default:paper.view_count }}</div>
+        <div class="metric-label">Views</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-icon"><i class="fas fa-download"></i></div>
+        <div class="metric-value">{{ metrics.total_downloads|default:paper.download_count }}</div>
+        <div class="metric-label">Downloads</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-icon"><i class="fas fa-quote-right"></i></div>
+        <div class="metric-value">{{ metrics.total_citations|default:paper.citation_count }}</div>
+        <div class="metric-label">Citations</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-icon"><i class="fas fa-bookmark"></i></div>
+        <div class="metric-value">{{ metrics.total_bookmarks|default:0 }}</div>
+        <div class="metric-label">Bookmarks</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-icon"><i class="fas fa-heart"></i></div>
+        <div class="metric-value">{{ metrics.total_likes|default:0 }}</div>
+        <div class="metric-label">Likes</div>
+    </div>
+    <div class="metric-card">
+        <div class="metric-icon"><i class="fas fa-share-alt"></i></div>
+        <div class="metric-value">{{ metrics.total_shares|default:0 }}</div>
+        <div class="metric-label">Shares</div>
+    </div>
+</div>
+
+{% if metrics.average_rating %}
+<h3 class="section-title">Average Rating</h3>
+<div class="rating-bar">
+    <span class="rating-label">User Rating</span>
+    <div class="bar-fill">
+        <div class="bar-fill-inner" style="width: {{ metrics.average_rating|default:0 }}0%;"></div>
+    </div>
+    <span class="rating-val">{{ metrics.average_rating|floatformat:1 }} / 5</span>
+</div>
+{% endif %}
+
+<h3 class="section-title">Views Over Last 30 Days</h3>
+<div class="views-chart">
+    {% if daily_views %}
+    <div id="viewsChart" style="height:160px;"></div>
+    {% else %}
+    <div class="chart-placeholder">
+        <i class="fas fa-chart-line"></i>
+        <p>No view data available for the last 30 days.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if daily_views %}
+<script>
+// Simple bar chart using DOM — no external library required
+const data = {{ daily_views|safe }};
+const canvas = document.getElementById('viewsChart');
+if (data.length) {
+    const max = Math.max(...data.map(d => d.count), 1);
+    canvas.style.display = 'flex';
+    canvas.style.alignItems = 'flex-end';
+    canvas.style.gap = '4px';
+    canvas.style.padding = '8px';
+    data.forEach(d => {
+        const bar = document.createElement('div');
+        const pct = (d.count / max * 100).toFixed(1);
+        bar.style.cssText = `flex:1;background:rgba(79,156,249,0.55);border-radius:4px 4px 0 0;height:${pct}%;min-height:4px;title="${d.day}: ${d.count} views"`;
+        bar.title = `${d.day}: ${d.count} views`;
+        canvas.appendChild(bar);
+    });
+}
+</script>
+{% endif %}
+{% endblock %}
