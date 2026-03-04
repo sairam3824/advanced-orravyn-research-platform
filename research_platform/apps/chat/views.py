@@ -4,12 +4,16 @@ import logging
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.db import models
-from django.db.models import functions as db_functions
+from django.core.cache import cache
+from django.db.models import Q, functions as db_functions
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.decorators import method_decorator
 from django.views.generic import ListView, TemplateView
+
+# Yggdrasil rate limit: max 10 requests per user per minute
+_YGG_RATE_LIMIT = 10
+_YGG_RATE_WINDOW = 60  # seconds
 
 from apps.chat.utils import is_offensive
 from apps.groups.models import Group, GroupMember
@@ -33,9 +37,11 @@ class ChatRoomView(LoginRequiredMixin, TemplateView):
             defaults={'created_by': self.request.user}
         )
         
-        last_three = ChatMessage.objects.filter(room=chat_room) \
-                                        .select_related('user') \
-                                        .order_by('-timestamp')[:50]
+        last_three = list(
+            ChatMessage.objects.filter(room=chat_room)
+            .select_related('user')
+            .order_by('-timestamp')[:50]
+        )
         messages = list(reversed(last_three))
 
         context['paper'] = paper
@@ -82,11 +88,11 @@ class ChatRoomView(LoginRequiredMixin, TemplateView):
         message_lower = message.lower()
         
         if 'abstract' in message_lower:
-            return f"The abstract of this paper is: {paper.abstract[:200]}..."
+            return f"The abstract of this paper is: {(paper.abstract or '')[:200]}..."
         elif 'author' in message_lower:
-            return f"The authors of this paper are: {paper.authors}"
+            return f"The authors of this paper are: {paper.authors or 'Not specified'}"
         elif 'date' in message_lower or 'year' in message_lower:
-            return f"This paper was published on: {paper.publication_date}"
+            return f"This paper was published on: {paper.publication_date or 'Not available'}"
         elif 'category' in message_lower or 'topic' in message_lower:
             categories = ", ".join([cat.name for cat in paper.categories.all()])
             return f"This paper belongs to the following categories: {categories}"
@@ -146,11 +152,11 @@ def generate_simple_bot_response(message, paper):
     message_lower = message.lower()
 
     if 'abstract' in message_lower:
-        return f"The abstract: {paper.abstract[:150]}..."
+        return f"The abstract: {(paper.abstract or '')[:150]}..."
     elif 'author' in message_lower:
-        return f"Authors: {paper.authors}"
+        return f"Authors: {paper.authors or 'Not specified'}"
     elif 'date' in message_lower:
-        return f"Published: {paper.publication_date}"
+        return f"Published: {paper.publication_date or 'Not available'}"
     else:
         return "I can help you with information about this paper's abstract, authors, or publication date."
 
@@ -175,10 +181,15 @@ class MyChatRoomsView(LoginRequiredMixin, ListView):
     paginate_by = 12
     
     def get_queryset(self):
+        # Use a subquery-based filter instead of a JOIN to avoid ordering
+        # instability when a user has many messages in the same room.
+        from django.db.models import Subquery, OuterRef
+        rooms_with_messages = ChatMessage.objects.filter(
+            room=OuterRef('pk'), user=self.request.user
+        ).values('room')[:1]
         return ChatRoom.objects.filter(
-            models.Q(created_by=self.request.user) |
-            models.Q(messages__user=self.request.user)
-        ).distinct().order_by('-created_at')
+            Q(created_by=self.request.user) | Q(pk__in=Subquery(rooms_with_messages))
+        ).order_by('-created_at')
 
 class GroupChatRoomView(LoginRequiredMixin, TemplateView):
     template_name = 'chat/group_room.html'
@@ -195,9 +206,11 @@ class GroupChatRoomView(LoginRequiredMixin, TemplateView):
             defaults={'created_by': self.request.user}
         )
         
-        last_messages = ChatMessage.objects.filter(room=chat_room) \
-                                        .select_related('user') \
-                                        .order_by('-timestamp')[:50]
+        last_messages = list(
+            ChatMessage.objects.filter(room=chat_room)
+            .select_related('user')
+            .order_by('-timestamp')[:50]
+        )
         messages = list(reversed(last_messages))
 
         context['group'] = group
@@ -236,22 +249,51 @@ def yggdrasil_chatbot_view(request):
     return render(request, 'chat/yggdrasil_chatbot.html')
 
 
+def _clean_response(text: str) -> str:
+    """
+    Strip markdown asterisks from LLM output so they never appear in the UI.
+    Bold (**text**) and italic (*text*) markers are removed; any stray * is dropped.
+    """
+    import re
+    # Remove bold markers: **text** → text
+    text = re.sub(r'\*\*(.+?)\*\*', r'\1', text, flags=re.DOTALL)
+    # Remove italic markers: *text* → text
+    text = re.sub(r'\*([^*\n]+?)\*', r'\1', text)
+    # Drop any remaining stray asterisks
+    text = text.replace('*', '')
+    return text
+
+
 @login_required
 def yggdrasil_rag_api(request):
-    """POST — send a message, get a RAG response. Persists to DB."""
+    """POST — send a message, run all 8 research agents, return structured response."""
     if request.method != 'POST':
         return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+    # ── Per-user rate limiting ────────────────────────────────────────────────
+    rate_key = f"ygg_rate:{request.user.id}"
+    request_count = cache.get(rate_key, 0)
+    if request_count >= _YGG_RATE_LIMIT:
+        return JsonResponse(
+            {'error': f'Rate limit exceeded. Max {_YGG_RATE_LIMIT} requests per minute.'},
+            status=429
+        )
+    cache.set(rate_key, request_count + 1, timeout=_YGG_RATE_WINDOW)
+    # ─────────────────────────────────────────────────────────────────────────
+
     try:
-        from apps.ml_engine.rag_pipeline import query_rag
+        from apps.ml_engine.research_agents import get_research_orchestrator
         from .models import YggdrasilConversation, YggdrasilMessage
 
         data = json.loads(request.body)
-        query = data.get('message', '').strip()
+        query           = data.get('message', '').strip()
         conversation_id = data.get('conversation_id')
+        session_id      = data.get('session_id') or request.COOKIES.get('ygg_session_id')
+
         if not query:
             return JsonResponse({'error': 'Empty message'}, status=400)
 
-        # Get or create conversation
+        # ── Conversation persistence ──────────────────────────────────────
         if conversation_id:
             try:
                 conversation = YggdrasilConversation.objects.get(
@@ -262,40 +304,60 @@ def yggdrasil_rag_api(request):
         else:
             conversation = YggdrasilConversation.objects.create(user=request.user)
 
-        # Auto-title from first message
         if conversation.title == 'New conversation' or not conversation.title:
             conversation.title = query[:50] + ('...' if len(query) > 50 else '')
             conversation.save(update_fields=['title'])
 
-        # Save user message
         YggdrasilMessage.objects.create(
             conversation=conversation,
             role=YggdrasilMessage.ROLE_USER,
             content=query,
         )
 
-        # Run RAG
-        result = query_rag(query)
+        # ── Run all 8 research agents ─────────────────────────────────────
+        orchestrator = get_research_orchestrator()
+        result = orchestrator.research(
+            query=query,
+            user_id=request.user.id,
+            session_id=session_id,
+        )
+
+        # Strip asterisks from response before saving and returning
+        clean_text = _clean_response(result.get('response', ''))
 
         # Save bot response
         YggdrasilMessage.objects.create(
             conversation=conversation,
             role=YggdrasilMessage.ROLE_BOT,
-            content=result['response'],
-            sources=result['sources'],
+            content=clean_text,
+            sources=result.get('sources', []),
+            faithfulness_score=None,
         )
 
-        # Touch updated_at so conversation bubbles to top of list
         YggdrasilConversation.objects.filter(pk=conversation.pk).update(
             updated_at=db_functions.Now()
         )
 
-        return JsonResponse({
-            'response': result['response'],
-            'sources': result['sources'],
-            'conversation_id': conversation.pk,
+        response = JsonResponse({
+            'response':           clean_text,
+            'sources':            result.get('sources', []),
+            'plan':               result.get('plan', {}),
+            'agent_log':          result.get('agent_log', []),
+            'total_ms':           result.get('total_ms', 0),
+            'session_id':         result.get('session_id', ''),
+            'conversation_id':    conversation.pk,
             'conversation_title': conversation.title,
         })
+        # Persist session_id in cookie for multi-turn memory
+        response.set_cookie(
+            'ygg_session_id',
+            result.get('session_id', ''),
+            max_age=60 * 60 * 24 * 30,  # 30 days
+            httponly=True,
+            samesite='Lax',
+        )
+        return response
+
     except Exception as exc:
         logger.error("Yggdrasil RAG API error: %s", exc)
         return JsonResponse({'error': 'Internal server error'}, status=500)
@@ -344,12 +406,13 @@ def yggdrasil_conversation_messages_api(request, conversation_id):
     except YggdrasilConversation.DoesNotExist:
         return JsonResponse({'error': 'Not found'}, status=404)
 
-    msgs = conversation.messages.values('role', 'content', 'sources', 'timestamp')
+    msgs = conversation.messages.values('role', 'content', 'sources', 'faithfulness_score', 'timestamp')
     data = [
         {
             'role': m['role'],
             'content': m['content'],
             'sources': m['sources'],
+            'faithfulness_score': m['faithfulness_score'],
             'timestamp': m['timestamp'].isoformat(),
         }
         for m in msgs
