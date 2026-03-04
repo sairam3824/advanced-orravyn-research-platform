@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from django.views.generic import ListView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse
@@ -31,9 +30,6 @@ class SearchView(ListView):
         )
 
         if query:
-            if self.request.user.is_authenticated:
-                SearchHistory.objects.create(user=self.request.user, query=query)
-
             # Boolean search support
             if boolean_mode == 'on':
                 queryset = self._apply_boolean_search(queryset, query)
@@ -51,19 +47,31 @@ class SearchView(ListView):
             queryset = queryset.filter(authors__icontains=author)
 
         if year_from:
-            queryset = queryset.filter(publication_date__year__gte=year_from)
+            try:
+                queryset = queryset.filter(publication_date__year__gte=int(year_from))
+            except (ValueError, TypeError):
+                pass
 
         if year_to:
-            queryset = queryset.filter(publication_date__year__lte=year_to)
+            try:
+                queryset = queryset.filter(publication_date__year__lte=int(year_to))
+            except (ValueError, TypeError):
+                pass
 
         if citation_min:
-            queryset = queryset.filter(citation_count_db__gte=citation_min)
+            try:
+                queryset = queryset.filter(citation_count_db__gte=int(citation_min))
+            except (ValueError, TypeError):
+                pass
 
         if citation_max:
-            queryset = queryset.filter(citation_count_db__lte=citation_max)
+            try:
+                queryset = queryset.filter(citation_count_db__lte=int(citation_max))
+            except (ValueError, TypeError):
+                pass
         
         return queryset.distinct().order_by('-created_at')
-    
+
     def _apply_boolean_search(self, queryset, query):
         """Apply boolean search operators (AND, OR, NOT)"""
         # Simple boolean parser
@@ -113,7 +121,8 @@ class SearchView(ListView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['query'] = self.request.GET.get('q', '')
+        query = self.request.GET.get('q', '').strip()
+        context['query'] = query
         context['categories'] = Category.objects.all()
         context['selected_category'] = self.request.GET.get('category', '')
         context['author'] = self.request.GET.get('author', '')
@@ -122,11 +131,16 @@ class SearchView(ListView):
         context['citation_min'] = self.request.GET.get('citation_min', '')
         context['citation_max'] = self.request.GET.get('citation_max', '')
         context['boolean_mode'] = self.request.GET.get('boolean', 'off')
-        
-        # Add saved searches for authenticated users
+
         if self.request.user.is_authenticated:
             context['saved_searches'] = SavedSearch.objects.filter(user=self.request.user)[:5]
-        
+            # Record history only when search has results (avoids polluting with empty/failed searches)
+            if query and context.get('papers'):
+                try:
+                    SearchHistory.objects.create(user=self.request.user, query=query)
+                except Exception:
+                    pass  # Never block the response for analytics writes
+
         return context
 
 class AdvancedSearchView(TemplateView):
@@ -186,10 +200,16 @@ def live_search(request):
         queryset = queryset.filter(authors__icontains=author)
 
     if year_from:
-        queryset = queryset.filter(publication_date__year__gte=year_from)
+        try:
+            queryset = queryset.filter(publication_date__year__gte=int(year_from))
+        except (ValueError, TypeError):
+            pass
 
     if year_to:
-        queryset = queryset.filter(publication_date__year__lte=year_to)
+        try:
+            queryset = queryset.filter(publication_date__year__lte=int(year_to))
+        except (ValueError, TypeError):
+            pass
 
     queryset = queryset.distinct().order_by('-created_at')[:20]
 
