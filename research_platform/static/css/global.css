@@ -954,15 +954,15 @@ footer.site-footer::before {
 }
 
 .pagination .page-item.active .page-link {
-    background: var(--primary-gradient);
-    border-color: transparent;
-    color: var(--text-primary);
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+    color: white;
 }
 
 .pagination .page-link:hover {
-    background: var(--secondary-gradient);
-    border-color: transparent;
-    color: var(--text-primary);
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+    color: white;
     transform: translateY(-2px);
 }
 
