@@ -50,3 +50,18 @@ langchain-community>=0.3
 langgraph>=0.2
 chromadb>=0.5
 python-dotenv>=1.0
+
+# Hybrid retrieval (BM25)
+rank-bm25>=0.2.2
+
+# Evaluation harness (ablation study + summarization metrics)
+rouge-score>=0.1.2
+bert-score>=0.3.13
+nltk>=3.8
+
+# DQSW / SciBERT training
+datasets>=2.18
+
+# Multi-agent research pipeline
+arxiv>=2.0              # arXiv live API for ArXivAgent
+google-search-results>=2.4  # SerpAPI client for WebSearchAgent
