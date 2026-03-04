@@ -24,7 +24,7 @@ class RecommendationModel(models.Model):
 
 
 class PaperEmbedding(models.Model):
-    paper = models.OneToOneField(Paper, on_delete=models.CASCADE)
+    paper = models.OneToOneField(Paper, on_delete=models.CASCADE, related_name='embedding')
     embedding = models.JSONField(default=list)  # JSON array for vector
     model_version = models.CharField(max_length=50, default='tfidf-v1')
     created_at = models.DateTimeField(auto_now_add=True)
