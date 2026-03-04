@@ -1,12 +1,13 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.decorators.http import require_POST
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from django.contrib import messages
 from django.urls import reverse_lazy, reverse
-from django.http import JsonResponse, HttpResponse, Http404
+from django.http import JsonResponse, HttpResponse
 from django.db.models import Q, Avg, Count, F
-from django.core.paginator import Paginator
+from django.db import transaction
 from .models import (Paper, Category, Bookmark, Rating, Citation, CategoryRequest,
                      PaperView, ReadingProgress, PaperLike, PaperShare, PaperComment,
                      PeerReview, ResearchBlogPost, BlogComment, PaperTag, PaperTagging, PaperComparison)
@@ -206,6 +207,7 @@ class PendingApprovalView(LoginRequiredMixin, ListView):
         return queryset
 
 @login_required
+@require_POST
 def bookmark_paper(request, pk):
     paper = get_object_or_404(Paper, pk=pk)
     bookmark, created = Bookmark.objects.get_or_create(user=request.user, paper=paper)
@@ -219,10 +221,10 @@ def bookmark_paper(request, pk):
     return redirect('papers:detail', pk=pk)
 
 @login_required
+@require_POST
 def rate_paper(request, pk):
     paper = get_object_or_404(Paper, pk=pk)
-    
-    if request.method == 'POST':
+    if True:
         form = RatingForm(request.POST)
         if form.is_valid():
             rating, created = Rating.objects.get_or_create(
@@ -247,10 +249,14 @@ def approve_paper(request, pk):
     if request.user.user_type not in ['moderator', 'admin']:
         messages.error(request, 'You do not have permission to approve papers.')
         return redirect('papers:list')
-    
-    paper = get_object_or_404(Paper, pk=pk)
-    paper.is_approved = True
-    paper.save()
+
+    with transaction.atomic():
+        paper = get_object_or_404(Paper.objects.select_for_update(), pk=pk)
+        if paper.is_approved:
+            messages.info(request, f'Paper "{paper.title}" is already approved.')
+            return redirect('papers:pending_approval')
+        paper.is_approved = True
+        paper.save()
     messages.success(request, f'Paper "{paper.title}" approved successfully!')
     return redirect('papers:pending_approval')
 
@@ -259,9 +265,10 @@ def reject_paper(request, pk):
     if request.user.user_type not in ['moderator', 'admin']:
         messages.error(request, 'You do not have permission to reject papers.')
         return redirect('papers:list')
-    
-    paper = get_object_or_404(Paper, pk=pk)
-    paper.delete()
+
+    with transaction.atomic():
+        paper = get_object_or_404(Paper.objects.select_for_update(), pk=pk)
+        paper.delete()
     messages.success(request, 'Paper rejected and deleted successfully!')
     return redirect('papers:pending_approval')
 
@@ -584,8 +591,8 @@ def reject_category_request(request, pk):
 # ── Paper Advanced Features ──────────────────────────────────────────────────
 
 from .models import (
-    PaperVersion, RelatedPaper, PaperAnnotation, ReadingList, 
-    ReadingListPaper, PaperCollection, ResearchProject, ProjectTask
+    PaperVersion, RelatedPaper, PaperAnnotation, ReadingList,
+    ReadingListPaper, ResearchProject, ProjectTask
 )
 from django.views.generic import CreateView
 import json
@@ -635,28 +642,27 @@ ER  -"""
 
 
 @login_required
+@require_POST
 def update_reading_progress(request, pk):
     """Update reading progress for a paper"""
-    if request.method == 'POST':
-        paper = get_object_or_404(Paper, pk=pk)
-        
-        progress, created = ReadingProgress.objects.get_or_create(
-            user=request.user,
-            paper=paper
-        )
-        
-        try:
-            progress.progress_percentage = max(0.0, min(100.0, float(request.POST.get('progress', 0))))
-            progress.last_page = max(1, int(request.POST.get('page', 1)))
-            progress.completed = request.POST.get('completed', 'false') == 'true'
-            progress.reading_time_minutes += max(0, int(request.POST.get('time_spent', 0)))
-        except (ValueError, TypeError):
-            return JsonResponse({'success': False, 'error': 'Invalid input values'}, status=400)
-        progress.save()
+    paper = get_object_or_404(Paper, pk=pk)
 
-        return JsonResponse({'success': True, 'progress': progress.progress_percentage, 'completed': progress.completed})
-    
-    return JsonResponse({'success': False})
+    progress, created = ReadingProgress.objects.get_or_create(
+        user=request.user,
+        paper=paper
+    )
+
+    try:
+        progress.progress_percentage = max(0.0, min(100.0, float(request.POST.get('progress', 0))))
+        progress.last_page = max(1, int(request.POST.get('page', 1)))
+        progress.completed = request.POST.get('completed', 'false') == 'true'
+        time_spent = max(0, int(request.POST.get('time_spent', 0)))
+        progress.reading_time_minutes += time_spent
+    except (ValueError, TypeError):
+        return JsonResponse({'success': False, 'error': 'Invalid input values'}, status=400)
+    progress.save()
+
+    return JsonResponse({'success': True, 'progress': progress.progress_percentage, 'completed': progress.completed})
 
 
 class PaperVersionListView(LoginRequiredMixin, ListView):
@@ -706,34 +712,32 @@ def upload_paper_version(request, pk):
 
 
 @login_required
+@require_POST
 def add_annotation(request, pk):
     """Add annotation to a paper"""
-    if request.method == 'POST':
-        paper = get_object_or_404(Paper, pk=pk)
+    paper = get_object_or_404(Paper, pk=pk)
 
-        try:
-            page_number = int(request.POST.get('page', 1))
-            position_data = json.loads(request.POST.get('position', '{}'))
-        except (ValueError, TypeError, json.JSONDecodeError):
-            return JsonResponse({'success': False, 'error': 'Invalid page or position data'}, status=400)
+    try:
+        page_number = int(request.POST.get('page', 1))
+        position_data = json.loads(request.POST.get('position', '{}'))
+    except (ValueError, TypeError, json.JSONDecodeError):
+        return JsonResponse({'success': False, 'error': 'Invalid page or position data'}, status=400)
 
-        annotation = PaperAnnotation.objects.create(
-            paper=paper,
-            user=request.user,
-            page_number=page_number,
-            annotation_text=request.POST.get('annotation', ''),
-            highlight_text=request.POST.get('highlight', ''),
-            position_data=position_data,
-            is_public=request.POST.get('is_public', 'false') == 'true'
-        )
+    annotation = PaperAnnotation.objects.create(
+        paper=paper,
+        user=request.user,
+        page_number=page_number,
+        annotation_text=request.POST.get('annotation', ''),
+        highlight_text=request.POST.get('highlight', ''),
+        position_data=position_data,
+        is_public=request.POST.get('is_public', 'false') == 'true'
+    )
 
-        return JsonResponse({
-            'success': True,
-            'annotation_id': annotation.id,
-            'created_at': annotation.created_at.strftime('%Y-%m-%d %H:%M')
-        })
-
-    return JsonResponse({'success': False})
+    return JsonResponse({
+        'success': True,
+        'annotation_id': annotation.id,
+        'created_at': annotation.created_at.strftime('%Y-%m-%d %H:%M')
+    })
 
 
 @login_required
@@ -799,30 +803,28 @@ class ReadingListDetailView(LoginRequiredMixin, DetailView):
 
 
 @login_required
+@require_POST
 def create_reading_list(request):
     """Create a new reading list"""
-    if request.method == 'POST':
-        name = request.POST.get('name', '').strip()
-        description = request.POST.get('description', '')
-        is_public = request.POST.get('is_public', 'false') == 'true'
-        
-        if not name:
-            return JsonResponse({'success': False, 'error': 'Name is required'})
-        
-        reading_list = ReadingList.objects.create(
-            name=name,
-            description=description,
-            owner=request.user,
-            is_public=is_public
-        )
-        
-        return JsonResponse({
-            'success': True,
-            'list_id': reading_list.id,
-            'name': reading_list.name
-        })
-    
-    return JsonResponse({'success': False})
+    name = request.POST.get('name', '').strip()
+    description = request.POST.get('description', '')
+    is_public = request.POST.get('is_public', 'false') == 'true'
+
+    if not name:
+        return JsonResponse({'success': False, 'error': 'Name is required'})
+
+    reading_list = ReadingList.objects.create(
+        name=name,
+        description=description,
+        owner=request.user,
+        is_public=is_public
+    )
+
+    return JsonResponse({
+        'success': True,
+        'list_id': reading_list.id,
+        'name': reading_list.name
+    })
 
 
 @login_required
@@ -910,6 +912,52 @@ class ResearchProjectDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
+@login_required
+@require_POST
+def create_project_task(request, pk):
+    """Create a task within a research project."""
+    project = get_object_or_404(
+        ResearchProject,
+        Q(created_by=request.user) | Q(members=request.user),
+        pk=pk,
+    )
+    title = request.POST.get('title', '').strip()
+    if not title:
+        return JsonResponse({'error': 'Title is required'}, status=400)
+
+    task = ProjectTask.objects.create(
+        project=project,
+        title=title,
+        description=request.POST.get('description', ''),
+        status=request.POST.get('status', 'todo'),
+    )
+    return JsonResponse({
+        'success': True,
+        'task_id': task.id,
+        'title': task.title,
+        'status': task.status,
+        'status_display': task.get_status_display(),
+    })
+
+
+@login_required
+@require_POST
+def update_project_task_status(request, pk, task_id):
+    """Update the status of a project task."""
+    project = get_object_or_404(
+        ResearchProject,
+        Q(created_by=request.user) | Q(members=request.user),
+        pk=pk,
+    )
+    task = get_object_or_404(ProjectTask, pk=task_id, project=project)
+    new_status = request.POST.get('status', '')
+    valid_statuses = [s[0] for s in ProjectTask.STATUS_CHOICES]
+    if new_status not in valid_statuses:
+        return JsonResponse({'error': 'Invalid status'}, status=400)
+    task.status = new_status
+    task.save(update_fields=['status'])
+    return JsonResponse({'success': True, 'status': task.status, 'status_display': task.get_status_display()})
+
 
 # ── Social Features ──────────────────────────────────────────────────
 
@@ -917,6 +965,7 @@ from django.utils.text import slugify
 
 
 @login_required
+@require_POST
 def like_paper(request, pk):
     """Like/unlike a paper"""
     paper = get_object_or_404(Paper, pk=pk)
@@ -953,68 +1002,64 @@ def like_paper(request, pk):
 
 
 @login_required
+@require_POST
 def share_paper(request, pk):
     """Track paper sharing"""
-    if request.method == 'POST':
-        paper = get_object_or_404(Paper, pk=pk)
-        platform = request.POST.get('platform', 'link')
-        
-        PaperShare.objects.create(
-            user=request.user,
-            paper=paper,
-            platform=platform
-        )
-        
-        return JsonResponse({
-            'success': True,
-            'message': f'Paper shared on {platform}'
-        })
-    
-    return JsonResponse({'success': False})
+    paper = get_object_or_404(Paper, pk=pk)
+    platform = request.POST.get('platform', 'link')
+
+    PaperShare.objects.create(
+        user=request.user,
+        paper=paper,
+        platform=platform
+    )
+
+    return JsonResponse({
+        'success': True,
+        'message': f'Paper shared on {platform}'
+    })
 
 
 @login_required
+@require_POST
 def add_comment(request, pk):
     """Add comment to a paper"""
-    if request.method == 'POST':
-        paper = get_object_or_404(Paper, pk=pk)
-        content = request.POST.get('content', '').strip()
-        parent_id = request.POST.get('parent_id')
-        
-        if not content:
-            return JsonResponse({'success': False, 'error': 'Comment cannot be empty'})
-        
-        parent = None
-        if parent_id:
-            parent = get_object_or_404(PaperComment, id=parent_id)
-        
-        comment = PaperComment.objects.create(
-            paper=paper,
-            user=request.user,
-            parent=parent,
-            content=content
+    paper = get_object_or_404(Paper, pk=pk)
+    content = request.POST.get('content', '').strip()
+    parent_id = request.POST.get('parent_id')
+
+    if not content:
+        return JsonResponse({'success': False, 'error': 'Comment cannot be empty'})
+
+    parent = None
+    if parent_id:
+        parent = get_object_or_404(PaperComment, id=parent_id)
+
+    comment = PaperComment.objects.create(
+        paper=paper,
+        user=request.user,
+        parent=parent,
+        content=content
+    )
+
+    # Notify paper author
+    if paper.uploaded_by != request.user:
+        from apps.messaging.utils import create_notification
+        create_notification(
+            user=paper.uploaded_by,
+            notification_type='comment',
+            title='New Comment',
+            message=f'{request.user.username} commented on your paper',
+            link=f'/papers/{paper.id}/#comment-{comment.id}'
         )
-        
-        # Notify paper author
-        if paper.uploaded_by != request.user:
-            from apps.messaging.utils import create_notification
-            create_notification(
-                user=paper.uploaded_by,
-                notification_type='comment',
-                title='New Comment',
-                message=f'{request.user.username} commented on your paper',
-                link=f'/papers/{paper.id}/#comment-{comment.id}'
-            )
-        
-        return JsonResponse({
-            'success': True,
-            'comment_id': comment.id,
-            'user': request.user.username,
-            'content': comment.content,
-            'created_at': comment.created_at.strftime('%Y-%m-%d %H:%M')
-        })
-    
-    return JsonResponse({'success': False})
+
+    return JsonResponse({
+        'success': True,
+        'comment_id': comment.id,
+        'user': request.user.username,
+        'content': comment.content,
+        'created_at': comment.created_at.strftime('%Y-%m-%d %H:%M')
+    })
 
 
 @login_required
@@ -1148,7 +1193,13 @@ class BlogPostCreateView(LoginRequiredMixin, CreateView):
     
     def form_valid(self, form):
         form.instance.author = self.request.user
-        form.instance.slug = slugify(form.instance.title)
+        base_slug = slugify(form.instance.title)
+        slug = base_slug
+        counter = 2
+        while ResearchBlogPost.objects.filter(slug=slug).exists():
+            slug = f"{base_slug}-{counter}"
+            counter += 1
+        form.instance.slug = slug
         
         # Set status to pending approval (unless user is admin/moderator)
         if self.request.user.user_type in ['admin', 'moderator']:
@@ -1163,12 +1214,16 @@ class BlogPostCreateView(LoginRequiredMixin, CreateView):
         # Save the instance first
         response = super().form_valid(form)
         
-        # Handle related papers (comma-separated IDs)
+        # Handle related papers (comma-separated IDs) — validate existence first
         related_papers_ids = self.request.POST.get('related_papers', '')
         if related_papers_ids:
-            paper_ids = [int(pid.strip()) for pid in related_papers_ids.split(',') if pid.strip().isdigit()]
-            if paper_ids:
-                self.object.related_papers.set(paper_ids)
+            requested_ids = [int(pid.strip()) for pid in related_papers_ids.split(',') if pid.strip().isdigit()]
+            if requested_ids:
+                valid_ids = list(
+                    Paper.objects.filter(pk__in=requested_ids, is_approved=True)
+                    .values_list('pk', flat=True)
+                )
+                self.object.related_papers.set(valid_ids)
         
         # Notify followers only if published
         if form.instance.status == 'published':
@@ -1335,9 +1390,10 @@ class MyBlogPostsView(LoginRequiredMixin, ListView):
 # ── Archive Functionality ────────────────────────────────────────────
 
 @login_required
+@require_POST
 def archive_paper(request, pk):
     """Archive/unarchive a paper"""
-    if request.method == 'POST':
+    if True:
         try:
             paper = Paper.objects.get(pk=pk, uploaded_by=request.user)
             paper.is_archived = not paper.is_archived
@@ -1379,32 +1435,30 @@ class TagListView(LoginRequiredMixin, ListView):
 
 
 @login_required
+@require_POST
 def create_tag(request):
     """Create a new tag"""
-    if request.method == 'POST':
-        name = request.POST.get('name', '').strip()
-        color = request.POST.get('color', '#2563eb')
-        
-        if not name:
-            return JsonResponse({'success': False, 'error': 'Tag name is required'})
-        
-        tag, created = PaperTag.objects.get_or_create(
-            name=name,
-            defaults={'color': color, 'created_by': request.user}
-        )
-        
-        if created:
-            return JsonResponse({
-                'success': True,
-                'tag': {'id': tag.id, 'name': tag.name, 'color': tag.color}
-            })
-        else:
-            return JsonResponse({'success': False, 'error': 'Tag already exists'})
-    
-    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+    name = request.POST.get('name', '').strip()
+    color = request.POST.get('color', '#2563eb')
+
+    if not name:
+        return JsonResponse({'success': False, 'error': 'Tag name is required'})
+
+    tag, created = PaperTag.objects.get_or_create(
+        name=name,
+        defaults={'color': color, 'created_by': request.user}
+    )
+
+    if created:
+        return JsonResponse({
+            'success': True,
+            'tag': {'id': tag.id, 'name': tag.name, 'color': tag.color}
+        })
+    return JsonResponse({'success': False, 'error': 'Tag already exists'})
 
 
 @login_required
+@require_POST
 def tag_paper(request, paper_id, tag_id):
     """Add a tag to a paper"""
     if request.method == 'POST':
