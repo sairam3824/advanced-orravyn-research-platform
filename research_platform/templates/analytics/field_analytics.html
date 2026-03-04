@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+{% block title %}Research Field Analytics · Orravyn{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        margin-bottom: 2rem;
+    }
+
+    .page-header h1 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.4rem;
+    }
+
+    .page-header p {
+        color: var(--text-secondary);
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    .analytics-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .analytics-table th {
+        text-align: left;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--text-secondary);
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .analytics-table td {
+        padding: 0.9rem 1rem;
+        border-bottom: 1px solid rgba(30,58,100,0.15);
+        font-size: 0.9rem;
+        color: var(--text-primary);
+        vertical-align: middle;
+    }
+
+    .analytics-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .analytics-table tr:hover td {
+        background: rgba(79,156,249,0.04);
+    }
+
+    .field-name {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .growth-badge {
+        display: inline-block;
+        padding: 0.2rem 0.55rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .growth-positive {
+        background: rgba(52,211,153,0.12);
+        color: #34d399;
+    }
+
+    .growth-negative {
+        background: rgba(239,68,68,0.12);
+        color: #ef4444;
+    }
+
+    .growth-neutral {
+        background: rgba(148,163,184,0.12);
+        color: #94a3b8;
+    }
+
+    .bar-mini {
+        height: 6px;
+        border-radius: 3px;
+        background: rgba(79,156,249,0.55);
+        min-width: 4px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 1rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state i {
+        font-size: 2.5rem;
+        opacity: 0.2;
+        display: block;
+        margin-bottom: 0.75rem;
+    }
+
+    .table-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: 14px;
+        overflow: hidden;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Research Field Analytics</h1>
+    <p>Publication and engagement trends by research field — current month</p>
+</div>
+
+{% if analytics %}
+<div class="table-card">
+    <table class="analytics-table">
+        <thead>
+            <tr>
+                <th>Field</th>
+                <th>Papers</th>
+                <th>Total Views</th>
+                <th>Avg Citations</th>
+                <th>Growth</th>
+                <th>Activity</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in analytics %}
+            <tr>
+                <td><span class="field-name">{{ row.field_name }}</span></td>
+                <td>{{ row.total_papers }}</td>
+                <td>{{ row.total_views|default:0 }}</td>
+                <td>{{ row.avg_citations|floatformat:1|default:"—" }}</td>
+                <td>
+                    {% if row.growth_rate > 0 %}
+                        <span class="growth-badge growth-positive">+{{ row.growth_rate|floatformat:1 }}%</span>
+                    {% elif row.growth_rate < 0 %}
+                        <span class="growth-badge growth-negative">{{ row.growth_rate|floatformat:1 }}%</span>
+                    {% else %}
+                        <span class="growth-badge growth-neutral">0%</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="bar-mini" style="width: {{ row.total_papers|default:1 }}px; max-width: 120px;"></div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if is_paginated %}
+<div class="d-flex justify-content-center mt-4">
+    <nav>
+        <ul class="pagination">
+            {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            </li>
+            {% endif %}
+            <li class="page-item disabled">
+                <span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+            </li>
+            {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div>
+{% endif %}
+
+{% else %}
+<div class="empty-state">
+    <i class="fas fa-chart-bar"></i>
+    <p>No field analytics data available for this month.</p>
+    <p style="font-size:0.82rem;">Data is populated automatically as papers are submitted and viewed.</p>
+</div>
+{% endif %}
+{% endblock %}
