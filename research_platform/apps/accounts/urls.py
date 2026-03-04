@@ -25,4 +25,7 @@ urlpatterns = [
 
     # AJAX helpers
     path('check-username/', views.check_username, name='check_username'),
+
+    # Research interest tags
+    path('interests/', views.update_research_interests, name='update_interests'),
 ]

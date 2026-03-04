@@ -6,6 +6,7 @@ from django.views.generic import TemplateView, FormView
 from django.views.generic.edit import UpdateView
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
+from django.views.decorators.http import require_POST
 from django.contrib import messages
 from django.urls import reverse_lazy
 from .models import User, UserProfile
@@ -61,18 +62,28 @@ class LogoutView(TemplateView):
 
 class ProfileView(LoginRequiredMixin, TemplateView):
     template_name = 'accounts/profile.html'
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
         profile, created = UserProfile.objects.get_or_create(user=user)
-        
+
+        from .models import ResearchInterestTag, UserResearchInterest
+        user_interest_tags = list(
+            UserResearchInterest.objects.filter(user=user)
+            .select_related('tag')
+            .values_list('tag__name', flat=True)
+        )
+        all_interest_tags = list(ResearchInterestTag.objects.values_list('name', flat=True))
+
         context.update({
             'profile': profile,
             'uploaded_papers': Paper.objects.filter(uploaded_by=user).count(),
             'bookmarks_count': Bookmark.objects.filter(user=user).count(),
             'ratings_count': Rating.objects.filter(user=user).count(),
             'groups_count': GroupMember.objects.filter(user=user).count(),
+            'interest_tags': user_interest_tags,
+            'all_interest_tags': all_interest_tags,
         })
         return context
 
@@ -265,40 +276,38 @@ class PublisherDetailView(DetailView):
 
 
 @login_required
+@require_POST
 def follow_user(request, user_id):
     """Follow/unfollow a user"""
-    if request.method == 'POST':
-        try:
-            user_to_follow = User.objects.get(id=user_id)
-            
-            if user_to_follow == request.user:
-                return JsonResponse({'success': False, 'error': 'You cannot follow yourself'})
-            
-            follow, created = UserFollow.objects.get_or_create(
-                follower=request.user,
-                following=user_to_follow
-            )
-            
-            profile = getattr(user_to_follow, 'profile', None)
-            display_name = profile.full_name if profile else user_to_follow.username
-            if created:
-                return JsonResponse({
-                    'success': True,
-                    'action': 'followed',
-                    'message': f'You are now following {display_name}'
-                })
-            else:
-                follow.delete()
-                return JsonResponse({
-                    'success': True,
-                    'action': 'unfollowed',
-                    'message': f'You unfollowed {display_name}'
-                })
-        
-        except User.DoesNotExist:
-            return JsonResponse({'success': False, 'error': 'User not found'})
-    
-    return JsonResponse({'success': False, 'error': 'Invalid request method'})
+    try:
+        user_to_follow = User.objects.get(id=user_id)
+
+        if user_to_follow == request.user:
+            return JsonResponse({'success': False, 'error': 'You cannot follow yourself'})
+
+        follow, created = UserFollow.objects.get_or_create(
+            follower=request.user,
+            following=user_to_follow
+        )
+
+        profile = getattr(user_to_follow, 'profile', None)
+        display_name = profile.full_name if profile else user_to_follow.username
+        if created:
+            return JsonResponse({
+                'success': True,
+                'action': 'followed',
+                'message': f'You are now following {display_name}'
+            })
+        else:
+            follow.delete()
+            return JsonResponse({
+                'success': True,
+                'action': 'unfollowed',
+                'message': f'You unfollowed {display_name}'
+            })
+
+    except User.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'User not found'})
 
 
 def check_username(request):
@@ -400,5 +409,40 @@ class UserPublicProfileView(DetailView):
             'followers_count': followers_count,
             'following_count': following_count,
         })
-        
+
         return context
+
+
+@login_required
+def update_research_interests(request):
+    """GET: return current interest tags + all available tags.
+    POST: add or remove a research interest tag for the logged-in user."""
+    from .models import ResearchInterestTag, UserResearchInterest
+
+    if request.method == 'POST':
+        action = request.POST.get('action', 'add')
+        tag_name = request.POST.get('tag', '').strip()
+        if not tag_name:
+            return JsonResponse({'error': 'Tag name is required'}, status=400)
+
+        tag, _ = ResearchInterestTag.objects.get_or_create(name=tag_name)
+        if action == 'remove':
+            UserResearchInterest.objects.filter(user=request.user, tag=tag).delete()
+        else:
+            UserResearchInterest.objects.get_or_create(user=request.user, tag=tag)
+
+        tags = list(
+            UserResearchInterest.objects.filter(user=request.user)
+            .select_related('tag')
+            .values_list('tag__name', flat=True)
+        )
+        return JsonResponse({'success': True, 'tags': tags})
+
+    # GET — return current interests and all available tags
+    tags = list(
+        UserResearchInterest.objects.filter(user=request.user)
+        .select_related('tag')
+        .values_list('tag__name', flat=True)
+    )
+    all_tags = list(ResearchInterestTag.objects.values_list('name', flat=True))
+    return JsonResponse({'tags': tags, 'all_tags': all_tags})
