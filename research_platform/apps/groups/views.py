@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.decorators.http import require_POST
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.contrib import messages
 from django.urls import reverse_lazy, reverse
@@ -8,7 +9,7 @@ from django.http import JsonResponse
 from django.db.models import Q, Count
 from .models import Group, GroupMember, GroupPaper
 from .forms import GroupCreateForm, GroupEditForm, GroupInviteForm
-from apps.papers.models import Paper
+from apps.papers.models import Paper, PaperCollection
 from apps.accounts.models import User
 
 class GroupListView(ListView):
@@ -86,11 +87,14 @@ class GroupDetailView(DetailView):
         
         context['members'] = GroupMember.objects.filter(group=group).select_related('user')
         context['papers'] = GroupPaper.objects.filter(group=group).select_related('paper')
-        
+        context['collections_count'] = PaperCollection.objects.filter(group=group).count()
+
         if self.request.user.is_authenticated:
             context['is_member'] = GroupMember.objects.filter(group=group, user=self.request.user).exists()
-            # Show all approved papers, not just user's papers
-            context['user_papers'] = Paper.objects.filter(is_approved=True).order_by('-created_at')
+            # Papers the current user uploaded (for "add to group" dropdown)
+            context['user_papers'] = Paper.objects.filter(
+                uploaded_by=self.request.user, is_approved=True
+            ).order_by('-created_at')
             
             # Get user's membership for role checking
             try:
@@ -139,6 +143,7 @@ class MyGroupsView(LoginRequiredMixin, ListView):
         return GroupMember.objects.filter(user=self.request.user).select_related('group')
 
 @login_required
+@require_POST
 def join_group(request, pk):
     group = get_object_or_404(Group, pk=pk)
     
@@ -160,6 +165,7 @@ def join_group(request, pk):
     return redirect('groups:detail', pk=pk)
 
 @login_required
+@require_POST
 def leave_group(request, pk):
     group = get_object_or_404(Group, pk=pk)
     
@@ -173,31 +179,35 @@ def leave_group(request, pk):
     return redirect('groups:detail', pk=pk)
 
 @login_required
+@require_POST
 def add_paper_to_group(request, pk):
     group = get_object_or_404(Group, pk=pk)
-    
+
     if not GroupMember.objects.filter(group=group, user=request.user).exists():
         messages.error(request, 'You must be a member to add papers to this group.')
         return redirect('groups:detail', pk=pk)
-    
-    if request.method == 'POST':
-        paper_id = request.POST.get('paper_id')
-        paper = get_object_or_404(Paper, pk=paper_id, is_approved=True)
+
+    paper_id = request.POST.get('paper_id', '').strip()
+    if not paper_id or not paper_id.isdigit():
+        messages.error(request, 'Invalid paper selection.')
+        return redirect('groups:detail', pk=pk)
+    paper = get_object_or_404(Paper, pk=paper_id, is_approved=True)
         
-        group_paper, created = GroupPaper.objects.get_or_create(
-            group=group,
-            paper=paper,
-            defaults={'added_by': request.user}
-        )
-        
-        if created:
-            messages.success(request, f'Paper "{paper.title}" added to group!')
-        else:
-            messages.info(request, 'Paper is already in this group.')
-    
+    group_paper, created = GroupPaper.objects.get_or_create(
+        group=group,
+        paper=paper,
+        defaults={'added_by': request.user}
+    )
+
+    if created:
+        messages.success(request, f'Paper "{paper.title}" added to group!')
+    else:
+        messages.info(request, 'Paper is already in this group.')
+
     return redirect('groups:detail', pk=pk)
 
 @login_required
+@require_POST
 def invite_member(request, pk):
     group = get_object_or_404(Group, pk=pk)
     
@@ -234,6 +244,7 @@ def invite_member(request, pk):
     return redirect('groups:detail', pk=pk)
 
 @login_required
+@require_POST
 def remove_member(request, pk, user_id):
     group = get_object_or_404(Group, pk=pk)
     member_to_remove = get_object_or_404(User, pk=user_id)
@@ -257,6 +268,7 @@ def remove_member(request, pk, user_id):
     return redirect('groups:detail', pk=pk)
 
 @login_required
+@require_POST
 def update_member_role(request, pk, user_id):
     group = get_object_or_404(Group, pk=pk)
     member = get_object_or_404(User, pk=user_id)
@@ -280,6 +292,7 @@ def update_member_role(request, pk, user_id):
     return redirect('groups:detail', pk=pk)
 
 @login_required
+@require_POST
 def delete_group(request, pk):
     group = get_object_or_404(Group, pk=pk)
 
@@ -300,16 +313,89 @@ class GroupMembersView(LoginRequiredMixin, DetailView):
     model = Group
     template_name = 'groups/members.html'
     context_object_name = 'group'
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         group = self.object
-        
+
         user_membership = GroupMember.objects.filter(group=group, user=self.request.user).first()
         context['user_membership'] = user_membership
         context['is_member'] = user_membership is not None
         context['can_manage'] = user_membership and user_membership.role in ['admin', 'moderator'] if user_membership else False
-        
+
         context['members'] = GroupMember.objects.filter(group=group).select_related('user').order_by('role', 'joined_at')
-        
+
         return context
+
+
+# ── Paper Collections ─────────────────────────────────────────────────
+
+@login_required
+def group_collections(request, pk):
+    """List paper collections for a group."""
+    group = get_object_or_404(Group, pk=pk)
+    if not GroupMember.objects.filter(group=group, user=request.user).exists():
+        messages.error(request, 'You must be a group member to view collections.')
+        return redirect('groups:detail', pk=pk)
+
+    collections = PaperCollection.objects.filter(group=group).prefetch_related('papers').order_by('-updated_at')
+    user_papers = Paper.objects.filter(uploaded_by=request.user, is_approved=True).order_by('-created_at')
+    return render(request, 'groups/collections.html', {
+        'group': group,
+        'collections': collections,
+        'user_papers': user_papers,
+    })
+
+
+@login_required
+@require_POST
+def create_collection(request, pk):
+    """Create a new paper collection within a group."""
+    group = get_object_or_404(Group, pk=pk)
+    if not GroupMember.objects.filter(group=group, user=request.user).exists():
+        messages.error(request, 'You must be a group member to create collections.')
+        return redirect('groups:detail', pk=pk)
+
+    if request.method == 'POST':
+        name = request.POST.get('name', '').strip()
+        description = request.POST.get('description', '').strip()
+        if not name:
+            messages.error(request, 'Collection name is required.')
+            return redirect('groups:collections', pk=pk)
+        PaperCollection.objects.create(
+            name=name,
+            description=description,
+            group=group,
+            created_by=request.user,
+        )
+        messages.success(request, f'Collection "{name}" created!')
+    return redirect('groups:collections', pk=pk)
+
+
+@login_required
+@require_POST
+def add_to_collection(request, pk, collection_pk):
+    """Add or remove a paper from a group collection."""
+    group = get_object_or_404(Group, pk=pk)
+    collection = get_object_or_404(PaperCollection, pk=collection_pk, group=group)
+
+    if not GroupMember.objects.filter(group=group, user=request.user).exists():
+        return JsonResponse({'error': 'Not a group member'}, status=403)
+
+    if request.method == 'POST':
+        paper_id = request.POST.get('paper_id')
+        action = request.POST.get('action', 'add')
+        paper = get_object_or_404(Paper, pk=paper_id, is_approved=True)
+
+        if action == 'remove':
+            collection.papers.remove(paper)
+            msg = 'Paper removed from collection.'
+        else:
+            collection.papers.add(paper)
+            msg = 'Paper added to collection!'
+
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({'success': True, 'message': msg})
+        messages.success(request, msg)
+
+    return redirect('groups:collections', pk=pk)
