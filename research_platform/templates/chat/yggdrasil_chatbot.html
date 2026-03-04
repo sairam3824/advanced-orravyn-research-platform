@@ -300,7 +300,6 @@
         font-size: 0.93rem;
         line-height: 1.65;
         word-wrap: break-word;
-        white-space: pre-wrap;
     }
 
     /* User: solid blue bubble */
@@ -310,6 +309,7 @@
         border-radius: 6px;
         background: #1d4ed8;
         color: #fff;
+        white-space: pre-wrap;
     }
 
     /* Bot: no bubble, plain text with left accent line */
@@ -456,6 +456,63 @@
     }
 
     /* ════════════════════════════════
+       BOT MESSAGE FORMATTING
+       ════════════════════════════════ */
+    .msg-section-heading {
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: var(--text-primary, #0f172a);
+        margin: 0.75rem 0 0.25rem;
+        padding-bottom: 0.2rem;
+        border-bottom: 1px solid rgba(37, 99, 235, 0.15);
+    }
+
+    .msg-list {
+        margin: 0.25rem 0 0.25rem 1.2rem;
+        padding: 0;
+    }
+
+    .msg-list li {
+        margin: 0.2rem 0;
+        line-height: 1.5;
+    }
+
+    /* Source type badges */
+    .src-badge {
+        display: inline-block;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.62rem;
+        font-weight: 700;
+        padding: 1px 5px;
+        border-radius: 3px;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        margin-right: 0.3rem;
+        vertical-align: middle;
+        flex-shrink: 0;
+    }
+
+    .src-badge-platform        { background: rgba(37, 99, 235, 0.12);  color: #2563eb; }
+    .src-badge-arxiv           { background: rgba(16, 185, 129, 0.12); color: #059669; }
+    .src-badge-web_search      { background: rgba(245, 158, 11, 0.12); color: #d97706; }
+    .src-badge-semantic_scholar{ background: rgba(139, 92, 246, 0.12); color: #7c3aed; }
+
+    /* Typing indicator agent label */
+    .typing-agent {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.68rem;
+        color: #64748b;
+        margin-left: 0.5rem;
+        transition: opacity 0.3s;
+    }
+
+    @keyframes agentFade {
+        from { opacity: 0; transform: translateY(-2px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ════════════════════════════════
        RESPONSIVE
        ════════════════════════════════ */
     @media (max-width: 768px) {
@@ -502,7 +559,7 @@
         </div>
 
         <div class="ygg-sidebar-footer">
-            Powered by RAG · GPT-4o mini
+            Powered by 8 Agents · GPT-4o mini
         </div>
     </aside>
 
@@ -516,7 +573,7 @@
             </button>
             <div class="ygg-header-text">
                 <div class="ygg-header-title" id="ygg-conv-title">Yggdrasil</div>
-                <span class="ygg-header-sub">· RAG · grounded in papers</span>
+                <span class="ygg-header-sub">· 8 Agents · grounded in research</span>
             </div>
         </div>
 
@@ -749,7 +806,7 @@
                 const res = await fetch(apiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
-                    body: JSON.stringify({ message: text, conversation_id: activeConvId }),
+                    body: JSON.stringify({ message: text, conversation_id: activeConvId, session_id: getSessionId() }),
                 });
 
                 typing.remove();
@@ -775,13 +832,66 @@
         });
 
         // ── DOM helpers ───────────────────────────────────────────────
+
+        /**
+         * Convert bot response text to safe HTML.
+         * - Strips any remaining asterisks (belt-and-suspenders after server _clean_response)
+         * - ## / ### → section headings
+         * - - item / • item → <ul>
+         * - 1. item → <ol>
+         * - plain lines → <p>
+         */
+        function renderBotText(text) {
+            // Belt-and-suspenders: strip any remaining markdown asterisks
+            text = text.replace(/\*\*(.+?)\*\*/gs, '$1').replace(/\*([^*\n]+?)\*/g, '$1').replace(/\*/g, '');
+
+            const lines = text.split('\n');
+            let html = '';
+            let inUl = false;
+            let inOl = false;
+
+            lines.forEach(line => {
+                if (/^#{1,3}\s+/.test(line)) {
+                    if (inUl) { html += '</ul>'; inUl = false; }
+                    if (inOl) { html += '</ol>'; inOl = false; }
+                    const txt = line.replace(/^#{1,3}\s+/, '');
+                    html += `<div class="msg-section-heading">${escHtml(txt)}</div>`;
+                } else if (/^[-•]\s+/.test(line)) {
+                    if (inOl) { html += '</ol>'; inOl = false; }
+                    if (!inUl) { html += '<ul class="msg-list">'; inUl = true; }
+                    html += `<li>${escHtml(line.replace(/^[-•]\s+/, ''))}</li>`;
+                } else if (/^\d+\.\s+/.test(line)) {
+                    if (inUl) { html += '</ul>'; inUl = false; }
+                    if (!inOl) { html += '<ol class="msg-list">'; inOl = true; }
+                    html += `<li>${escHtml(line.replace(/^\d+\.\s+/, ''))}</li>`;
+                } else if (line.trim() === '') {
+                    if (inUl) { html += '</ul>'; inUl = false; }
+                    if (inOl) { html += '</ol>'; inOl = false; }
+                    html += '<br>';
+                } else {
+                    if (inUl) { html += '</ul>'; inUl = false; }
+                    if (inOl) { html += '</ol>'; inOl = false; }
+                    html += `<p style="margin:0.15em 0">${escHtml(line)}</p>`;
+                }
+            });
+
+            if (inUl) html += '</ul>';
+            if (inOl) html += '</ol>';
+            return html;
+        }
+
         function appendMessage(text, role, ts) {
             const row = document.createElement('div');
             row.className = `msg-row ${role}`;
 
             const bubble = document.createElement('div');
             bubble.className = 'msg-bubble';
-            bubble.textContent = text;
+
+            if (role === 'bot') {
+                bubble.innerHTML = renderBotText(text);
+            } else {
+                bubble.textContent = text;
+            }
 
             const time = document.createElement('div');
             time.className = 'msg-time';
@@ -796,6 +906,7 @@
         }
 
         function appendSources(sources) {
+            if (!sources || !sources.length) return;
             const row = document.createElement('div');
             row.className = 'msg-row bot';
             const panel = document.createElement('div');
@@ -804,29 +915,86 @@
             label.className = 'msg-sources-label';
             label.textContent = 'Sources';
             panel.appendChild(label);
+
+            const badgeLabels = {
+                'platform': 'Platform',
+                'arxiv': 'arXiv',
+                'web_search': 'Web',
+                'semantic_scholar': 'Scholar',
+            };
+
             sources.forEach(src => {
+                const srcType = src.source || 'platform';
+                let href = null;
+                if (srcType === 'platform' && src.paper_id) {
+                    href = `/papers/${src.paper_id}/`;
+                } else if (src.url) {
+                    href = src.url;
+                }
+                if (!href) return;
+
                 const a = document.createElement('a');
-                a.href = `/papers/${src.paper_id}/`;
+                a.href = href;
                 a.target = '_blank';
                 a.rel = 'noopener noreferrer';
-                a.textContent = src.title + (src.authors ? ` — ${src.authors}` : '');
+                a.style.display = 'flex';
+                a.style.alignItems = 'center';
+
+                const badge = document.createElement('span');
+                badge.className = `src-badge src-badge-${srcType}`;
+                badge.textContent = badgeLabels[srcType] || srcType;
+
+                const titleSpan = document.createElement('span');
+                titleSpan.style.overflow = 'hidden';
+                titleSpan.style.textOverflow = 'ellipsis';
+                titleSpan.style.whiteSpace = 'nowrap';
+                titleSpan.textContent = (src.title || 'Untitled') + (src.authors ? ` — ${src.authors}` : '');
+
+                a.appendChild(badge);
+                a.appendChild(titleSpan);
                 panel.appendChild(a);
             });
+
             row.appendChild(panel);
             window_.appendChild(row);
             scrollDown();
         }
 
         function appendTyping() {
+            const agentNames = ['Planner', 'Web Search', 'arXiv', 'Platform', 'Scholar', 'Critic', 'Synthesizer'];
+            let agentIdx = 0;
+
             const row = document.createElement('div');
             row.className = 'msg-row bot';
             const b = document.createElement('div');
             b.className = 'typing-bubble';
-            b.innerHTML = '<span></span><span></span><span></span>';
+            b.innerHTML = `<span></span><span></span><span></span><span class="typing-agent">${agentNames[0]}</span>`;
             row.appendChild(b);
             window_.appendChild(row);
             scrollDown();
+
+            const interval = setInterval(() => {
+                agentIdx = (agentIdx + 1) % agentNames.length;
+                const lbl = b.querySelector('.typing-agent');
+                if (lbl) {
+                    lbl.style.opacity = '0';
+                    setTimeout(() => {
+                        lbl.textContent = agentNames[agentIdx];
+                        lbl.style.opacity = '1';
+                    }, 150);
+                }
+            }, 1200);
+
+            // Store interval so we can clear on removal
+            const origRemove = row.remove.bind(row);
+            row.remove = function () { clearInterval(interval); origRemove(); };
+
             return row;
+        }
+
+        function getSessionId() {
+            const m = document.cookie.match(/(?:^|;\s*)ygg_session_id=([^;]+)/);
+            return m ? m[1] : null;
         }
 
         function setEnabled(on) {
