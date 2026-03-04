@@ -49,6 +49,8 @@ urlpatterns = [
     # Research Projects
     path('projects/', views.ResearchProjectListView.as_view(), name='research_projects'),
     path('projects/<int:pk>/', views.ResearchProjectDetailView.as_view(), name='research_project_detail'),
+    path('projects/<int:pk>/tasks/create/', views.create_project_task, name='create_project_task'),
+    path('projects/<int:pk>/tasks/<int:task_id>/status/', views.update_project_task_status, name='update_task_status'),
     
     # Social Features
     path('<int:pk>/like/', views.like_paper, name='like_paper'),
