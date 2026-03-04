@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+{% block title %}Collections — {{ group.name }} · Orravyn{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .page-header h1 {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 0;
+    }
+
+    .page-header a.back-link {
+        font-size: 0.85rem;
+        color: var(--accent-color);
+        text-decoration: none;
+    }
+
+    .collections-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+    }
+
+    .collection-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: 14px;
+        padding: 1.5rem;
+        transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .collection-card:hover {
+        border-color: var(--accent-color);
+        transform: translateY(-2px);
+    }
+
+    .collection-card h3 {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 0.4rem;
+    }
+
+    .collection-desc {
+        font-size: 0.84rem;
+        color: var(--text-secondary);
+        margin-bottom: 0.75rem;
+        min-height: 2.4em;
+    }
+
+    .collection-meta {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+    }
+
+    .collection-papers {
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--border-subtle);
+    }
+
+    .paper-chip {
+        display: inline-block;
+        background: rgba(79,156,249,0.10);
+        border: 1px solid rgba(79,156,249,0.2);
+        border-radius: 6px;
+        padding: 0.2rem 0.55rem;
+        font-size: 0.75rem;
+        color: var(--accent-color);
+        margin: 0.15rem;
+    }
+
+    .add-form-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: 14px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .add-form-card h2 {
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+    }
+
+    .form-row {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+        align-items: flex-end;
+    }
+
+    .form-group {
+        flex: 1;
+        min-width: 180px;
+    }
+
+    .form-group label {
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+        font-weight: 500;
+        display: block;
+        margin-bottom: 0.3rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .form-group input,
+    .form-group textarea {
+        width: 100%;
+        background: rgba(255,255,255,0.03);
+        border: 1px solid var(--border-subtle);
+        border-radius: 8px;
+        padding: 0.6rem 0.9rem;
+        color: var(--text-primary);
+        font-family: inherit;
+        font-size: 0.9rem;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+        outline: none;
+        border-color: var(--accent-color);
+    }
+
+    .btn-create {
+        background: var(--accent-color);
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 0.65rem 1.4rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: opacity 0.2s;
+    }
+
+    .btn-create:hover { opacity: 0.85; }
+
+    .empty-state {
+        text-align: center;
+        padding: 3.5rem 1rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state i {
+        font-size: 2.5rem;
+        opacity: 0.2;
+        display: block;
+        margin-bottom: 0.75rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <a class="back-link" href="{% url 'groups:detail' group.pk %}">
+            <i class="fas fa-arrow-left"></i> Back to {{ group.name }}
+        </a>
+        <h1>Paper Collections</h1>
+    </div>
+</div>
+
+<div class="add-form-card">
+    <h2><i class="fas fa-plus" style="color:var(--accent-color);margin-right:0.5rem;"></i>Create Collection</h2>
+    <form method="post" action="{% url 'groups:create_collection' group.pk %}">
+        {% csrf_token %}
+        <div class="form-row">
+            <div class="form-group">
+                <label>Collection Name</label>
+                <input type="text" name="name" placeholder="e.g. Deep Learning Classics" required maxlength="200">
+            </div>
+            <div class="form-group">
+                <label>Description (optional)</label>
+                <input type="text" name="description" placeholder="What is this collection about?">
+            </div>
+            <button type="submit" class="btn-create">Create</button>
+        </div>
+    </form>
+</div>
+
+{% if collections %}
+<div class="collections-grid">
+    {% for collection in collections %}
+    <div class="collection-card">
+        <h3>{{ collection.name }}</h3>
+        <div class="collection-desc">{{ collection.description|default:"No description." }}</div>
+        <div class="collection-meta">
+            <span><i class="fas fa-file-alt"></i> {{ collection.papers.count }} paper{{ collection.papers.count|pluralize }}</span>
+            <span>by {{ collection.created_by.username }}</span>
+        </div>
+
+        {% if collection.papers.all %}
+        <div class="collection-papers">
+            {% for paper in collection.papers.all|slice:":5" %}
+            <span class="paper-chip" title="{{ paper.title }}">{{ paper.title|truncatechars:30 }}</span>
+            {% endfor %}
+            {% if collection.papers.count > 5 %}
+            <span class="paper-chip">+{{ collection.papers.count|add:"-5" }} more</span>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if user_papers %}
+        <form method="post" action="{% url 'groups:add_to_collection' group.pk collection.pk %}" style="margin-top:0.75rem; display:flex; gap:0.5rem;">
+            {% csrf_token %}
+            <select name="paper_id" style="flex:1; background:rgba(255,255,255,0.04); border:1px solid var(--border-subtle); border-radius:6px; padding:0.4rem 0.6rem; color:var(--text-primary); font-size:0.8rem;">
+                <option value="">Add a paper…</option>
+                {% for paper in user_papers %}
+                <option value="{{ paper.pk }}">{{ paper.title|truncatechars:50 }}</option>
+                {% endfor %}
+            </select>
+            <input type="hidden" name="action" value="add">
+            <button type="submit" style="background:rgba(79,156,249,0.15);border:1px solid rgba(79,156,249,0.3);border-radius:6px;padding:0.4rem 0.75rem;color:var(--accent-color);cursor:pointer;font-size:0.8rem;">Add</button>
+        </form>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <i class="fas fa-layer-group"></i>
+    <p>No collections yet. Create one above to organize papers for your group.</p>
+</div>
+{% endif %}
+{% endblock %}
