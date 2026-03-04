@@ -23,7 +23,23 @@ if not _secret_key:
             'Generate one with: python -c "import secrets; print(secrets.token_hex(50))"'
         )
 SECRET_KEY = _secret_key
-ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,testserver').split(',')
+ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', 'localhost,127.0.0.1,testserver').split(',') + [
+    '.devtunnels.ms',
+    '.app.github.dev',
+]
+
+# Trust any origin listed in DJANGO_CSRF_TRUSTED_ORIGINS (comma-separated).
+# Also automatically trusts dev tunnel domains used during local development.
+_csrf_extra = os.environ.get('DJANGO_CSRF_TRUSTED_ORIGINS', '')
+CSRF_TRUSTED_ORIGINS = [o.strip() for o in _csrf_extra.split(',') if o.strip()] + [
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+    # Microsoft dev tunnels
+    'https://*.devtunnels.ms',
+    # VS Code / GitHub Codespaces forwarded ports
+    'https://*.app.github.dev',
+    'https://*.preview.app.github.dev',
+]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
