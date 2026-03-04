@@ -72,6 +72,7 @@ urlpatterns = [
     path('search/', include('apps.search.urls')),
     path('messaging/', include('apps.messaging.urls')),
     path('analytics/', include('apps.analytics.urls')),
+    path('recommendations/', include('apps.ml_engine.urls')),
 ]
 
 if settings.DEBUG:
