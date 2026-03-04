@@ -19,4 +19,9 @@ urlpatterns = [
     path('<int:pk>/remove/<int:user_id>/', views.remove_member, name='remove_member'),
     path('<int:pk>/update-role/<int:user_id>/', views.update_member_role, name='update_role'),
     path('<int:pk>/delete/', views.delete_group, name='delete'),
+
+    # Paper Collections
+    path('<int:pk>/collections/', views.group_collections, name='collections'),
+    path('<int:pk>/collections/create/', views.create_collection, name='create_collection'),
+    path('<int:pk>/collections/<int:collection_pk>/add/', views.add_to_collection, name='add_to_collection'),
 ]
