@@ -64,6 +64,7 @@ class YggdrasilMessage(models.Model):
     role = models.CharField(max_length=10, choices=ROLE_CHOICES)
     content = models.TextField()
     sources = models.JSONField(default=list, blank=True)
+    faithfulness_score = models.FloatField(null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -72,3 +73,73 @@ class YggdrasilMessage(models.Model):
 
     def __str__(self):
         return f"[{self.role}] {self.content[:60]}"
+
+
+class ResearchSession(models.Model):
+    """
+    Persists multi-turn research sessions for the MemoryAgent.
+
+    Each session stores a JSON list of {"role": "user"|"assistant", "content": str}
+    turn-pairs so the ResearchOrchestrator can inject prior context into
+    the PlannerAgent and SynthesizerAgent prompts.
+    """
+    user       = models.ForeignKey(
+        'accounts.User', on_delete=models.CASCADE,
+        related_name='research_sessions', null=True, blank=True,
+    )
+    session_id  = models.CharField(max_length=64, unique=True, db_index=True)
+    turns       = models.JSONField(default=list, blank=True)
+    created_at  = models.DateTimeField(auto_now_add=True)
+    updated_at  = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'research_sessions'
+        ordering = ['-updated_at']
+
+    def __str__(self):
+        n = len(self.turns or []) // 2
+        return f"Session {self.session_id[:8]}… ({n} turns)"
+
+
+
+class AgentDecisionLog(models.Model):
+    """
+    Logs agent decisions for explainability and debugging.
+    
+    Tracks which agents made which decisions during query processing,
+    enabling transparency and counterfactual analysis.
+    """
+    query_id = models.CharField(max_length=64, db_index=True)
+    session_id = models.CharField(max_length=64, null=True, blank=True, db_index=True)
+    user = models.ForeignKey(
+        'accounts.User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='agent_decisions'
+    )
+    
+    # Decision details
+    agent_name = models.CharField(max_length=100)
+    decision_type = models.CharField(max_length=100)  # e.g., "retrieve", "filter", "synthesize"
+    reasoning = models.TextField()
+    confidence = models.FloatField()
+    
+    # Metadata
+    metadata = models.JSONField(default=dict, blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
+    
+    # Performance
+    latency_ms = models.FloatField(null=True, blank=True)
+    
+    class Meta:
+        db_table = 'agent_decision_logs'
+        ordering = ['timestamp']
+        indexes = [
+            models.Index(fields=['query_id', 'timestamp']),
+            models.Index(fields=['session_id', 'timestamp']),
+            models.Index(fields=['agent_name']),
+        ]
+    
+    def __str__(self):
+        return f"{self.agent_name}: {self.decision_type} (confidence={self.confidence:.2f})"
