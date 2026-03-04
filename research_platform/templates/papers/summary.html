@@ -4,17 +4,18 @@
 {% block extra_css %}
 <style>
   .summary-page {
-    max-width: 720px;
+    max-width: 760px;
   }
 
   .summary-header {
-    margin-bottom: 1.5rem;
+    margin-bottom: 2rem;
   }
 
   .summary-header h1 {
-    font-size: 1.3rem;
+    font-size: 1.35rem;
     font-weight: 700;
     color: var(--text-primary);
+    line-height: 1.4;
     margin-bottom: 0.25rem;
   }
 
@@ -26,21 +27,54 @@
     display: inline-flex;
     align-items: center;
     gap: 0.3rem;
+    margin-bottom: 0.75rem;
   }
 
-  .summary-header .back-link:hover {
-    color: #1d4ed8;
+  .summary-header .back-link:hover { color: #1d4ed8; }
+
+  /* ── Structured section cards ── */
+  .summary-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
   }
 
-  .summary-content {
-    font-size: 0.95rem;
+  .summary-section {
+    padding: 1.4rem 0;
+  }
+
+  .section-heading {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.65rem;
+  }
+
+  .section-heading h3 {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  .section-body {
+    font-size: 0.93rem;
+    color: var(--text-secondary);
+    line-height: 1.8;
+  }
+
+  /* ── Flat-text fallback (no section_summaries) ── */
+  .summary-flat {
+    font-size: 0.93rem;
     color: var(--text-secondary);
     line-height: 1.85;
   }
 
   .summary-pending {
     text-align: center;
-    padding: 2.5rem 1.5rem;
+    padding: 3rem 1.5rem;
     color: var(--text-secondary);
   }
 
@@ -50,18 +84,54 @@
     margin-bottom: 0.75rem;
     display: block;
   }
+
+  .weight-bar-wrap {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-left: auto;
+  }
+
+  .weight-bar {
+    height: 4px;
+    border-radius: 2px;
+    background: var(--accent-color);
+    opacity: 0.45;
+    min-width: 6px;
+  }
+
+  .weight-label {
+    font-size: 0.68rem;
+    color: var(--text-secondary);
+    font-family: 'JetBrains Mono', monospace;
+  }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="summary-page">
   <div class="summary-header">
-    <a href="{% url 'papers:detail' paper.pk %}" class="back-link"><i class="fas fa-arrow-left"></i> Back to paper</a>
+    <a href="{% url 'papers:detail' paper.pk %}" class="back-link">
+      <i class="fas fa-arrow-left"></i> Back to paper
+    </a>
     <h1>{{ paper.title }}</h1>
   </div>
 
-  {% if paper.summary %}
-  <div class="summary-content">{{ paper.summary }}</div>
+  {% if paper.section_summaries %}
+  {# ── Preferred path: structured per-section summaries ── #}
+  <div class="summary-sections" id="structuredSummary"></div>
+
+  {% elif paper.summary == "__summary_failed__" %}
+  {# ── GAP-4: permanent failure — both summarization paths failed ── #}
+  <div class="summary-pending">
+    <i class="fas fa-exclamation-circle"></i>
+    <p><em>Summary could not be generated for this paper. This may be because the PDF is scanned (image-only) or could not be read. Please try re-uploading the paper.</em></p>
+  </div>
+
+  {% elif paper.summary %}
+  {# ── Fallback: parse [Section] markers from the flat summary string ── #}
+  <div class="summary-sections" id="parsedSummary"></div>
+
   {% else %}
   <div class="summary-pending">
     <i class="fas fa-spinner fa-pulse"></i>
@@ -69,4 +139,150 @@
   </div>
   {% endif %}
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{% if paper.section_summaries %}
+<script>
+// Section metadata: icon class and FontAwesome icon
+const SECTION_META = {
+  'Introduction':  { cls: 'icon-intro',      icon: 'fa-door-open' },
+  'Background':    { cls: 'icon-intro',      icon: 'fa-book-open' },
+  'Related Work':  { cls: 'icon-related',    icon: 'fa-link' },
+  'Methodology':   { cls: 'icon-method',     icon: 'fa-flask' },
+  'Methods':       { cls: 'icon-method',     icon: 'fa-flask' },
+  'Experiments':   { cls: 'icon-exp',        icon: 'fa-vial' },
+  'Results':       { cls: 'icon-results',    icon: 'fa-chart-bar' },
+  'Discussion':    { cls: 'icon-discussion', icon: 'fa-comments' },
+  'Conclusion':    { cls: 'icon-conclusion', icon: 'fa-flag-checkered' },
+  'Abstract':      { cls: 'icon-abstract',   icon: 'fa-file-alt' },
+};
+
+// IMRaD display order
+const ORDER = ['Abstract','Introduction','Background','Related Work',
+               'Methodology','Methods','Experiments','Results','Discussion','Conclusion'];
+
+const SECTION_WEIGHTS = {
+  'Methodology':0.35,'Methods':0.35,'Experiments':0.30,'Results':0.30,
+  'Discussion':0.15,'Introduction':0.10,'Related Work':0.08,
+  'Background':0.08,'Conclusion':0.07,'Abstract':0.05
+};
+
+const data = {{ paper.section_summaries|safe }};
+const container = document.getElementById('structuredSummary');
+
+// Sort keys: known ORDER first, then alphabetical for unknowns
+const keys = Object.keys(data).sort((a, b) => {
+  const ia = ORDER.indexOf(a), ib = ORDER.indexOf(b);
+  if (ia === -1 && ib === -1) return a.localeCompare(b);
+  if (ia === -1) return 1;
+  if (ib === -1) return -1;
+  return ia - ib;
+});
+
+// GAP-5: detect fallback "Part N" keys — paper had no recognisable section headers
+const isFallback = keys.length > 0 && keys.every(k => /^Part \d+$/.test(k));
+
+if (isFallback) {
+  const notice = document.createElement('p');
+  notice.className = 'summary-flat';
+  notice.style.cssText = 'margin-bottom:1rem;font-size:0.82rem;opacity:0.6;';
+  notice.textContent = 'This paper does not follow standard section headings. The summary is shown as continuous text.';
+  container.appendChild(notice);
+  const p = document.createElement('p');
+  p.className = 'summary-flat';
+  p.textContent = keys.map(k => data[k]).filter(Boolean).join(' ');
+  container.appendChild(p);
+} else {
+  keys.forEach(name => {
+    const text = data[name];
+    if (!text || !text.trim()) return;
+
+    const meta   = SECTION_META[name] || { cls: 'icon-default', icon: 'fa-layer-group' };
+    const weight = SECTION_WEIGHTS[name] || 0.10;
+    const barW   = Math.round(weight * 200);  // max ~70px for weight=0.35
+
+    const sec = document.createElement('div');
+    sec.className = 'summary-section';
+    sec.innerHTML = `
+      <div class="section-heading">
+        <span class="section-icon ${meta.cls}"><i class="fas ${meta.icon}"></i></span>
+        <h3>${name}</h3>
+        <div class="weight-bar-wrap">
+          <div class="weight-bar" style="width:${barW}px;"></div>
+          <span class="weight-label">w=${weight.toFixed(2)}</span>
+        </div>
+      </div>
+      <div class="section-body">${text}</div>`;
+    container.appendChild(sec);
+  });
+}
+</script>
+
+{% elif paper.summary %}
+<script>
+// Parse flat "[Section] text [Section] text" string into structured sections
+const raw = "{{ paper.summary|escapejs }}";
+const container = document.getElementById('parsedSummary');
+
+const SECTION_META = {
+  'Introduction':  { cls: 'icon-intro',      icon: 'fa-door-open' },
+  'Background':    { cls: 'icon-intro',      icon: 'fa-book-open' },
+  'Related Work':  { cls: 'icon-related',    icon: 'fa-link' },
+  'Methodology':   { cls: 'icon-method',     icon: 'fa-flask' },
+  'Methods':       { cls: 'icon-method',     icon: 'fa-flask' },
+  'Experiments':   { cls: 'icon-exp',        icon: 'fa-vial' },
+  'Results':       { cls: 'icon-results',    icon: 'fa-chart-bar' },
+  'Discussion':    { cls: 'icon-discussion', icon: 'fa-comments' },
+  'Conclusion':    { cls: 'icon-conclusion', icon: 'fa-flag-checkered' },
+  'Abstract':      { cls: 'icon-abstract',   icon: 'fa-file-alt' },
+};
+
+const ORDER = ['Abstract','Introduction','Background','Related Work',
+               'Methodology','Methods','Experiments','Results','Discussion','Conclusion'];
+
+// Split on [SectionName] markers
+const pattern = /\[([A-Z][^\]]{2,30})\]/g;
+const sections = [];
+let lastIndex = 0, lastLabel = null, m;
+
+while ((m = pattern.exec(raw)) !== null) {
+  if (lastLabel !== null) {
+    const text = raw.slice(lastIndex, m.index).trim();
+    if (text) sections.push({ name: lastLabel, text });
+  }
+  lastLabel = m[1];
+  lastIndex = m.index + m[0].length;
+}
+if (lastLabel) {
+  const text = raw.slice(lastIndex).trim();
+  if (text) sections.push({ name: lastLabel, text });
+}
+
+if (!sections.length) {
+  // No markers found — show as plain text
+  const p = document.createElement('p');
+  p.className = 'summary-flat';
+  p.textContent = raw;
+  container.appendChild(p);
+} else {
+  sections.sort((a, b) => {
+    const ia = ORDER.indexOf(a.name), ib = ORDER.indexOf(b.name);
+    if (ia === -1 && ib === -1) return a.name.localeCompare(b.name);
+    if (ia === -1) return 1; if (ib === -1) return -1;
+    return ia - ib;
+  });
+  sections.forEach(({ name, text }) => {
+    const sec  = document.createElement('div');
+    sec.className = 'summary-section';
+    sec.innerHTML = `
+      <div class="section-heading">
+        <h3>${name}</h3>
+      </div>
+      <div class="section-body">${text}</div>`;
+    container.appendChild(sec);
+  });
+}
+</script>
+{% endif %}
 {% endblock %}

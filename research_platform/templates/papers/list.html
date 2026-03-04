@@ -457,7 +457,14 @@
 {% block content %}
 
 <div class="page-header">
-    <h1>Research Papers</h1>
+    <div>
+        <h1>Research Papers</h1>
+        {% if page_obj %}
+        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.25rem; margin-bottom: 0;">
+            <i class="fas fa-file-alt"></i> {{ page_obj.paginator.count }} paper{{ page_obj.paginator.count|pluralize }} found
+        </p>
+        {% endif %}
+    </div>
     {% if user.is_authenticated and user.user_type != 'reader' %}
     <a href="{% url 'papers:upload' %}" class="feature-btn">
         <i class="fas fa-cloud-upload-alt"></i> Upload Paper
@@ -584,8 +591,7 @@
         <li class="page-item active"><span class="page-link">{{ num }}</span></li>
         {% else %}
         <li class="page-item"><a class="page-link"
-                href="?category={{ selected_category }}&sort={{ sort_by }}&page={{ num }}">{{
-                num }}</a></li>
+                href="?category={{ selected_category }}&sort={{ sort_by }}&page={{ num }}">{{ num }}</a></li>
         {% endif %}
         {% endfor %}
         {% if page_obj.has_next %}
