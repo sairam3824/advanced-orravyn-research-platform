@@ -181,19 +181,23 @@ function showRoute(routeName) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+function dismissDemoNotice() {
+  if (demoNotice.classList.contains("hidden")) return;
+  demoNotice.classList.add("hidden");
+  showRoute("home");
+}
+
 document.querySelectorAll(".quick-users button").forEach((button) => {
   button.addEventListener("click", () => setUser(button.dataset.user));
 });
 
-demoNoticeClose.addEventListener("click", () => {
-  demoNotice.classList.add("hidden");
-  showRoute("home");
-});
+demoNoticeClose.addEventListener("click", dismissDemoNotice);
+
+setTimeout(dismissDemoNotice, 5500);
 
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
-    demoNotice.classList.add("hidden");
-    showRoute("home");
+    dismissDemoNotice();
   }
 });
 

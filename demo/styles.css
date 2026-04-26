@@ -63,6 +63,7 @@ button { cursor: pointer; }
 
 .notice-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   margin-top: 18px;
 }
@@ -74,6 +75,9 @@ button { cursor: pointer; }
   justify-content: center;
   min-height: 44px;
   text-decoration: none;
+  gap: 8px;
+  overflow-wrap: anywhere;
+  text-align: center;
 }
 
 .login-page {
